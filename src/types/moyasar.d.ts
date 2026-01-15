@@ -1,3 +1,13 @@
+export interface MoyasarPayment {
+  id: string
+  status: string
+  amount: number
+  source?: {
+    type: string
+    message?: string
+  }
+}
+
 export interface MoyasarConfig {
   element: string
   amount: number
@@ -6,12 +16,17 @@ export interface MoyasarConfig {
   publishable_api_key: string
   callback_url: string
   methods: string[]
-  on_completed?: (payment: { id: string }) => void
+  on_completed?: (payment: MoyasarPayment) => void
+  on_initiating?: () => void
+  on_failure?: (error: { message: string; code?: string }) => void
+  on_cancelled?: () => void
   metadata?: Record<string, string>
   apple_pay?: {
     label: string
     validate_merchant_url: string
     country: string
+    supported_networks?: string[]
+    merchant_capabilities?: string[]
   }
 }
 

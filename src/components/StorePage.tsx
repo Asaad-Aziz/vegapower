@@ -57,9 +57,28 @@ export default function StorePage({ product }: StorePageProps) {
     }
   }
 
+  // Helper function to log to server
+  const logToServer = async (type: string, message: string, data?: unknown) => {
+    try {
+      await fetch('/api/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, message, data }),
+      })
+    } catch (e) {
+      console.error('Failed to log to server:', e)
+    }
+  }
+
   useEffect(() => {
     if (showPayment && moyasarLoaded && window.Moyasar && !moyasarInitialized) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+      
+      logToServer('MOYASAR_INIT', 'Initializing Moyasar Payment Form', {
+        amount: Math.round(product.price_sar * 100),
+        appUrl,
+        hasPublishableKey: !!process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY,
+      })
       
       // Small delay to ensure DOM element is ready
       setTimeout(() => {
@@ -80,12 +99,28 @@ export default function StorePage({ product }: StorePageProps) {
             label: 'Vega Power',
             validate_merchant_url: `${appUrl}/api/moyasar/apple-pay/validate`,
             country: 'SA',
+            supported_networks: ['mada', 'visa', 'masterCard', 'amex'],
+            merchant_capabilities: ['supports3DS', 'supportsDebit', 'supportsCredit'],
+          },
+          on_initiating: () => {
+            logToServer('PAYMENT_INITIATING', 'Payment is being initiated')
+          },
+          on_completed: (payment) => {
+            logToServer('PAYMENT_COMPLETED', 'Payment completed', payment)
+          },
+          on_failure: (error) => {
+            logToServer('PAYMENT_FAILURE', 'Payment failed', error)
+          },
+          on_cancelled: () => {
+            logToServer('PAYMENT_CANCELLED', 'Payment was cancelled by user')
           },
           metadata: {
             buyer_email: email,
             product_id: product.id,
           },
         })
+        
+        logToServer('MOYASAR_INIT_COMPLETE', 'Moyasar init() called successfully')
         setMoyasarInitialized(true)
       }, 100)
     }
