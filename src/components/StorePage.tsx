@@ -97,11 +97,10 @@ export default function StorePage({ product }: StorePageProps) {
           methods: ['creditcard', 'applepay'],
           apple_pay: {
             label: 'Vega Power',
-            validate_merchant_url: `${appUrl}/api/moyasar/apple-pay/validate`,
+            validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
             country: 'SA',
-            supported_networks: ['mada', 'visa', 'masterCard', 'amex'],
-            merchant_capabilities: ['supports3DS', 'supportsDebit', 'supportsCredit'],
           },
+          supported_networks: ['mada', 'visa', 'masterCard'],
           on_initiating: () => {
             logToServer('PAYMENT_INITIATING', 'Payment is being initiated')
           },
