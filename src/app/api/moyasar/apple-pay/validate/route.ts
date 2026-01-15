@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         validation_url: validation_url,
         display_name: 'Vega Power',
-        domain_name: domain_name || 'vegapower.vercel.app',
+        domain_name: domain_name || 'vegapowerstore.com',
         publishable_api_key: publishableKey,
       }),
     })
