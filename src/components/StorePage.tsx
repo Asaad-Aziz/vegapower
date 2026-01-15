@@ -75,7 +75,7 @@ export default function StorePage({ product }: StorePageProps) {
           description: product.title,
           publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || '',
           callback_url: `${appUrl}/success`,
-          methods: ['creditcard', 'applepay', 'stcpay'],
+          methods: ['creditcard', 'applepay'],
           apple_pay: {
             label: 'Vega Power',
             validate_merchant_url: `${appUrl}/api/moyasar/apple-pay/validate`,
