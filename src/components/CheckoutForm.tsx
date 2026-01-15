@@ -30,6 +30,11 @@ interface MoyasarConfig {
   methods: string[]
   on_completed?: (payment: { id: string }) => void
   metadata?: Record<string, string>
+  apple_pay?: {
+    label: string
+    validate_merchant_url: string
+    country: string
+  }
 }
 
 export default function CheckoutForm({ product }: CheckoutFormProps) {
@@ -63,6 +68,11 @@ export default function CheckoutForm({ product }: CheckoutFormProps) {
         publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || '',
         callback_url: `${appUrl}/success`,
         methods: ['creditcard', 'applepay', 'stcpay'],
+        apple_pay: {
+          label: 'Vega Power',
+          validate_merchant_url: `${appUrl}/api/moyasar/apple-pay/validate`,
+          country: 'SA',
+        },
         metadata: {
           buyer_email: email,
           product_id: product.id,
