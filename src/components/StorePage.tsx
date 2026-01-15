@@ -6,26 +6,7 @@ import Script from 'next/script'
 import ReactMarkdown from 'react-markdown'
 import { trackEvent } from '@/lib/analytics'
 import type { Product } from '@/types/database'
-
-declare global {
-  interface Window {
-    Moyasar: {
-      init: (config: MoyasarConfig) => void
-    }
-  }
-}
-
-interface MoyasarConfig {
-  element: string
-  amount: number
-  currency: string
-  description: string
-  publishable_api_key: string
-  callback_url: string
-  methods: string[]
-  on_completed?: (payment: { id: string }) => void
-  metadata?: Record<string, string>
-}
+import type { MoyasarConfig } from '@/types/moyasar.d'
 
 interface StorePageProps {
   product: Product
