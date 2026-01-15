@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { validation_url } = await request.json()
+    const { validation_url, domain_name } = await request.json()
 
     if (!validation_url) {
       return NextResponse.json(
@@ -11,31 +11,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const apiKey = process.env.MOYASAR_API_KEY
+    const publishableKey = process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY
 
-    if (!apiKey) {
-      console.error('MOYASAR_API_KEY not configured')
+    if (!publishableKey) {
+      console.error('MOYASAR_PUBLISHABLE_KEY not configured')
       return NextResponse.json(
         { error: 'Payment configuration error' },
         { status: 500 }
       )
     }
 
-    // Call Moyasar's Apple Pay session endpoint
-    const response = await fetch('https://api.moyasar.com/v1/applepay/session', {
+    // Call Moyasar's Apple Pay initiate endpoint
+    const response = await fetch('https://api.moyasar.com/v1/applepay/initiate', {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${Buffer.from(apiKey + ':').toString('base64')}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         validation_url: validation_url,
+        display_name: 'Vega Power',
+        domain_name: domain_name || 'vegapower.vercel.app',
+        publishable_api_key: publishableKey,
       }),
     })
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Moyasar Apple Pay session error:', response.status, errorText)
+      console.error('Moyasar Apple Pay initiate error:', response.status, errorText)
       return NextResponse.json(
         { error: 'Failed to validate Apple Pay session' },
         { status: response.status }
