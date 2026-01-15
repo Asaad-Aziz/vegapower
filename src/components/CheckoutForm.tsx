@@ -14,7 +14,7 @@ interface CheckoutFormProps {
 
 declare global {
   interface Window {
-    Moyasar: {
+    Moyasar?: {
       init: (config: MoyasarConfig) => void
     }
   }
