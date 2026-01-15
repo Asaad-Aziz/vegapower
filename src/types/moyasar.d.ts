@@ -16,6 +16,7 @@ export interface MoyasarConfig {
   publishable_api_key: string
   callback_url: string
   methods: string[]
+  supported_networks?: string[]
   on_completed?: (payment: MoyasarPayment) => void
   on_initiating?: () => void
   on_failure?: (error: { message: string; code?: string }) => void
@@ -25,8 +26,6 @@ export interface MoyasarConfig {
     label: string
     validate_merchant_url: string
     country: string
-    supported_networks?: string[]
-    merchant_capabilities?: string[]
   }
 }
 
