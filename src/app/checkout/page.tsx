@@ -1,5 +1,5 @@
 import { createServerClient } from '@/lib/supabase'
-import StorePage from '@/components/StorePage'
+import CheckoutForm from '@/components/CheckoutForm'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -9,7 +9,7 @@ async function getProduct() {
     const supabase = createServerClient()
     const { data, error } = await supabase
       .from('product')
-      .select('*')
+      .select('id, title, price_sar')
       .single()
 
     if (error) {
@@ -24,19 +24,19 @@ async function getProduct() {
   }
 }
 
-export default async function Home() {
+export default async function CheckoutPage() {
   const product = await getProduct()
 
   if (!product) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold mb-2">Store Not Configured</h1>
-          <p className="text-muted">Please set up your database and add a product.</p>
+          <h1 className="text-2xl font-semibold mb-2">Product Not Found</h1>
+          <p className="text-muted">Unable to load product details.</p>
         </div>
       </div>
     )
   }
 
-  return <StorePage product={product} />
+  return <CheckoutForm product={product} />
 }
