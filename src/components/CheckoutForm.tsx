@@ -34,7 +34,7 @@ export default function CheckoutForm({ product }: CheckoutFormProps) {
 
   useEffect(() => {
     if (showPayment && moyasarLoaded && window.Moyasar) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+      const appUrl = (process.env.NEXT_PUBLIC_APP_URL || window.location.origin).replace(/\/$/, '')
       
       window.Moyasar.init({
         element: '.moyasar-form',
@@ -131,12 +131,12 @@ export default function CheckoutForm({ product }: CheckoutFormProps) {
             
             {/* Moyasar Scripts */}
             <Script
-              src="https://cdn.moyasar.com/mpf/1.14.0/moyasar.js"
+              src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.umd.min.js"
               onLoad={() => setMoyasarLoaded(true)}
             />
             <link
               rel="stylesheet"
-              href="https://cdn.moyasar.com/mpf/1.14.0/moyasar.css"
+              href="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.css"
             />
           </div>
         )}

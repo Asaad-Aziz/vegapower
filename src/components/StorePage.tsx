@@ -72,7 +72,7 @@ export default function StorePage({ product }: StorePageProps) {
 
   useEffect(() => {
     if (showPayment && moyasarLoaded && window.Moyasar && !moyasarInitialized) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+      const appUrl = (process.env.NEXT_PUBLIC_APP_URL || window.location.origin).replace(/\/$/, '')
       
       const publishableKey = process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || ''
       logToServer('MOYASAR_INIT', 'Initializing Moyasar Payment Form', {
@@ -138,7 +138,7 @@ export default function StorePage({ product }: StorePageProps) {
   useEffect(() => {
     const link = document.createElement('link')
     link.rel = 'stylesheet'
-    link.href = 'https://cdn.moyasar.com/mpf/1.14.0/moyasar.css'
+    link.href = 'https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.css'
     document.head.appendChild(link)
     return () => {
       document.head.removeChild(link)
@@ -462,7 +462,7 @@ export default function StorePage({ product }: StorePageProps) {
                     
                     {/* Moyasar Script */}
                     <Script
-                      src="https://cdn.moyasar.com/mpf/1.14.0/moyasar.js"
+                      src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.umd.min.js"
                       onLoad={() => setMoyasarLoaded(true)}
                     />
                   </div>
