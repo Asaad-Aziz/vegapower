@@ -105,22 +105,15 @@ export default function StorePage({ product }: StorePageProps) {
             country: 'SA',
           },
           supported_networks: ['mada', 'visa', 'mastercard'],
-          on_initiating: () => {
-            logToServer('PAYMENT_INITIATING', 'Payment is being initiated')
+          on_initiating: async function() {
+            await logToServer('PAYMENT_INITIATING', 'Payment is being initiated')
+            return true
           },
-          on_completed: (payment) => {
-            logToServer('PAYMENT_COMPLETED', 'Payment completed', payment)
+          on_completed: async function(payment) {
+            await logToServer('PAYMENT_COMPLETED', 'Payment completed', payment)
           },
-          on_failure: (error) => {
-            logToServer('PAYMENT_FAILURE', 'Payment failed', {
-              error,
-              errorString: JSON.stringify(error),
-              errorMessage: error?.message,
-              errorType: typeof error,
-            })
-          },
-          on_cancelled: () => {
-            logToServer('PAYMENT_CANCELLED', 'Payment was cancelled by user')
+          on_failure: async function(error) {
+            await logToServer('PAYMENT_FAILURE', 'Payment failed', error)
           },
           metadata: {
             buyer_email: email,
