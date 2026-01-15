@@ -104,7 +104,7 @@ export default function StorePage({ product }: StorePageProps) {
             validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
             country: 'SA',
           },
-          supported_networks: ['mada', 'visa', 'masterCard'],
+          supported_networks: ['mada', 'visa', 'mastercard'],
           on_initiating: () => {
             logToServer('PAYMENT_INITIATING', 'Payment is being initiated')
           },

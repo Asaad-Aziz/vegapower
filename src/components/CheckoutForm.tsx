@@ -44,7 +44,7 @@ export default function CheckoutForm({ product }: CheckoutFormProps) {
         publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || '',
         callback_url: `${appUrl}/success`,
         methods: ['creditcard', 'applepay'],
-        supported_networks: ['mada', 'visa', 'masterCard'],
+        supported_networks: ['mada', 'visa', 'mastercard'],
         apple_pay: {
           label: 'Vega Power',
           validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
