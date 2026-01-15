@@ -74,10 +74,14 @@ export default function StorePage({ product }: StorePageProps) {
     if (showPayment && moyasarLoaded && window.Moyasar && !moyasarInitialized) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
       
+      const publishableKey = process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || ''
       logToServer('MOYASAR_INIT', 'Initializing Moyasar Payment Form', {
         amount: Math.round(product.price_sar * 100),
         appUrl,
-        hasPublishableKey: !!process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY,
+        hasPublishableKey: !!publishableKey,
+        keyPrefix: publishableKey.substring(0, 10),
+        isTestKey: publishableKey.startsWith('pk_test'),
+        isLiveKey: publishableKey.startsWith('pk_live'),
       })
       
       // Small delay to ensure DOM element is ready
@@ -92,7 +96,7 @@ export default function StorePage({ product }: StorePageProps) {
           amount: Math.round(product.price_sar * 100),
           currency: 'SAR',
           description: product.title,
-          publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || '',
+          publishable_api_key: publishableKey,
           callback_url: `${appUrl}/success`,
           methods: ['creditcard', 'applepay'],
           apple_pay: {
@@ -108,7 +112,12 @@ export default function StorePage({ product }: StorePageProps) {
             logToServer('PAYMENT_COMPLETED', 'Payment completed', payment)
           },
           on_failure: (error) => {
-            logToServer('PAYMENT_FAILURE', 'Payment failed', error)
+            logToServer('PAYMENT_FAILURE', 'Payment failed', {
+              error,
+              errorString: JSON.stringify(error),
+              errorMessage: error?.message,
+              errorType: typeof error,
+            })
           },
           on_cancelled: () => {
             logToServer('PAYMENT_CANCELLED', 'Payment was cancelled by user')
