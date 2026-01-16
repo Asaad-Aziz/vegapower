@@ -417,7 +417,6 @@ export default function StorePage({ product }: StorePageProps) {
                         placeholder="you@example.com"
                         className="input-field mb-4"
                         required
-                        autoFocus
                         dir="ltr"
                       />
                       <button
