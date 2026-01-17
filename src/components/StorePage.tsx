@@ -513,21 +513,13 @@ export default function StorePage({ product }: StorePageProps) {
                         <div className="flex items-start gap-4">
                           {/* Tamara Logo */}
                           <div className="flex-shrink-0 mt-1">
-                            <svg width="80" height="28" viewBox="0 0 1268 448" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M168.5 143H211V305H168.5V143Z" fill="url(#tamara-gradient)"/>
-                              <path d="M0 143H42.5V162.5C54.5 148.5 74.5 139 98.5 139C147 139 178.5 172 178.5 224V305H136V231.5C136 199 118 180 90.5 180C62.5 180 42.5 200.5 42.5 233V305H0V143Z" fill="url(#tamara-gradient)"/>
-                              <path d="M434 143H476.5V162.5C488.5 148.5 508.5 139 532.5 139C581 139 612.5 172 612.5 224V305H570V231.5C570 199 552 180 524.5 180C496.5 180 476.5 200.5 476.5 233V305H434V143Z" fill="url(#tamara-gradient)"/>
-                              <path d="M868 143H910.5V162.5C922.5 148.5 942.5 139 966.5 139C1015 139 1046.5 172 1046.5 224V305H1004V231.5C1004 199 986 180 958.5 180C930.5 180 910.5 200.5 910.5 233V305H868V143Z" fill="url(#tamara-gradient)"/>
-                              <path d="M254 224C254 167 298.5 135 353 135C398 135 432 157.5 443.5 193.5L405 208C398.5 188 378 175 353 175C320.5 175 296.5 195 296.5 224C296.5 253 320.5 273 353 273C378 273 398.5 260 405 240L443.5 254.5C432 290.5 398 313 353 313C298.5 313 254 281 254 224Z" fill="url(#tamara-gradient)"/>
-                              <path d="M688 224C688 167 732.5 135 787 135C832 135 866 157.5 877.5 193.5L839 208C832.5 188 812 175 787 175C754.5 175 730.5 195 730.5 224C730.5 253 754.5 273 787 273C812 273 832.5 260 839 240L877.5 254.5C866 290.5 832 313 787 313C732.5 313 688 281 688 224Z" fill="url(#tamara-gradient)"/>
-                              <path d="M1089 224C1089 167 1133.5 135 1188 135C1233 135 1267 157.5 1268 193.5L1229.5 208C1223 188 1203 175 1188 175C1155.5 175 1131.5 195 1131.5 224C1131.5 253 1155.5 273 1188 273C1203 273 1223 260 1229.5 240L1268 254.5C1257 290.5 1223 313 1188 313C1133.5 313 1089 281 1089 224Z" fill="url(#tamara-gradient)"/>
-                              <defs>
-                                <linearGradient id="tamara-gradient" x1="0" y1="224" x2="1268" y2="224" gradientUnits="userSpaceOnUse">
-                                  <stop stopColor="#4ECDC4"/>
-                                  <stop offset="1" stopColor="#2C9F97"/>
-                                </linearGradient>
-                              </defs>
-                            </svg>
+                            <Image
+                              src="/tamara.png"
+                              alt="Tamara"
+                              width={80}
+                              height={28}
+                              className="h-7 w-auto object-contain"
+                            />
                           </div>
                           <div className="flex-1 min-w-0">
                             {/* Tamara Messaging - Following Official Guidelines */}
@@ -593,21 +585,13 @@ export default function StorePage({ product }: StorePageProps) {
                     <div className="bg-white border border-neutral-200 rounded-2xl p-4 mb-4">
                       {/* Logo */}
                       <div className="flex items-center justify-between mb-4">
-                        <svg width="90" height="32" viewBox="0 0 1268 448" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M168.5 143H211V305H168.5V143Z" fill="url(#tamara-gradient-2)"/>
-                          <path d="M0 143H42.5V162.5C54.5 148.5 74.5 139 98.5 139C147 139 178.5 172 178.5 224V305H136V231.5C136 199 118 180 90.5 180C62.5 180 42.5 200.5 42.5 233V305H0V143Z" fill="url(#tamara-gradient-2)"/>
-                          <path d="M434 143H476.5V162.5C488.5 148.5 508.5 139 532.5 139C581 139 612.5 172 612.5 224V305H570V231.5C570 199 552 180 524.5 180C496.5 180 476.5 200.5 476.5 233V305H434V143Z" fill="url(#tamara-gradient-2)"/>
-                          <path d="M868 143H910.5V162.5C922.5 148.5 942.5 139 966.5 139C1015 139 1046.5 172 1046.5 224V305H1004V231.5C1004 199 986 180 958.5 180C930.5 180 910.5 200.5 910.5 233V305H868V143Z" fill="url(#tamara-gradient-2)"/>
-                          <path d="M254 224C254 167 298.5 135 353 135C398 135 432 157.5 443.5 193.5L405 208C398.5 188 378 175 353 175C320.5 175 296.5 195 296.5 224C296.5 253 320.5 273 353 273C378 273 398.5 260 405 240L443.5 254.5C432 290.5 398 313 353 313C298.5 313 254 281 254 224Z" fill="url(#tamara-gradient-2)"/>
-                          <path d="M688 224C688 167 732.5 135 787 135C832 135 866 157.5 877.5 193.5L839 208C832.5 188 812 175 787 175C754.5 175 730.5 195 730.5 224C730.5 253 754.5 273 787 273C812 273 832.5 260 839 240L877.5 254.5C866 290.5 832 313 787 313C732.5 313 688 281 688 224Z" fill="url(#tamara-gradient-2)"/>
-                          <path d="M1089 224C1089 167 1133.5 135 1188 135C1233 135 1267 157.5 1268 193.5L1229.5 208C1223 188 1203 175 1188 175C1155.5 175 1131.5 195 1131.5 224C1131.5 253 1155.5 273 1188 273C1203 273 1223 260 1229.5 240L1268 254.5C1257 290.5 1223 313 1188 313C1133.5 313 1089 281 1089 224Z" fill="url(#tamara-gradient-2)"/>
-                          <defs>
-                            <linearGradient id="tamara-gradient-2" x1="0" y1="224" x2="1268" y2="224" gradientUnits="userSpaceOnUse">
-                              <stop stopColor="#4ECDC4"/>
-                              <stop offset="1" stopColor="#2C9F97"/>
-                            </linearGradient>
-                          </defs>
-                        </svg>
+                        <Image
+                          src="/tamara.png"
+                          alt="Tamara"
+                          width={90}
+                          height={32}
+                          className="h-8 w-auto object-contain"
+                        />
                         <span className="text-xs text-neutral-400">متوافقة مع الشريعة</span>
                       </div>
 
