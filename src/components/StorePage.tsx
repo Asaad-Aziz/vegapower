@@ -505,21 +505,39 @@ export default function StorePage({ product }: StorePageProps) {
                         </svg>
                       </button>
 
-                      {/* Tamara BNPL Option */}
+                      {/* Tamara BNPL Option - Following Official Guidelines */}
                       <button
                         onClick={() => setPaymentMethod('tamara')}
-                        className="w-full p-4 border-2 border-neutral-200 rounded-xl hover:border-[#3FCBCB] transition-colors flex items-center gap-4 text-right group"
+                        className="w-full p-4 bg-white border border-neutral-200 rounded-2xl hover:border-[#4ECDC4] hover:shadow-md transition-all text-right group"
                       >
-                        <div className="w-12 h-12 bg-[#3FCBCB]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-[#3FCBCB] font-bold text-lg">T</span>
+                        <div className="flex items-start gap-4">
+                          {/* Tamara Logo */}
+                          <div className="flex-shrink-0 mt-1">
+                            <svg width="80" height="28" viewBox="0 0 1268 448" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M168.5 143H211V305H168.5V143Z" fill="url(#tamara-gradient)"/>
+                              <path d="M0 143H42.5V162.5C54.5 148.5 74.5 139 98.5 139C147 139 178.5 172 178.5 224V305H136V231.5C136 199 118 180 90.5 180C62.5 180 42.5 200.5 42.5 233V305H0V143Z" fill="url(#tamara-gradient)"/>
+                              <path d="M434 143H476.5V162.5C488.5 148.5 508.5 139 532.5 139C581 139 612.5 172 612.5 224V305H570V231.5C570 199 552 180 524.5 180C496.5 180 476.5 200.5 476.5 233V305H434V143Z" fill="url(#tamara-gradient)"/>
+                              <path d="M868 143H910.5V162.5C922.5 148.5 942.5 139 966.5 139C1015 139 1046.5 172 1046.5 224V305H1004V231.5C1004 199 986 180 958.5 180C930.5 180 910.5 200.5 910.5 233V305H868V143Z" fill="url(#tamara-gradient)"/>
+                              <path d="M254 224C254 167 298.5 135 353 135C398 135 432 157.5 443.5 193.5L405 208C398.5 188 378 175 353 175C320.5 175 296.5 195 296.5 224C296.5 253 320.5 273 353 273C378 273 398.5 260 405 240L443.5 254.5C432 290.5 398 313 353 313C298.5 313 254 281 254 224Z" fill="url(#tamara-gradient)"/>
+                              <path d="M688 224C688 167 732.5 135 787 135C832 135 866 157.5 877.5 193.5L839 208C832.5 188 812 175 787 175C754.5 175 730.5 195 730.5 224C730.5 253 754.5 273 787 273C812 273 832.5 260 839 240L877.5 254.5C866 290.5 832 313 787 313C732.5 313 688 281 688 224Z" fill="url(#tamara-gradient)"/>
+                              <path d="M1089 224C1089 167 1133.5 135 1188 135C1233 135 1267 157.5 1268 193.5L1229.5 208C1223 188 1203 175 1188 175C1155.5 175 1131.5 195 1131.5 224C1131.5 253 1155.5 273 1188 273C1203 273 1223 260 1229.5 240L1268 254.5C1257 290.5 1223 313 1188 313C1133.5 313 1089 281 1089 224Z" fill="url(#tamara-gradient)"/>
+                              <defs>
+                                <linearGradient id="tamara-gradient" x1="0" y1="224" x2="1268" y2="224" gradientUnits="userSpaceOnUse">
+                                  <stop stopColor="#4ECDC4"/>
+                                  <stop offset="1" stopColor="#2C9F97"/>
+                                </linearGradient>
+                              </defs>
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            {/* Tamara Messaging - Following Official Guidelines */}
+                            <p className="text-sm text-neutral-800">
+                              ادفع <span className="font-semibold">{Math.round(product.price_sar / 4)} ر.س</span>/شهريًا أو على 4 دفعات.
+                            </p>
+                            <p className="text-sm text-neutral-500 mt-0.5">متوافقة مع الشريعة الإسلامية.</p>
+                            <span className="text-sm text-[#4ECDC4] font-medium group-hover:underline">تعرّف على خياراتك ←</span>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <p className="font-semibold">تمارا - قسّم فاتورتك</p>
-                          <p className="text-sm text-muted">ادفع على 4 دفعات بدون فوائد</p>
-                        </div>
-                        <svg className="w-5 h-5 text-neutral-400 group-hover:text-[#3FCBCB]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
                       </button>
                     </div>
                   </div>
@@ -555,7 +573,7 @@ export default function StorePage({ product }: StorePageProps) {
                   </div>
                 )}
 
-                {/* Tamara Payment */}
+                {/* Tamara Payment - Official Branding */}
                 {showPayment && paymentMethod === 'tamara' && (
                   <div className="animate-fade-in">
                     <div className="flex items-center justify-between mb-4">
@@ -571,27 +589,98 @@ export default function StorePage({ product }: StorePageProps) {
                       Paying as <span className="font-medium text-foreground">{email}</span>
                     </p>
 
-                    {/* Tamara Info */}
-                    <div className="bg-[#3FCBCB]/10 border border-[#3FCBCB]/30 rounded-xl p-4 mb-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-[#3FCBCB] rounded-lg flex items-center justify-center">
-                          <span className="text-white font-bold">T</span>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-[#2A8A8A]">تمارا</p>
-                          <p className="text-xs text-[#3FCBCB]">قسّم فاتورتك على 4 دفعات</p>
+                    {/* Tamara Widget - Following Official Design Specs */}
+                    <div className="bg-white border border-neutral-200 rounded-2xl p-4 mb-4">
+                      {/* Logo */}
+                      <div className="flex items-center justify-between mb-4">
+                        <svg width="90" height="32" viewBox="0 0 1268 448" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M168.5 143H211V305H168.5V143Z" fill="url(#tamara-gradient-2)"/>
+                          <path d="M0 143H42.5V162.5C54.5 148.5 74.5 139 98.5 139C147 139 178.5 172 178.5 224V305H136V231.5C136 199 118 180 90.5 180C62.5 180 42.5 200.5 42.5 233V305H0V143Z" fill="url(#tamara-gradient-2)"/>
+                          <path d="M434 143H476.5V162.5C488.5 148.5 508.5 139 532.5 139C581 139 612.5 172 612.5 224V305H570V231.5C570 199 552 180 524.5 180C496.5 180 476.5 200.5 476.5 233V305H434V143Z" fill="url(#tamara-gradient-2)"/>
+                          <path d="M868 143H910.5V162.5C922.5 148.5 942.5 139 966.5 139C1015 139 1046.5 172 1046.5 224V305H1004V231.5C1004 199 986 180 958.5 180C930.5 180 910.5 200.5 910.5 233V305H868V143Z" fill="url(#tamara-gradient-2)"/>
+                          <path d="M254 224C254 167 298.5 135 353 135C398 135 432 157.5 443.5 193.5L405 208C398.5 188 378 175 353 175C320.5 175 296.5 195 296.5 224C296.5 253 320.5 273 353 273C378 273 398.5 260 405 240L443.5 254.5C432 290.5 398 313 353 313C298.5 313 254 281 254 224Z" fill="url(#tamara-gradient-2)"/>
+                          <path d="M688 224C688 167 732.5 135 787 135C832 135 866 157.5 877.5 193.5L839 208C832.5 188 812 175 787 175C754.5 175 730.5 195 730.5 224C730.5 253 754.5 273 787 273C812 273 832.5 260 839 240L877.5 254.5C866 290.5 832 313 787 313C732.5 313 688 281 688 224Z" fill="url(#tamara-gradient-2)"/>
+                          <path d="M1089 224C1089 167 1133.5 135 1188 135C1233 135 1267 157.5 1268 193.5L1229.5 208C1223 188 1203 175 1188 175C1155.5 175 1131.5 195 1131.5 224C1131.5 253 1155.5 273 1188 273C1203 273 1223 260 1229.5 240L1268 254.5C1257 290.5 1223 313 1188 313C1133.5 313 1089 281 1089 224Z" fill="url(#tamara-gradient-2)"/>
+                          <defs>
+                            <linearGradient id="tamara-gradient-2" x1="0" y1="224" x2="1268" y2="224" gradientUnits="userSpaceOnUse">
+                              <stop stopColor="#4ECDC4"/>
+                              <stop offset="1" stopColor="#2C9F97"/>
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        <span className="text-xs text-neutral-400">متوافقة مع الشريعة</span>
+                      </div>
+
+                      {/* Hero Message */}
+                      <div className="text-center mb-4">
+                        <p className="text-lg font-medium text-neutral-800">دفعاتك، على راحتك</p>
+                        <p className="text-sm text-neutral-500 mt-1">
+                          ادفع <span className="font-semibold text-neutral-800">{Math.round(product.price_sar / 4)} ر.س</span> أو على 4 دفعات
+                        </p>
+                      </div>
+
+                      {/* Payment Breakdown */}
+                      <div className="bg-neutral-50 rounded-xl p-3 mb-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-gradient-to-r from-[#4ECDC4] to-[#2C9F97] rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">4x</span>
+                            </div>
+                            <span className="text-sm text-neutral-600">4 دفعات شهرية</span>
+                          </div>
+                          <span className="font-bold text-neutral-800">{(product.price_sar / 4).toFixed(0)} ر.س</span>
                         </div>
                       </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-neutral-600">4 دفعات بقيمة:</span>
-                        <span className="font-bold text-[#2A8A8A]">{(product.price_sar / 4).toFixed(2)} ر.س</span>
+
+                      {/* How it works */}
+                      <div className="grid grid-cols-4 gap-2 text-center mb-4">
+                        <div>
+                          <div className="w-8 h-8 mx-auto bg-[#4ECDC4]/10 rounded-full flex items-center justify-center mb-1">
+                            <span className="text-[#4ECDC4] text-xs font-bold">1</span>
+                          </div>
+                          <p className="text-[10px] text-neutral-500">اختر الخطة</p>
+                        </div>
+                        <div>
+                          <div className="w-8 h-8 mx-auto bg-[#4ECDC4]/10 rounded-full flex items-center justify-center mb-1">
+                            <span className="text-[#4ECDC4] text-xs font-bold">2</span>
+                          </div>
+                          <p className="text-[10px] text-neutral-500">أدخل البطاقة</p>
+                        </div>
+                        <div>
+                          <div className="w-8 h-8 mx-auto bg-[#4ECDC4]/10 rounded-full flex items-center justify-center mb-1">
+                            <span className="text-[#4ECDC4] text-xs font-bold">3</span>
+                          </div>
+                          <p className="text-[10px] text-neutral-500">تابع من التطبيق</p>
+                        </div>
+                        <div>
+                          <div className="w-8 h-8 mx-auto bg-[#4ECDC4]/10 rounded-full flex items-center justify-center mb-1">
+                            <span className="text-[#4ECDC4] text-xs font-bold">4</span>
+                          </div>
+                          <p className="text-[10px] text-neutral-500">تذكيرات</p>
+                        </div>
+                      </div>
+
+                      {/* Benefits */}
+                      <div className="flex items-center justify-center gap-4 text-[10px] text-neutral-500 border-t border-neutral-100 pt-3">
+                        <span className="flex items-center gap-1">
+                          <svg className="w-3 h-3 text-[#4ECDC4]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                          </svg>
+                          بدون رسوم خفية
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <svg className="w-3 h-3 text-[#4ECDC4]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                          </svg>
+                          حماية المشتري
+                        </span>
                       </div>
                     </div>
 
                     <button
                       onClick={handleTamaraCheckout}
                       disabled={tamaraLoading}
-                      className="w-full py-4 bg-[#3FCBCB] hover:bg-[#35b5b5] text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="w-full py-4 bg-gradient-to-r from-[#4ECDC4] to-[#2C9F97] hover:from-[#45c4bc] hover:to-[#279088] text-white font-semibold rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#4ECDC4]/25"
                     >
                       {tamaraLoading ? (
                         <>
@@ -608,9 +697,21 @@ export default function StorePage({ product }: StorePageProps) {
                       )}
                     </button>
 
-                    <p className="text-xs text-muted text-center mt-3">
-                      سيتم تحويلك إلى تمارا لإكمال عملية الدفع
-                    </p>
+                    {/* Payment Methods */}
+                    <div className="flex items-center justify-center gap-3 mt-4">
+                      <span className="text-[10px] text-neutral-400">طرق الدفع المقبولة:</span>
+                      <div className="flex items-center gap-2">
+                        <div className="h-5 px-2 bg-neutral-100 rounded flex items-center justify-center">
+                          <span className="text-[10px] font-medium text-[#1A1F71]">VISA</span>
+                        </div>
+                        <div className="h-5 px-2 bg-neutral-100 rounded flex items-center justify-center">
+                          <span className="text-[10px] font-medium text-[#EB001B]">MC</span>
+                        </div>
+                        <div className="h-5 px-2 bg-[#6C3D91] rounded flex items-center justify-center">
+                          <span className="text-[10px] font-medium text-white">mada</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 
