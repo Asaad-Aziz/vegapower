@@ -26,6 +26,7 @@ export interface MoyasarConfig {
     label: string
     validate_merchant_url: string
     country: string
+    supported_countries?: string[]
   }
 }
 
