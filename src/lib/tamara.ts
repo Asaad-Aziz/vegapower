@@ -22,6 +22,14 @@ interface TamaraItem {
     amount: number
     currency: string
   }
+  discount_amount: {
+    amount: number
+    currency: string
+  }
+  tax_amount: {
+    amount: number
+    currency: string
+  }
 }
 
 interface TamaraConsumer {
@@ -45,6 +53,14 @@ interface TamaraCheckoutRequest {
     amount: number
     currency: string
   }
+  shipping_amount: {
+    amount: number
+    currency: string
+  }
+  tax_amount: {
+    amount: number
+    currency: string
+  }
   description: string
   country_code: string
   payment_type: string
@@ -52,6 +68,7 @@ interface TamaraCheckoutRequest {
   items: TamaraItem[]
   consumer: TamaraConsumer
   shipping_address: TamaraAddress
+  billing_address: TamaraAddress
   merchant_url: {
     success: string
     failure: string
@@ -107,6 +124,14 @@ export async function createTamaraCheckout(params: {
         amount: params.amount,
         currency: params.currency,
       },
+      shipping_amount: {
+        amount: 0,
+        currency: params.currency,
+      },
+      tax_amount: {
+        amount: 0,
+        currency: params.currency,
+      },
       description: params.description,
       country_code: 'SA',
       payment_type: 'PAY_BY_INSTALMENTS',
@@ -126,15 +151,30 @@ export async function createTamaraCheckout(params: {
             amount: params.amount,
             currency: params.currency,
           },
+          discount_amount: {
+            amount: 0,
+            currency: params.currency,
+          },
+          tax_amount: {
+            amount: 0,
+            currency: params.currency,
+          },
         },
       ],
       consumer: {
         email: params.buyerEmail,
         first_name: 'Customer',
         last_name: 'Customer',
-        phone_number: '+966500000000',
+        phone_number: '500000000',
       },
       shipping_address: {
+        first_name: 'Customer',
+        last_name: 'Customer',
+        line1: 'Digital Delivery',
+        city: 'Riyadh',
+        country_code: 'SA',
+      },
+      billing_address: {
         first_name: 'Customer',
         last_name: 'Customer',
         line1: 'Digital Delivery',
@@ -245,6 +285,31 @@ export async function capturePayment(orderId: string, amount: number, currency: 
           amount,
           currency,
         },
+        shipping_amount: {
+          amount: 0,
+          currency,
+        },
+        tax_amount: {
+          amount: 0,
+          currency,
+        },
+        discount_amount: {
+          amount: 0,
+          currency,
+        },
+        items: [
+          {
+            name: 'Digital Product',
+            type: 'Digital',
+            reference_id: 'item-1',
+            sku: 'item-1',
+            quantity: 1,
+            unit_price: { amount, currency },
+            total_amount: { amount, currency },
+            discount_amount: { amount: 0, currency },
+            tax_amount: { amount: 0, currency },
+          },
+        ],
         shipping_info: {
           shipped_at: new Date().toISOString(),
           shipping_company: 'Digital Delivery',
