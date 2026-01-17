@@ -20,12 +20,16 @@ const socialIcons: Record<string, string> = {
   linkedin: 'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z',
 }
 
+type PaymentMethod = 'card' | 'tamara' | null
+
 export default function StorePage({ product }: StorePageProps) {
   const [showCheckout, setShowCheckout] = useState(false)
   const [email, setEmail] = useState('')
   const [showPayment, setShowPayment] = useState(false)
   const [moyasarLoaded, setMoyasarLoaded] = useState(false)
   const [moyasarInitialized, setMoyasarInitialized] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(null)
+  const [tamaraLoading, setTamaraLoading] = useState(false)
 
   useEffect(() => {
     trackEvent('page_view')
@@ -47,7 +51,38 @@ export default function StorePage({ product }: StorePageProps) {
     setShowPayment(false)
     setEmail('')
     setMoyasarInitialized(false)
+    setPaymentMethod(null)
+    setTamaraLoading(false)
     document.body.style.overflow = ''
+  }
+
+  const handleTamaraCheckout = async () => {
+    setTamaraLoading(true)
+    try {
+      const response = await fetch('/api/tamara/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          productId: product.id,
+        }),
+      })
+
+      const data = await response.json()
+      
+      if (data.success && data.checkoutUrl) {
+        // Redirect to Tamara checkout
+        window.location.href = data.checkoutUrl
+      } else {
+        console.error('Tamara checkout failed:', data.error)
+        alert('فشل في إنشاء جلسة الدفع. يرجى المحاولة مرة أخرى.')
+        setTamaraLoading(false)
+      }
+    } catch (error) {
+      console.error('Tamara checkout error:', error)
+      alert('حدث خطأ. يرجى المحاولة مرة أخرى.')
+      setTamaraLoading(false)
+    }
   }
 
   const handleEmailSubmit = (e: React.FormEvent) => {
@@ -71,7 +106,7 @@ export default function StorePage({ product }: StorePageProps) {
   }
 
   useEffect(() => {
-    if (showPayment && moyasarLoaded && window.Moyasar && !moyasarInitialized) {
+    if (showPayment && paymentMethod === 'card' && moyasarLoaded && window.Moyasar && !moyasarInitialized) {
       const appUrl = (process.env.NEXT_PUBLIC_APP_URL || window.location.origin).replace(/\/$/, '')
       
       const publishableKey = process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || ''
@@ -126,7 +161,7 @@ export default function StorePage({ product }: StorePageProps) {
         setMoyasarInitialized(true)
       }, 100)
     }
-  }, [showPayment, moyasarLoaded, product, email, moyasarInitialized])
+  }, [showPayment, paymentMethod, moyasarLoaded, product, email, moyasarInitialized])
 
   // Load Moyasar CSS
   useEffect(() => {
@@ -431,11 +466,11 @@ export default function StorePage({ product }: StorePageProps) {
                   </div>
                 )}
 
-                {/* Payment Form */}
-                {showPayment && (
+                {/* Payment Method Selection */}
+                {showPayment && !paymentMethod && (
                   <div className="animate-fade-in">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base font-semibold">الدفع</h3>
+                      <h3 className="text-base font-semibold">اختر طريقة الدفع</h3>
                       <button
                         onClick={() => {
                           setShowPayment(false)
@@ -450,6 +485,65 @@ export default function StorePage({ product }: StorePageProps) {
                       Paying as <span className="font-medium text-foreground">{email}</span>
                     </p>
                     
+                    <div className="space-y-3">
+                      {/* Credit Card / Apple Pay Option */}
+                      <button
+                        onClick={() => setPaymentMethod('card')}
+                        className="w-full p-4 border-2 border-neutral-200 rounded-xl hover:border-neutral-400 transition-colors flex items-center gap-4 text-right"
+                      >
+                        <div className="w-12 h-12 bg-neutral-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <svg className="w-6 h-6 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold">بطاقة ائتمان / Apple Pay</p>
+                          <p className="text-sm text-muted">Visa, Mastercard, mada, Apple Pay</p>
+                        </div>
+                        <svg className="w-5 h-5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+
+                      {/* Tamara BNPL Option */}
+                      <button
+                        onClick={() => setPaymentMethod('tamara')}
+                        className="w-full p-4 border-2 border-neutral-200 rounded-xl hover:border-[#3FCBCB] transition-colors flex items-center gap-4 text-right group"
+                      >
+                        <div className="w-12 h-12 bg-[#3FCBCB]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-[#3FCBCB] font-bold text-lg">T</span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold">تمارا - قسّم فاتورتك</p>
+                          <p className="text-sm text-muted">ادفع على 4 دفعات بدون فوائد</p>
+                        </div>
+                        <svg className="w-5 h-5 text-neutral-400 group-hover:text-[#3FCBCB]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Card Payment Form (Moyasar) */}
+                {showPayment && paymentMethod === 'card' && (
+                  <div className="animate-fade-in">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base font-semibold">الدفع بالبطاقة</h3>
+                      <button
+                        onClick={() => {
+                          setPaymentMethod(null)
+                          setMoyasarInitialized(false)
+                        }}
+                        className="text-sm text-muted hover:text-foreground transition-colors"
+                      >
+                        ← طرق الدفع
+                      </button>
+                    </div>
+                    <p className="text-sm text-muted mb-4" dir="ltr">
+                      Paying as <span className="font-medium text-foreground">{email}</span>
+                    </p>
+                    
                     {/* Moyasar Payment Form */}
                     <div className="moyasar-form"></div>
                     
@@ -458,6 +552,65 @@ export default function StorePage({ product }: StorePageProps) {
                       src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.umd.min.js"
                       onLoad={() => setMoyasarLoaded(true)}
                     />
+                  </div>
+                )}
+
+                {/* Tamara Payment */}
+                {showPayment && paymentMethod === 'tamara' && (
+                  <div className="animate-fade-in">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base font-semibold">الدفع عبر تمارا</h3>
+                      <button
+                        onClick={() => setPaymentMethod(null)}
+                        className="text-sm text-muted hover:text-foreground transition-colors"
+                      >
+                        ← طرق الدفع
+                      </button>
+                    </div>
+                    <p className="text-sm text-muted mb-4" dir="ltr">
+                      Paying as <span className="font-medium text-foreground">{email}</span>
+                    </p>
+
+                    {/* Tamara Info */}
+                    <div className="bg-[#3FCBCB]/10 border border-[#3FCBCB]/30 rounded-xl p-4 mb-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 bg-[#3FCBCB] rounded-lg flex items-center justify-center">
+                          <span className="text-white font-bold">T</span>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-[#2A8A8A]">تمارا</p>
+                          <p className="text-xs text-[#3FCBCB]">قسّم فاتورتك على 4 دفعات</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-neutral-600">4 دفعات بقيمة:</span>
+                        <span className="font-bold text-[#2A8A8A]">{(product.price_sar / 4).toFixed(2)} ر.س</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleTamaraCheckout}
+                      disabled={tamaraLoading}
+                      className="w-full py-4 bg-[#3FCBCB] hover:bg-[#35b5b5] text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {tamaraLoading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          جاري التحويل...
+                        </>
+                      ) : (
+                        <>
+                          متابعة مع تمارا
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                          </svg>
+                        </>
+                      )}
+                    </button>
+
+                    <p className="text-xs text-muted text-center mt-3">
+                      سيتم تحويلك إلى تمارا لإكمال عملية الدفع
+                    </p>
                   </div>
                 )}
 

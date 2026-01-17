@@ -43,6 +43,9 @@ export interface Order {
   amount_sar: number
   status: 'paid' | 'failed' | 'pending'
   moyasar_payment_id: string
+  tamara_order_id?: string
+  tamara_checkout_id?: string
+  order_reference_id?: string
   created_at: string
 }
 

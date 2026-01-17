@@ -19,7 +19,39 @@ export default function SuccessContent() {
 
   useEffect(() => {
     const paymentId = searchParams.get('id')
+    const isTamara = searchParams.get('tamara') === 'true'
+    const orderRef = searchParams.get('order_ref')
     
+    // For Tamara payments
+    if (isTamara && orderRef) {
+      const verifyTamaraPayment = async () => {
+        try {
+          const response = await fetch(`/api/payments/verify?tamara=true&order_ref=${orderRef}`)
+          const data = await response.json()
+
+          if (data.success) {
+            setStatus('success')
+            setResult(data)
+            trackEvent('purchase')
+          } else if (data.status === 'processing') {
+            // Payment still processing, retry after delay
+            setStatus('loading')
+            setTimeout(verifyTamaraPayment, 3000)
+          } else {
+            setStatus('error')
+            setResult(data)
+          }
+        } catch {
+          setStatus('error')
+          setResult({ success: false, error: 'فشل في التحقق من الدفع' })
+        }
+      }
+
+      verifyTamaraPayment()
+      return
+    }
+
+    // For Moyasar payments
     if (!paymentId) {
       setStatus('error')
       setResult({ success: false, error: 'لم يتم توفير معرف الدفع' })
