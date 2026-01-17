@@ -1,7 +1,12 @@
 // Tamara BNPL Payment Integration
 
-const TAMARA_API_URL = process.env.TAMARA_API_URL || 'https://api.tamara.co'
-const TAMARA_API_TOKEN = process.env.TAMARA_API_TOKEN || ''
+// Get env vars at runtime (not module load time)
+function getTamaraConfig() {
+  return {
+    apiUrl: process.env.TAMARA_API_URL || 'https://api.tamara.co',
+    apiToken: process.env.TAMARA_API_TOKEN || '',
+  }
+}
 
 interface TamaraItem {
   reference_id: string
@@ -144,12 +149,17 @@ export async function createTamaraCheckout(params: {
       },
     }
 
-    console.log('[Tamara] Creating checkout session:', JSON.stringify(requestBody, null, 2))
+    const { apiUrl, apiToken } = getTamaraConfig()
+    
+    console.log('[Tamara] Creating checkout session')
+    console.log('[Tamara] API URL:', apiUrl)
+    console.log('[Tamara] Token exists:', !!apiToken, 'Length:', apiToken.length)
+    console.log('[Tamara] Request body:', JSON.stringify(requestBody, null, 2))
 
-    const response = await fetch(`${TAMARA_API_URL}/checkout`, {
+    const response = await fetch(`${apiUrl}/checkout`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${TAMARA_API_TOKEN}`,
+        'Authorization': `Bearer ${apiToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),
@@ -172,10 +182,12 @@ export async function createTamaraCheckout(params: {
 
 export async function getTamaraOrder(orderId: string): Promise<TamaraOrderResponse | null> {
   try {
-    const response = await fetch(`${TAMARA_API_URL}/orders/${orderId}`, {
+    const { apiUrl, apiToken } = getTamaraConfig()
+    
+    const response = await fetch(`${apiUrl}/orders/${orderId}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${TAMARA_API_TOKEN}`,
+        'Authorization': `Bearer ${apiToken}`,
         'Content-Type': 'application/json',
       },
     })
@@ -197,10 +209,12 @@ export async function getTamaraOrder(orderId: string): Promise<TamaraOrderRespon
 
 export async function authorizeOrder(orderId: string): Promise<boolean> {
   try {
-    const response = await fetch(`${TAMARA_API_URL}/orders/${orderId}/authorise`, {
+    const { apiUrl, apiToken } = getTamaraConfig()
+    
+    const response = await fetch(`${apiUrl}/orders/${orderId}/authorise`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${TAMARA_API_TOKEN}`,
+        'Authorization': `Bearer ${apiToken}`,
         'Content-Type': 'application/json',
       },
     })
@@ -217,10 +231,12 @@ export async function authorizeOrder(orderId: string): Promise<boolean> {
 
 export async function capturePayment(orderId: string, amount: number, currency: string): Promise<boolean> {
   try {
-    const response = await fetch(`${TAMARA_API_URL}/payments/capture`, {
+    const { apiUrl, apiToken } = getTamaraConfig()
+    
+    const response = await fetch(`${apiUrl}/payments/capture`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${TAMARA_API_TOKEN}`,
+        'Authorization': `Bearer ${apiToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

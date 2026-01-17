@@ -38,6 +38,13 @@ export async function POST(request: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vegapowerfitness.com'
     const baseUrl = appUrl.replace(/\/$/, '')
 
+    // Log environment check
+    const tamaraApiUrl = process.env.TAMARA_API_URL
+    const tamaraToken = process.env.TAMARA_API_TOKEN
+    console.log('[Tamara Checkout] API URL:', tamaraApiUrl)
+    console.log('[Tamara Checkout] Token exists:', !!tamaraToken)
+    console.log('[Tamara Checkout] Token prefix:', tamaraToken?.substring(0, 20) + '...')
+
     // Create Tamara checkout session
     const checkout = await createTamaraCheckout({
       orderReferenceId,
@@ -53,8 +60,9 @@ export async function POST(request: NextRequest) {
     })
 
     if (!checkout) {
+      console.error('[Tamara Checkout] Checkout creation returned null')
       return NextResponse.json(
-        { error: 'Failed to create Tamara checkout session' },
+        { error: 'Failed to create Tamara checkout session. Check server logs for details.' },
         { status: 500 }
       )
     }
