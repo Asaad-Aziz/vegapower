@@ -106,7 +106,7 @@ export default function StorePage({ product }: StorePageProps) {
   }
 
   useEffect(() => {
-    if (showPayment && paymentMethod === 'card' && moyasarLoaded && window.Moyasar && !moyasarInitialized) {
+    if (showPayment && paymentMethod !== 'tamara' && moyasarLoaded && window.Moyasar && !moyasarInitialized) {
       const appUrl = (process.env.NEXT_PUBLIC_APP_URL || window.location.origin).replace(/\/$/, '')
       
       const publishableKey = process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || ''
@@ -466,11 +466,11 @@ export default function StorePage({ product }: StorePageProps) {
                   </div>
                 )}
 
-                {/* Payment Method Selection */}
-                {showPayment && !paymentMethod && (
+                {/* Payment Form - Moyasar Default + Tamara Option */}
+                {showPayment && paymentMethod !== 'tamara' && (
                   <div className="animate-fade-in">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base font-semibold">اختر طريقة الدفع</h3>
+                      <h3 className="text-base font-semibold">الدفع</h3>
                       <button
                         onClick={() => {
                           setShowPayment(false)
@@ -485,87 +485,56 @@ export default function StorePage({ product }: StorePageProps) {
                       Paying as <span className="font-medium text-foreground">{email}</span>
                     </p>
                     
-                    <div className="space-y-3">
-                      {/* Credit Card / Apple Pay Option */}
-                      <button
-                        onClick={() => setPaymentMethod('card')}
-                        className="w-full p-4 border-2 border-neutral-200 rounded-xl hover:border-neutral-400 transition-colors flex items-center gap-4 text-right"
-                      >
-                        <div className="w-12 h-12 bg-neutral-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <svg className="w-6 h-6 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-semibold">بطاقة ائتمان / Apple Pay</p>
-                          <p className="text-sm text-muted">Visa, Mastercard, mada, Apple Pay</p>
-                        </div>
-                        <svg className="w-5 h-5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-
-                      {/* Tamara BNPL Option - Following Official Guidelines */}
-                      <button
-                        onClick={() => setPaymentMethod('tamara')}
-                        className="w-full p-4 bg-white border border-neutral-200 rounded-2xl hover:border-[#4ECDC4] hover:shadow-md transition-all text-right group"
-                      >
-                        <div className="flex items-start gap-4">
-                          {/* Tamara Logo */}
-                          <div className="flex-shrink-0 mt-1">
-                            <Image
-                              src="/tamara.png"
-                              alt="Tamara"
-                              width={80}
-                              height={28}
-                              className="h-7 w-auto object-contain"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            {/* Tamara Messaging - Following Official Guidelines */}
-                            <p className="text-sm text-neutral-800">
-                              ادفع <span className="font-semibold">{Math.round(product.price_sar / 4)} ر.س</span>/شهريًا أو على 4 دفعات.
-                            </p>
-                            <p className="text-sm text-neutral-500 mt-0.5">متوافقة مع الشريعة الإسلامية.</p>
-                            <span className="text-sm text-[#4ECDC4] font-medium group-hover:underline">تعرّف على خياراتك ←</span>
-                          </div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Card Payment Form (Moyasar) */}
-                {showPayment && paymentMethod === 'card' && (
-                  <div className="animate-fade-in">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base font-semibold">الدفع بالبطاقة</h3>
-                      <button
-                        onClick={() => {
-                          setPaymentMethod(null)
-                          setMoyasarInitialized(false)
-                        }}
-                        className="text-sm text-muted hover:text-foreground transition-colors"
-                      >
-                        ← طرق الدفع
-                      </button>
-                    </div>
-                    <p className="text-sm text-muted mb-4" dir="ltr">
-                      Paying as <span className="font-medium text-foreground">{email}</span>
-                    </p>
-                    
-                    {/* Moyasar Payment Form */}
-                    <div className="moyasar-form"></div>
+                    {/* Moyasar Payment Form - Default */}
+                    <div className="moyasar-form mb-6"></div>
                     
                     {/* Moyasar Script */}
                     <Script
                       src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.umd.min.js"
                       onLoad={() => setMoyasarLoaded(true)}
                     />
+
+                    {/* Divider */}
+                    <div className="relative my-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-neutral-200"></div>
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="px-3 bg-white text-neutral-500">أو</span>
+                      </div>
+                    </div>
+
+                    {/* Tamara Option Below */}
+                    <button
+                      onClick={() => setPaymentMethod('tamara')}
+                      className="w-full p-4 bg-gradient-to-r from-[#FFB88C]/10 via-[#DE6FA1]/10 to-[#8B5CF6]/10 border border-[#DE6FA1]/30 rounded-2xl hover:shadow-lg hover:border-[#DE6FA1]/50 transition-all text-right group"
+                    >
+                      <div className="flex items-center gap-4">
+                        {/* Tamara Logo */}
+                        <div className="flex-shrink-0">
+                          <Image
+                            src="/tamara.png"
+                            alt="Tamara"
+                            width={70}
+                            height={24}
+                            className="h-6 w-auto object-contain"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-neutral-800">
+                            ادفع <span className="font-semibold bg-gradient-to-r from-[#F97316] via-[#EC4899] to-[#8B5CF6] bg-clip-text text-transparent">{Math.round(product.price_sar / 4)} ر.س</span>/شهريًا أو على 4 دفعات
+                          </p>
+                          <p className="text-xs text-neutral-500 mt-0.5">متوافقة مع الشريعة الإسلامية</p>
+                        </div>
+                        <svg className="w-5 h-5 text-[#DE6FA1] group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </button>
                   </div>
                 )}
 
-                {/* Tamara Payment - Official Branding */}
+                {/* Tamara Payment - Colorful Gradient Branding */}
                 {showPayment && paymentMethod === 'tamara' && (
                   <div className="animate-fade-in">
                     <div className="flex items-center justify-between mb-4">
@@ -574,15 +543,15 @@ export default function StorePage({ product }: StorePageProps) {
                         onClick={() => setPaymentMethod(null)}
                         className="text-sm text-muted hover:text-foreground transition-colors"
                       >
-                        ← طرق الدفع
+                        ← العودة
                       </button>
                     </div>
                     <p className="text-sm text-muted mb-4" dir="ltr">
                       Paying as <span className="font-medium text-foreground">{email}</span>
                     </p>
 
-                    {/* Tamara Widget - Following Official Design Specs */}
-                    <div className="bg-white border border-neutral-200 rounded-2xl p-4 mb-4">
+                    {/* Tamara Widget - Colorful Gradient Theme */}
+                    <div className="bg-gradient-to-br from-[#FFB88C]/5 via-[#DE6FA1]/5 to-[#8B5CF6]/5 border border-[#DE6FA1]/20 rounded-2xl p-4 mb-4">
                       {/* Logo */}
                       <div className="flex items-center justify-between mb-4">
                         <Image
@@ -592,22 +561,22 @@ export default function StorePage({ product }: StorePageProps) {
                           height={32}
                           className="h-8 w-auto object-contain"
                         />
-                        <span className="text-xs text-neutral-400">متوافقة مع الشريعة</span>
+                        <span className="text-xs text-[#8B5CF6]">متوافقة مع الشريعة</span>
                       </div>
 
                       {/* Hero Message */}
                       <div className="text-center mb-4">
-                        <p className="text-lg font-medium text-neutral-800">دفعاتك، على راحتك</p>
+                        <p className="text-lg font-medium bg-gradient-to-r from-[#F97316] via-[#EC4899] to-[#8B5CF6] bg-clip-text text-transparent">دفعاتك، على راحتك</p>
                         <p className="text-sm text-neutral-500 mt-1">
                           ادفع <span className="font-semibold text-neutral-800">{Math.round(product.price_sar / 4)} ر.س</span> أو على 4 دفعات
                         </p>
                       </div>
 
                       {/* Payment Breakdown */}
-                      <div className="bg-neutral-50 rounded-xl p-3 mb-4">
+                      <div className="bg-white/80 rounded-xl p-3 mb-4 border border-[#DE6FA1]/10">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-gradient-to-r from-[#4ECDC4] to-[#2C9F97] rounded-full flex items-center justify-center">
+                            <div className="w-8 h-8 bg-gradient-to-r from-[#F97316] via-[#EC4899] to-[#8B5CF6] rounded-full flex items-center justify-center">
                               <span className="text-white text-xs font-bold">4x</span>
                             </div>
                             <span className="text-sm text-neutral-600">4 دفعات شهرية</span>
@@ -619,41 +588,41 @@ export default function StorePage({ product }: StorePageProps) {
                       {/* How it works */}
                       <div className="grid grid-cols-4 gap-2 text-center mb-4">
                         <div>
-                          <div className="w-8 h-8 mx-auto bg-[#4ECDC4]/10 rounded-full flex items-center justify-center mb-1">
-                            <span className="text-[#4ECDC4] text-xs font-bold">1</span>
+                          <div className="w-8 h-8 mx-auto bg-gradient-to-br from-[#FFB88C]/20 to-[#F97316]/20 rounded-full flex items-center justify-center mb-1">
+                            <span className="text-[#F97316] text-xs font-bold">1</span>
                           </div>
                           <p className="text-[10px] text-neutral-500">اختر الخطة</p>
                         </div>
                         <div>
-                          <div className="w-8 h-8 mx-auto bg-[#4ECDC4]/10 rounded-full flex items-center justify-center mb-1">
-                            <span className="text-[#4ECDC4] text-xs font-bold">2</span>
+                          <div className="w-8 h-8 mx-auto bg-gradient-to-br from-[#F9DC5C]/20 to-[#EC4899]/20 rounded-full flex items-center justify-center mb-1">
+                            <span className="text-[#EC4899] text-xs font-bold">2</span>
                           </div>
                           <p className="text-[10px] text-neutral-500">أدخل البطاقة</p>
                         </div>
                         <div>
-                          <div className="w-8 h-8 mx-auto bg-[#4ECDC4]/10 rounded-full flex items-center justify-center mb-1">
-                            <span className="text-[#4ECDC4] text-xs font-bold">3</span>
+                          <div className="w-8 h-8 mx-auto bg-gradient-to-br from-[#EC4899]/20 to-[#8B5CF6]/20 rounded-full flex items-center justify-center mb-1">
+                            <span className="text-[#8B5CF6] text-xs font-bold">3</span>
                           </div>
                           <p className="text-[10px] text-neutral-500">تابع من التطبيق</p>
                         </div>
                         <div>
-                          <div className="w-8 h-8 mx-auto bg-[#4ECDC4]/10 rounded-full flex items-center justify-center mb-1">
-                            <span className="text-[#4ECDC4] text-xs font-bold">4</span>
+                          <div className="w-8 h-8 mx-auto bg-gradient-to-br from-[#8B5CF6]/20 to-[#67E8F9]/20 rounded-full flex items-center justify-center mb-1">
+                            <span className="text-[#06B6D4] text-xs font-bold">4</span>
                           </div>
                           <p className="text-[10px] text-neutral-500">تذكيرات</p>
                         </div>
                       </div>
 
                       {/* Benefits */}
-                      <div className="flex items-center justify-center gap-4 text-[10px] text-neutral-500 border-t border-neutral-100 pt-3">
+                      <div className="flex items-center justify-center gap-4 text-[10px] text-neutral-500 border-t border-[#DE6FA1]/10 pt-3">
                         <span className="flex items-center gap-1">
-                          <svg className="w-3 h-3 text-[#4ECDC4]" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-3 h-3 text-[#EC4899]" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                           </svg>
                           بدون رسوم خفية
                         </span>
                         <span className="flex items-center gap-1">
-                          <svg className="w-3 h-3 text-[#4ECDC4]" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-3 h-3 text-[#8B5CF6]" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                           </svg>
                           حماية المشتري
@@ -664,7 +633,7 @@ export default function StorePage({ product }: StorePageProps) {
                     <button
                       onClick={handleTamaraCheckout}
                       disabled={tamaraLoading}
-                      className="w-full py-4 bg-gradient-to-r from-[#4ECDC4] to-[#2C9F97] hover:from-[#45c4bc] hover:to-[#279088] text-white font-semibold rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#4ECDC4]/25"
+                      className="w-full py-4 bg-gradient-to-r from-[#F97316] via-[#EC4899] to-[#8B5CF6] hover:from-[#EA580C] hover:via-[#DB2777] hover:to-[#7C3AED] text-white font-semibold rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#EC4899]/25"
                     >
                       {tamaraLoading ? (
                         <>
