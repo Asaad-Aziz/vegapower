@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     // Payment already processed, fetch product details
     const { data: product } = await supabase
       .from('product')
-      .select('title, delivery_url')
+      .select('id, title, delivery_url, price_sar')
       .single()
 
     return NextResponse.json({
@@ -156,7 +156,7 @@ async function handleTamaraVerification(orderRef: string) {
   // Get product details
   const { data: product } = await supabase
     .from('product')
-    .select('title, delivery_url, price_sar')
+    .select('id, title, delivery_url, price_sar')
     .single()
 
   if (!product) {
