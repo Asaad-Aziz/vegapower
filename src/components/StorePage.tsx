@@ -378,36 +378,36 @@ export default function StorePage({ product }: StorePageProps) {
             </button>
             
             {/* Payment Methods */}
-            <div className="flex items-center justify-center gap-3 mt-4">
+            <div className="flex items-center justify-center gap-2 mt-3">
               {/* Tamara */}
-              <div className="h-6 w-auto">
+              <div className="h-4 w-auto">
                 <Image
                   src="/tamara.png"
                   alt="Tamara"
-                  width={50}
-                  height={20}
-                  className="h-5 w-auto object-contain opacity-70"
+                  width={36}
+                  height={14}
+                  className="h-3.5 w-auto object-contain opacity-60"
                 />
               </div>
               {/* Apple Pay */}
-              <div className="h-6 px-2 bg-black rounded flex items-center justify-center">
-                <svg className="h-4 w-auto" viewBox="0 0 50 20" fill="white">
+              <div className="h-4 px-1.5 bg-black rounded flex items-center justify-center">
+                <svg className="h-2.5 w-auto" viewBox="0 0 50 20" fill="white">
                   <path d="M9.6 5.3c-.6.7-1.5 1.2-2.4 1.1-.1-.9.3-1.9.9-2.5.6-.7 1.6-1.2 2.4-1.2.1 1-.3 1.9-.9 2.6zm.9 1.3c-1.3-.1-2.5.8-3.1.8-.6 0-1.6-.7-2.7-.7-1.4 0-2.7.8-3.4 2.1-1.5 2.5-.4 6.3 1 8.4.7 1 1.5 2.2 2.7 2.1 1-.1 1.5-.7 2.7-.7 1.2 0 1.6.7 2.7.7 1.1 0 1.9-1 2.6-2.1.8-1.2 1.1-2.3 1.1-2.4-.1 0-2.2-.8-2.2-3.3 0-2.1 1.7-3.1 1.8-3.2-1-1.5-2.5-1.6-3.2-1.7z"/>
                   <path d="M21.2 3.2c3.2 0 5.4 2.2 5.4 5.4 0 3.2-2.3 5.4-5.5 5.4h-3.5v5.6h-2.5V3.2h6.1zm-3.6 8.6h2.9c2.2 0 3.5-1.2 3.5-3.2 0-2-1.3-3.2-3.5-3.2h-2.9v6.4zm10.5 2.6c0-2.1 1.6-3.4 4.5-3.5l3.3-.2v-.9c0-1.3-.9-2.1-2.4-2.1-1.4 0-2.3.7-2.5 1.7h-2.3c.1-2.2 2-3.8 4.9-3.8 2.9 0 4.7 1.5 4.7 3.9v8.2h-2.3v-2h-.1c-.7 1.4-2.2 2.2-3.8 2.2-2.4 0-4-1.5-4-3.5zm7.8-1v-.9l-3 .2c-1.5.1-2.3.7-2.3 1.7 0 1 .9 1.7 2.2 1.7 1.7 0 3.1-1.2 3.1-2.7zm4.4 6.9v-1.9c.2 0 .6.1.9.1 1.3 0 2-.5 2.4-1.9l.3-.8-4.5-12.5h2.6l3.2 10.2h.1l3.2-10.2h2.5l-4.6 13.1c-1.1 3-2.3 4-4.9 4-.3 0-.9 0-1.2-.1z"/>
                 </svg>
               </div>
               {/* Visa */}
-              <div className="h-6 px-2 bg-[#1A1F71] rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold italic">VISA</span>
+              <div className="h-4 px-1.5 bg-[#1A1F71] rounded flex items-center justify-center">
+                <span className="text-white text-[8px] font-bold italic">VISA</span>
               </div>
               {/* Mastercard */}
-              <div className="h-6 px-1.5 bg-neutral-100 rounded flex items-center justify-center gap-0.5">
-                <div className="w-3 h-3 bg-[#EB001B] rounded-full"></div>
-                <div className="w-3 h-3 bg-[#F79E1B] rounded-full -ml-1"></div>
+              <div className="h-4 px-1 bg-neutral-100 rounded flex items-center justify-center">
+                <div className="w-2 h-2 bg-[#EB001B] rounded-full"></div>
+                <div className="w-2 h-2 bg-[#F79E1B] rounded-full -ml-0.5"></div>
               </div>
               {/* Mada */}
-              <div className="h-6 px-2 bg-[#004B87] rounded flex items-center justify-center">
-                <span className="text-white text-[10px] font-bold">mada</span>
+              <div className="h-4 px-1.5 bg-[#004B87] rounded flex items-center justify-center">
+                <span className="text-white text-[8px] font-bold">mada</span>
               </div>
             </div>
             
