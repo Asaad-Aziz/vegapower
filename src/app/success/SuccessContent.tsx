@@ -1,14 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { trackEvent } from '@/lib/analytics'
+import * as fbq from '@/lib/meta-pixel'
 
 interface VerificationResult {
   success: boolean
   productTitle?: string
   deliveryUrl?: string
+  productId?: string
+  amount?: number
   error?: string
 }
 
@@ -16,6 +19,25 @@ export default function SuccessContent() {
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [result, setResult] = useState<VerificationResult | null>(null)
+  const purchaseTracked = useRef(false)
+
+  // Track purchase conversion (only once)
+  const trackPurchaseConversion = (data: VerificationResult) => {
+    if (purchaseTracked.current) return
+    purchaseTracked.current = true
+    
+    trackEvent('purchase')
+    
+    // Meta Pixel: Purchase Conversion Event (most important for ads!)
+    fbq.purchase({
+      content_name: data.productTitle || 'Product',
+      content_ids: [data.productId || 'unknown'],
+      content_type: 'product',
+      value: data.amount || 0,
+      currency: 'SAR',
+      num_items: 1,
+    })
+  }
 
   useEffect(() => {
     const paymentId = searchParams.get('id')
@@ -32,7 +54,7 @@ export default function SuccessContent() {
           if (data.success) {
             setStatus('success')
             setResult(data)
-            trackEvent('purchase')
+            trackPurchaseConversion(data)
           } else if (data.status === 'processing') {
             // Payment still processing, retry after delay
             setStatus('loading')
@@ -66,7 +88,7 @@ export default function SuccessContent() {
         if (data.success) {
           setStatus('success')
           setResult(data)
-          trackEvent('purchase')
+          trackPurchaseConversion(data)
         } else {
           setStatus('error')
           setResult(data)

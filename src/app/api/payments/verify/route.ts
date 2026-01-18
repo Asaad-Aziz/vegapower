@@ -41,6 +41,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: existingOrder.status === 'paid',
       productTitle: product?.title,
+      productId: product?.id,
+      amount: product?.price_sar,
       deliveryUrl: existingOrder.status === 'paid' ? product?.delivery_url : undefined,
       message: existingOrder.status === 'paid' ? 'Order already processed' : 'Payment not completed',
       error: existingOrder.status !== 'paid' ? 'Payment was not completed' : undefined,
@@ -107,6 +109,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         productTitle: product.title,
+        productId: product.id,
+        amount: product.price_sar,
         deliveryUrl: product.delivery_url,
         message: 'Order already processed',
       })
@@ -132,6 +136,8 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     success: true,
     productTitle: product.title,
+    productId: product.id,
+    amount: product.price_sar,
     deliveryUrl: product.delivery_url,
   })
 }
@@ -165,6 +171,8 @@ async function handleTamaraVerification(orderRef: string) {
     return NextResponse.json({
       success: true,
       productTitle: product.title,
+      productId: product.id,
+      amount: product.price_sar,
       deliveryUrl: product.delivery_url,
       message: 'Order already processed',
     })
@@ -194,6 +202,8 @@ async function handleTamaraVerification(orderRef: string) {
       return NextResponse.json({
         success: true,
         productTitle: product.title,
+        productId: product.id,
+        amount: product.price_sar,
         deliveryUrl: product.delivery_url,
       })
     }

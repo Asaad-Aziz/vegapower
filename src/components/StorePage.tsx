@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Script from 'next/script'
 import ReactMarkdown from 'react-markdown'
 import { trackEvent } from '@/lib/analytics'
+import * as fbq from '@/lib/meta-pixel'
 import type { Product } from '@/types/database'
 import type { MoyasarConfig } from '@/types/moyasar.d'
 
@@ -33,7 +34,15 @@ export default function StorePage({ product }: StorePageProps) {
 
   useEffect(() => {
     trackEvent('page_view')
-  }, [])
+    // Meta Pixel: ViewContent
+    fbq.viewContent({
+      content_name: product.title,
+      content_ids: [product.id],
+      content_type: 'product',
+      value: product.price_sar,
+      currency: 'SAR',
+    })
+  }, [product])
 
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -42,6 +51,14 @@ export default function StorePage({ product }: StorePageProps) {
 
   const handleBuyClick = () => {
     trackEvent('buy_click')
+    // Meta Pixel: InitiateCheckout
+    fbq.initiateCheckout({
+      content_ids: [product.id],
+      content_type: 'product',
+      value: product.price_sar,
+      currency: 'SAR',
+      num_items: 1,
+    })
     setShowCheckout(true)
     document.body.style.overflow = 'hidden'
   }
@@ -88,6 +105,13 @@ export default function StorePage({ product }: StorePageProps) {
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (validateEmail(email)) {
+      // Meta Pixel: AddPaymentInfo
+      fbq.addPaymentInfo({
+        content_ids: [product.id],
+        content_type: 'product',
+        value: product.price_sar,
+        currency: 'SAR',
+      })
       setShowPayment(true)
     }
   }

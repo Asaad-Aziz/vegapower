@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Tajawal } from "next/font/google";
 import "./globals.css";
+import MetaPixel from "@/components/MetaPixel";
 
 const tajawal = Tajawal({
   variable: "--font-arabic",
@@ -21,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <body className={`${tajawal.variable} antialiased`}>
+        <MetaPixel />
         {children}
       </body>
     </html>
