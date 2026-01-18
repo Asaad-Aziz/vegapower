@@ -31,6 +31,9 @@ export default function StorePage({ product }: StorePageProps) {
   const [moyasarInitialized, setMoyasarInitialized] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(null)
   const [tamaraLoading, setTamaraLoading] = useState(false)
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false)
+  const [viewersCount] = useState(() => Math.floor(Math.random() * 15) + 8) // 8-22 viewers
+  const [recentBuyers] = useState(() => Math.floor(Math.random() * 20) + 12) // 12-31 recent buyers
 
   useEffect(() => {
     trackEvent('page_view')
@@ -230,9 +233,33 @@ export default function StorePage({ product }: StorePageProps) {
         </div>
       </section>
 
+      {/* FOMO Banner */}
+      <section className="px-4 mb-4 animate-fade-in">
+        <div className="max-w-lg mx-auto">
+          <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-center py-2 px-4 rounded-xl text-sm font-medium flex items-center justify-center gap-2">
+            <span className="animate-pulse">🔥</span>
+            <span>عرض محدود - ينتهي قريباً!</span>
+            <span className="animate-pulse">🔥</span>
+          </div>
+        </div>
+      </section>
+
       {/* Product Card */}
       <section className="px-4 mb-8 animate-fade-in animate-delay-100">
-        <div className="max-w-lg mx-auto glass-card overflow-hidden">
+        <div className="max-w-lg mx-auto glass-card overflow-hidden relative">
+          {/* Live Viewers Badge */}
+          <div className="absolute top-3 right-3 z-10 bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-2">
+            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            <span>{viewersCount} يشاهدون الآن</span>
+          </div>
+
+          {/* Discount Badge */}
+          {product.before_price_sar && product.before_price_sar > product.price_sar && (
+            <div className="absolute top-3 left-3 z-10 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full animate-bounce">
+              -{Math.round(((product.before_price_sar - product.price_sar) / product.before_price_sar) * 100)}%
+            </div>
+          )}
+
           {/* Product Image */}
           {product.product_image_url && (
             <div className="w-full">
@@ -249,37 +276,111 @@ export default function StorePage({ product }: StorePageProps) {
           )}
           
           <div className="p-6">
+            {/* Recent Buyers FOMO */}
+            <div className="flex items-center gap-2 mb-3 text-sm text-green-600">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+              </svg>
+              <span>{recentBuyers}+ اشتروا هذا المنتج اليوم</span>
+            </div>
+
             <h2 className="text-2xl font-semibold mb-4">{product.title}</h2>
             
-            {/* Description with Markdown */}
-            <div className="markdown-content mb-6">
-              <ReactMarkdown>{product.description}</ReactMarkdown>
-            </div>
-            
-            {/* Price */}
-            <div className="mb-6 flex items-baseline gap-3 flex-wrap">
-              <span className="text-3xl font-bold">
-                {product.price_sar.toFixed(0)} ر.س
-              </span>
-              {product.before_price_sar && product.before_price_sar > product.price_sar && (
-                <>
-                  <span className="text-xl text-muted line-through">
-                    {product.before_price_sar.toFixed(0)} ر.س
-                  </span>
-                  <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                    خصم {Math.round(((product.before_price_sar - product.price_sar) / product.before_price_sar) * 100)}%
-                  </span>
-                </>
+            {/* Collapsible Description with Markdown */}
+            <div className="mb-6">
+              <div 
+                className={`markdown-content overflow-hidden transition-all duration-300 ${
+                  descriptionExpanded ? 'max-h-[2000px]' : 'max-h-32'
+                }`}
+              >
+                <ReactMarkdown>{product.description}</ReactMarkdown>
+              </div>
+              {product.description.length > 150 && (
+                <button
+                  onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                  className="mt-2 text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                >
+                  {descriptionExpanded ? (
+                    <>
+                      عرض أقل
+                      <svg className="w-4 h-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </>
+                  ) : (
+                    <>
+                      عرض المزيد
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </>
+                  )}
+                </button>
               )}
             </div>
             
-            {/* CTA Button */}
+            {/* Price with FOMO */}
+            <div className="mb-4">
+              <div className="flex items-baseline gap-3 flex-wrap">
+                <span className="text-3xl font-bold text-green-600">
+                  {product.price_sar.toFixed(0)} ر.س
+                </span>
+                {product.before_price_sar && product.before_price_sar > product.price_sar && (
+                  <>
+                    <span className="text-xl text-muted line-through">
+                      {product.before_price_sar.toFixed(0)} ر.س
+                    </span>
+                    <span className="text-sm font-medium text-white bg-red-500 px-2 py-1 rounded-full">
+                      وفّر {(product.before_price_sar - product.price_sar).toFixed(0)} ر.س
+                    </span>
+                  </>
+                )}
+              </div>
+              {/* Urgency Text */}
+              <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                </svg>
+                السعر قد يتغير في أي وقت!
+              </p>
+            </div>
+
+            {/* Trust Badges */}
+            <div className="flex items-center justify-center gap-4 mb-4 py-3 border-y border-neutral-100">
+              <div className="flex items-center gap-1 text-xs text-neutral-500">
+                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                </svg>
+                دفع آمن
+              </div>
+              <div className="flex items-center gap-1 text-xs text-neutral-500">
+                <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                </svg>
+                توصيل فوري
+              </div>
+              <div className="flex items-center gap-1 text-xs text-neutral-500">
+                <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+                جودة عالية
+              </div>
+            </div>
+            
+            {/* CTA Button with FOMO */}
             <button
               onClick={handleBuyClick}
-              className="btn-primary w-full text-center"
+              className="btn-primary w-full text-center text-lg py-4 relative overflow-hidden group"
             >
-              Get Now
+              <span className="relative z-10">احصل عليه الآن</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-green-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
             </button>
+            
+            {/* Scarcity Text */}
+            <p className="text-center text-xs text-neutral-500 mt-3">
+              ⚡ التوصيل الفوري متاح الآن
+            </p>
           </div>
         </div>
       </section>
