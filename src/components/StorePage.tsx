@@ -551,16 +551,42 @@ export default function StorePage({ product }: StorePageProps) {
               </div>
 
               <div className="p-6">
+                {/* FOMO: Others checking out */}
+                <div className="flex items-center justify-center gap-2 mb-4 py-2 bg-orange-50 rounded-lg border border-orange-100">
+                  <div className="flex -space-x-2 rtl:space-x-reverse">
+                    <div className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-[10px] text-white font-bold">م</div>
+                    <div className="w-6 h-6 rounded-full bg-green-500 border-2 border-white flex items-center justify-center text-[10px] text-white font-bold">س</div>
+                    <div className="w-6 h-6 rounded-full bg-purple-500 border-2 border-white flex items-center justify-center text-[10px] text-white font-bold">أ</div>
+                  </div>
+                  <span className="text-xs text-orange-700">
+                    <span className="font-semibold">{Math.floor(Math.random() * 5) + 3}</span> أشخاص يتمون الشراء الآن
+                  </span>
+                </div>
+
                 {/* Order Summary */}
-                <div className="bg-neutral-50 rounded-xl p-4 mb-6">
+                <div className="bg-neutral-50 rounded-xl p-4 mb-4">
                   <div className="flex justify-between items-center py-2 border-b border-neutral-200">
                     <span className="text-muted text-sm">{product.title}</span>
                     <span className="font-medium">{product.price_sar.toFixed(0)} ر.س</span>
                   </div>
+                  {product.before_price_sar && product.before_price_sar > product.price_sar && (
+                    <div className="flex justify-between items-center py-2 border-b border-neutral-200 text-green-600">
+                      <span className="text-sm">💰 التوفير</span>
+                      <span className="font-medium">-{(product.before_price_sar - product.price_sar).toFixed(0)} ر.س</span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center pt-2">
                     <span className="font-semibold">الإجمالي</span>
-                    <span className="text-xl font-bold">{product.price_sar.toFixed(0)} ر.س</span>
+                    <span className="text-xl font-bold text-green-600">{product.price_sar.toFixed(0)} ر.س</span>
                   </div>
+                </div>
+
+                {/* FOMO: Limited offer warning */}
+                <div className="flex items-center gap-2 mb-4 text-xs text-red-600 bg-red-50 p-2 rounded-lg">
+                  <svg className="w-4 h-4 flex-shrink-0 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                  </svg>
+                  <span>⚠️ العرض قد ينتهي في أي لحظة - أكمل طلبك الآن!</span>
                 </div>
 
                 {/* Email Form */}
@@ -582,11 +608,16 @@ export default function StorePage({ product }: StorePageProps) {
                       />
                       <button
                         type="submit"
-                        className="btn-primary w-full"
+                        className="btn-primary w-full py-4 text-lg relative overflow-hidden group"
                         disabled={!validateEmail(email)}
                       >
-                        متابعة الدفع
+                        <span className="relative z-10 flex items-center justify-center gap-2">
+                          🔒 متابعة للدفع الآمن
+                        </span>
                       </button>
+                      <p className="text-center text-[10px] text-neutral-400 mt-2">
+                        ✓ معلوماتك محمية بتشفير SSL
+                      </p>
                     </form>
                   </div>
                 )}
