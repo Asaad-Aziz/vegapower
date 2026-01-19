@@ -78,11 +78,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Firebase user with Admin SDK
+    console.log('Attempting to create Firebase user with temp password:', {
+      email: metadata.email,
+      passwordLength: tempPassword.length,
+    })
+    
     const firebaseUid = await createFirebaseUser(metadata.email, tempPassword)
 
     if (!firebaseUid) {
-      console.error('Failed to create Firebase user')
-      // Continue anyway to save order, but note the failure
+      console.error('Failed to create Firebase user - user will NOT be able to login!')
+    } else {
+      console.log('Firebase user created successfully:', firebaseUid)
     }
 
     // Prepare Firebase user data (matching iOS app structure)
