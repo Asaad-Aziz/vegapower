@@ -1,58 +1,222 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 import Script from 'next/script'
 
-type Step = 'welcome' | 'goal' | 'experience' | 'schedule' | 'info' | 'plan' | 'payment'
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
 
 interface UserData {
-  goal: string
-  experience: string
-  schedule: string
-  name: string
+  gender: 'male' | 'female' | ''
+  activityLevel: string
+  height: number
+  weight: number
+  birthYear: number
+  age: number
+  fitnessGoal: string
+  targetWeight: number
+  targetSpeed: number
+  challenges: string[]
+  accomplishments: string[]
   email: string
-  phone: string
-  plan: 'monthly' | 'yearly'
+  // Calculated values
+  calculatedCalories: number
+  proteinGrams: number
+  carbsGrams: number
+  fatGrams: number
+  proteinPercentage: number
+  carbsPercentage: number
+  fatPercentage: number
+  programName: string
 }
 
 const plans = {
-  monthly: { price: 49, period: 'شهرياً', savings: null },
-  yearly: { price: 299, period: 'سنوياً', savings: '50%' },
+  monthly: { price: 49, period: 'شهرياً', productId: 'vega_monthly_moyasar' },
+  yearly: { price: 299, period: 'سنوياً', productId: 'vega_yearly_moyasar', savings: '50%' },
 }
 
+// Activity level mappings
+const activityLevels = [
+  { id: 'lightlyActive', emoji: '🐢', title: '0-2 تمارين', subtitle: 'نشاط خفيف أو خامل', value: 'نشاط خفيف (تمرين خفيف 1-3 أيام/أسبوع)', multiplier: 1.375 },
+  { id: 'moderatelyActive', emoji: '🚶', title: '3-5 تمارين', subtitle: 'نشاط متوسط', value: 'نشط إلى حد ما (تمرين معتدل 3-5 أيام في الأسبوع)', multiplier: 1.55 },
+  { id: 'veryActive', emoji: '🔥', title: '6+ تمارين', subtitle: 'نشاط عالي / رياضي', value: 'نشيط للغاية (ممارسة التمارين الرياضية الشاقة 6-7 أيام في الأسبوع)', multiplier: 1.725 },
+]
+
+// Fitness goals
+const fitnessGoals = [
+  { id: 'loseWeight', emoji: '⬇️', title: 'خسارة الوزن', value: 'Lose Fat (Cut)' },
+  { id: 'maintainWeight', emoji: '⚖️', title: 'الحفاظ على الوزن', value: 'Body Recomposition' },
+  { id: 'gainMuscle', emoji: '⬆️', title: 'زيادة الوزن / عضلات', value: 'Build Muscle (Bulk)' },
+]
+
+// Challenges
+const challengeOptions = [
+  { id: 'lack_consistency', emoji: '📊', title: 'عدم الاستمرار' },
+  { id: 'unhealthy_habits', emoji: '🍴', title: 'عادات أكل غير صحية' },
+  { id: 'lack_support', emoji: '👥', title: 'قلة الدعم والتشجيع' },
+  { id: 'busy_schedule', emoji: '📅', title: 'جدول مزدحم' },
+  { id: 'meal_inspiration', emoji: '💡', title: 'قلة الأفكار للوجبات' },
+]
+
+// Accomplishments
+const accomplishmentOptions = [
+  { id: 'healthier_lifestyle', emoji: '🍃', title: 'أكل وحياة صحية أكثر' },
+  { id: 'boost_energy', emoji: '☀️', title: 'زيادة طاقتي ومزاجي' },
+  { id: 'stay_motivated', emoji: '💪', title: 'البقاء متحفزاً ومستمراً' },
+  { id: 'body_confidence', emoji: '🧍', title: 'الشعور بالرضا عن جسمي' },
+]
+
+// Testimonials
+const testimonials = [
+  { name: 'سارة م.', text: 'تطبيق رائع جداً! خسرت 5 كيلو في شهر واحد فقط.' },
+  { name: 'خالد ع.', text: 'أفضل تطبيق جربته للتمارين والتغذية. أنصح به بشدة.' },
+  { name: 'نورة س.', text: 'سهل الاستخدام والنتائج مضمونة مع الالتزام.' },
+]
+
 export default function AppOnboarding() {
-  const [step, setStep] = useState<Step>('welcome')
-  const [userData, setUserData] = useState<UserData>({
-    goal: '',
-    experience: '',
-    schedule: '',
-    name: '',
-    email: '',
-    phone: '',
-    plan: 'yearly',
-  })
+  const [step, setStep] = useState<Step>(0)
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly')
+  const [showPayment, setShowPayment] = useState(false)
+  const [processingProgress, setProcessingProgress] = useState(0)
+  const [completedChecks, setCompletedChecks] = useState<number[]>([])
   const [moyasarLoaded, setMoyasarLoaded] = useState(false)
   const [moyasarInitialized, setMoyasarInitialized] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
 
-  const steps: Step[] = ['welcome', 'goal', 'experience', 'schedule', 'info', 'plan', 'payment']
-  const currentStepIndex = steps.indexOf(step)
-  const progress = ((currentStepIndex) / (steps.length - 1)) * 100
+  const [userData, setUserData] = useState<UserData>({
+    gender: '',
+    activityLevel: '',
+    height: 170,
+    weight: 70,
+    birthYear: 2000,
+    age: new Date().getFullYear() - 2000,
+    fitnessGoal: '',
+    targetWeight: 65,
+    targetSpeed: 0.5,
+    challenges: [],
+    accomplishments: [],
+    email: '',
+    calculatedCalories: 0,
+    proteinGrams: 0,
+    carbsGrams: 0,
+    fatGrams: 0,
+    proteinPercentage: 0,
+    carbsPercentage: 0,
+    fatPercentage: 0,
+    programName: '',
+  })
+
+  const totalSteps = 14
+  const progress = (step / (totalSteps - 1)) * 100
 
   const nextStep = () => {
-    const nextIndex = currentStepIndex + 1
-    if (nextIndex < steps.length) {
-      setStep(steps[nextIndex])
-    }
+    if (step < 13) setStep((step + 1) as Step)
   }
 
   const prevStep = () => {
-    const prevIndex = currentStepIndex - 1
-    if (prevIndex >= 0) {
-      setStep(steps[prevIndex])
+    if (step > 0) setStep((step - 1) as Step)
+  }
+
+  // Calculate calories using Mifflin-St Jeor
+  const calculateCalories = () => {
+    const { gender, weight, height, age, activityLevel, fitnessGoal, targetSpeed } = userData
+
+    // BMR using Mifflin-St Jeor
+    const s = gender === 'male' ? 5 : -161
+    const bmr = (10 * weight) + (6.25 * height) - (5 * age) + s
+
+    // Get activity multiplier
+    const activityData = activityLevels.find(a => a.value === activityLevel)
+    const multiplier = activityData?.multiplier || 1.55
+
+    let tdee = bmr * multiplier
+
+    // Adjust based on goal and speed (1 kg/week ≈ 1100 kcal/day)
+    const adjustment = targetSpeed * 1100
+
+    const goalData = fitnessGoals.find(g => g.value === fitnessGoal)
+    if (goalData?.id === 'loseWeight') {
+      tdee -= adjustment
+    } else if (goalData?.id === 'gainMuscle') {
+      tdee += adjustment
+    }
+
+    // Safety minimum: never below 1200
+    return Math.max(Math.round(tdee), 1200)
+  }
+
+  // Get macro percentages by goal
+  const getMacroPercentages = () => {
+    const goalData = fitnessGoals.find(g => g.value === userData.fitnessGoal)
+    switch (goalData?.id) {
+      case 'loseWeight':
+        return { protein: 40, carbs: 35, fat: 25 }
+      case 'gainMuscle':
+        return { protein: 30, carbs: 50, fat: 20 }
+      default: // maintainWeight
+        return { protein: 30, carbs: 40, fat: 30 }
     }
   }
+
+  // Get program name
+  const getProgramName = () => {
+    const goalData = fitnessGoals.find(g => g.value === userData.fitnessGoal)
+    switch (goalData?.id) {
+      case 'loseWeight': return 'Vega Shred 🔥'
+      case 'gainMuscle': return 'Vega Gainz 💪'
+      default: return 'Vega Balance ⚖️'
+    }
+  }
+
+  // Calculate all values when reaching step 12
+  useEffect(() => {
+    if (step === 12) {
+      const calories = calculateCalories()
+      const macros = getMacroPercentages()
+      const programName = getProgramName()
+
+      const proteinGrams = Math.round((calories * macros.protein / 100) / 4)
+      const carbsGrams = Math.round((calories * macros.carbs / 100) / 4)
+      const fatGrams = Math.round((calories * macros.fat / 100) / 9)
+
+      setUserData(prev => ({
+        ...prev,
+        calculatedCalories: calories,
+        proteinGrams,
+        carbsGrams,
+        fatGrams,
+        proteinPercentage: macros.protein,
+        carbsPercentage: macros.carbs,
+        fatPercentage: macros.fat,
+        programName,
+      }))
+
+      // Animate progress
+      let progress = 0
+      const interval = setInterval(() => {
+        progress += 2
+        setProcessingProgress(progress)
+
+        if (progress >= 20 && !completedChecks.includes(0)) {
+          setCompletedChecks(prev => [...prev, 0])
+        }
+        if (progress >= 50 && !completedChecks.includes(1)) {
+          setCompletedChecks(prev => [...prev, 1])
+        }
+        if (progress >= 75 && !completedChecks.includes(2)) {
+          setCompletedChecks(prev => [...prev, 2])
+        }
+        if (progress >= 90 && !completedChecks.includes(3)) {
+          setCompletedChecks(prev => [...prev, 3])
+        }
+
+        if (progress >= 100) {
+          clearInterval(interval)
+          setTimeout(() => nextStep(), 500)
+        }
+      }, 40)
+
+      return () => clearInterval(interval)
+    }
+  }, [step])
 
   // Load Moyasar CSS
   useEffect(() => {
@@ -65,24 +229,22 @@ export default function AppOnboarding() {
     }
   }, [])
 
-  // Initialize Moyasar when on payment step
+  // Initialize Moyasar
   useEffect(() => {
-    if (step === 'payment' && moyasarLoaded && window.Moyasar && !moyasarInitialized) {
+    if (showPayment && moyasarLoaded && window.Moyasar && !moyasarInitialized) {
       const appUrl = (process.env.NEXT_PUBLIC_APP_URL || window.location.origin).replace(/\/$/, '')
       const publishableKey = process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || ''
-      const selectedPlan = plans[userData.plan]
+      const plan = plans[selectedPlan]
 
       setTimeout(() => {
-        const moyasarElement = document.querySelector('.moyasar-form')
-        if (moyasarElement) {
-          moyasarElement.innerHTML = ''
-        }
+        const el = document.querySelector('.moyasar-form')
+        if (el) el.innerHTML = ''
 
         window.Moyasar.init({
           element: '.moyasar-form',
-          amount: selectedPlan.price * 100,
+          amount: plan.price * 100,
           currency: 'SAR',
-          description: `Vega Power App - ${userData.plan === 'yearly' ? 'اشتراك سنوي' : 'اشتراك شهري'}`,
+          description: `Vega Power App - ${selectedPlan === 'yearly' ? 'اشتراك سنوي' : 'اشتراك شهري'}`,
           publishable_api_key: publishableKey,
           callback_url: `${appUrl}/app/success`,
           methods: ['creditcard', 'applepay'],
@@ -94,42 +256,41 @@ export default function AppOnboarding() {
           },
           supported_networks: ['mada', 'visa', 'mastercard'],
           metadata: {
-            user_name: userData.name,
-            user_email: userData.email,
-            user_phone: userData.phone,
-            goal: userData.goal,
-            experience: userData.experience,
-            schedule: userData.schedule,
-            plan: userData.plan,
             type: 'app_subscription',
+            plan: selectedPlan,
+            productId: plan.productId,
+            ...userData,
           },
         })
-
         setMoyasarInitialized(true)
       }, 100)
     }
-  }, [step, moyasarLoaded, moyasarInitialized, userData])
+  }, [showPayment, moyasarLoaded, moyasarInitialized, selectedPlan, userData])
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  const validatePhone = (phone: string) => /^05\d{8}$/.test(phone)
+
+  const weightDiff = Math.abs(userData.weight - userData.targetWeight)
+  const isLosingWeight = userData.targetWeight < userData.weight
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-900 via-neutral-900 to-black text-white">
+    <div className="min-h-screen bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white" dir="rtl">
       {/* Progress Bar */}
-      {step !== 'welcome' && (
-        <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-neutral-800">
-          <div 
-            className="h-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          />
+      {step > 0 && step < 13 && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
+          <div className="w-[200px] h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-green-500 to-emerald-600 transition-all duration-500 rounded-full"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
       )}
 
       {/* Back Button */}
-      {step !== 'welcome' && step !== 'payment' && (
+      {step > 0 && step < 12 && !showPayment && (
         <button
           onClick={prevStep}
-          className="fixed top-6 right-4 z-50 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center"
+          className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -137,92 +298,83 @@ export default function AppOnboarding() {
         </button>
       )}
 
-      <div className="max-w-md mx-auto px-6 py-12 min-h-screen flex flex-col">
-        {/* Welcome Step */}
-        {step === 'welcome' && (
-          <div className="flex-1 flex flex-col justify-center animate-fade-in">
-            <div className="text-center mb-12">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-2xl shadow-green-500/30">
-                <span className="text-4xl">💪</span>
-              </div>
-              <h1 className="text-3xl font-bold mb-3">Vega Power</h1>
-              <p className="text-neutral-400">تطبيقك الشخصي للياقة البدنية</p>
+      <div className="max-w-md mx-auto px-6 py-16 min-h-screen flex flex-col">
+
+        {/* Step 0: Welcome */}
+        {step === 0 && (
+          <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
+            <div className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-xl">
+              <span className="text-5xl">🏃</span>
             </div>
-
-            <div className="space-y-4 mb-12">
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
-                <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
-                  <span className="text-2xl">📋</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold">برامج مخصصة</h3>
-                  <p className="text-sm text-neutral-400">تمارين تناسب أهدافك</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
-                <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                  <span className="text-2xl">🍽️</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold">أنظمة غذائية</h3>
-                  <p className="text-sm text-neutral-400">وجبات محسوبة السعرات</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                  <span className="text-2xl">📊</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold">تتبع تقدمك</h3>
-                  <p className="text-sm text-neutral-400">إحصائيات ونتائج مرئية</p>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={nextStep}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 font-semibold text-lg shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all"
-            >
+            <h1 className="text-3xl font-bold mb-4">أهلاً بك في Vega Power</h1>
+            <p className="text-neutral-500 dark:text-neutral-400 mb-12 leading-relaxed">
+              دعنا نخصص لك خطة تدريبية وغذائية تناسب احتياجات جسمك 100%
+            </p>
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg">
               ابدأ الآن
             </button>
           </div>
         )}
 
-        {/* Goal Step */}
-        {step === 'goal' && (
+        {/* Step 1: Gender */}
+        {step === 1 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">ما هو هدفك؟</h2>
-              <p className="text-neutral-400">اختر الهدف الرئيسي من التدريب</p>
+              <h2 className="text-2xl font-bold mb-2">ما هو جنسك؟</h2>
+              <p className="text-neutral-500 dark:text-neutral-400">سنستخدم هذا لضبط حساب السعرات الحرارية.</p>
             </div>
-
-            <div className="flex-1 space-y-3">
+            <div className="flex-1 flex flex-col gap-4 justify-center">
               {[
-                { id: 'fat_loss', emoji: '🔥', label: 'خسارة الدهون', desc: 'حرق الدهون وإنقاص الوزن' },
-                { id: 'muscle_gain', emoji: '💪', label: 'بناء العضلات', desc: 'زيادة الكتلة العضلية' },
-                { id: 'body_toning', emoji: '✨', label: 'شد الجسم', desc: 'تحسين شكل الجسم' },
-                { id: 'fitness', emoji: '🏃', label: 'لياقة عامة', desc: 'تحسين الصحة واللياقة' },
-              ].map((goal) => (
+                { id: 'male', emoji: '👨', label: 'ذكر' },
+                { id: 'female', emoji: '👩', label: 'أنثى' },
+              ].map((g) => (
                 <button
-                  key={goal.id}
+                  key={g.id}
                   onClick={() => {
-                    setUserData({ ...userData, goal: goal.id })
+                    setUserData({ ...userData, gender: g.id as 'male' | 'female' })
+                    nextStep()
+                  }}
+                  className={`p-6 rounded-2xl text-center transition-all ${
+                    userData.gender === g.id
+                      ? 'bg-green-500/20 border-2 border-green-500'
+                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
+                >
+                  <span className="text-4xl mb-2 block">{g.emoji}</span>
+                  <span className="text-xl font-semibold">{g.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Activity Level */}
+        {step === 2 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">كم مرة تتمرن أسبوعياً؟</h2>
+              <p className="text-neutral-500 dark:text-neutral-400">يساعدنا هذا في تحديد مستوى نشاطك الحالي.</p>
+            </div>
+            <div className="flex-1 space-y-3">
+              {activityLevels.map((level) => (
+                <button
+                  key={level.id}
+                  onClick={() => {
+                    setUserData({ ...userData, activityLevel: level.value })
                     nextStep()
                   }}
                   className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
-                    userData.goal === goal.id
+                    userData.activityLevel === level.value
                       ? 'bg-green-500/20 border-2 border-green-500'
-                      : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center text-2xl">
-                    {goal.emoji}
+                  <div className="w-14 h-14 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-2xl">
+                    {level.emoji}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">{goal.label}</h3>
-                    <p className="text-sm text-neutral-400">{goal.desc}</p>
+                    <h3 className="font-semibold text-lg">{level.title}</h3>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">{level.subtitle}</p>
                   </div>
                 </button>
               ))}
@@ -230,274 +382,485 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Experience Step */}
-        {step === 'experience' && (
+        {/* Step 3: Height & Weight */}
+        {step === 3 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">ما هو مستواك؟</h2>
-              <p className="text-neutral-400">حدد خبرتك في التمارين الرياضية</p>
+              <h2 className="text-2xl font-bold mb-2">الطول والوزن</h2>
+              <p className="text-neutral-500 dark:text-neutral-400">بيانات أساسية لحساب مؤشر كتلة الجسم (BMI).</p>
             </div>
-
-            <div className="flex-1 space-y-3">
-              {[
-                { id: 'beginner', emoji: '🌱', label: 'مبتدئ', desc: 'جديد على الرياضة' },
-                { id: 'intermediate', emoji: '🌿', label: 'متوسط', desc: '6 أشهر - سنتين خبرة' },
-                { id: 'advanced', emoji: '🌳', label: 'متقدم', desc: 'أكثر من سنتين خبرة' },
-              ].map((exp) => (
-                <button
-                  key={exp.id}
-                  onClick={() => {
-                    setUserData({ ...userData, experience: exp.id })
-                    nextStep()
-                  }}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
-                    userData.experience === exp.id
-                      ? 'bg-green-500/20 border-2 border-green-500'
-                      : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center text-2xl">
-                    {exp.emoji}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{exp.label}</h3>
-                    <p className="text-sm text-neutral-400">{exp.desc}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Schedule Step */}
-        {step === 'schedule' && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">كم مرة تتمرن؟</h2>
-              <p className="text-neutral-400">حدد عدد أيام التمرين في الأسبوع</p>
-            </div>
-
-            <div className="flex-1 space-y-3">
-              {[
-                { id: '3', emoji: '3️⃣', label: '3 أيام', desc: 'مثالي للمبتدئين' },
-                { id: '4', emoji: '4️⃣', label: '4 أيام', desc: 'توازن مثالي' },
-                { id: '5', emoji: '5️⃣', label: '5 أيام', desc: 'نتائج أسرع' },
-                { id: '6', emoji: '6️⃣', label: '6 أيام', desc: 'للجادين فقط' },
-              ].map((sched) => (
-                <button
-                  key={sched.id}
-                  onClick={() => {
-                    setUserData({ ...userData, schedule: sched.id })
-                    nextStep()
-                  }}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
-                    userData.schedule === sched.id
-                      ? 'bg-green-500/20 border-2 border-green-500'
-                      : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center text-2xl">
-                    {sched.emoji}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{sched.label}</h3>
-                    <p className="text-sm text-neutral-400">{sched.desc}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Info Step */}
-        {step === 'info' && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">معلوماتك</h2>
-              <p className="text-neutral-400">أدخل بياناتك لإنشاء حسابك</p>
-            </div>
-
-            <div className="flex-1 space-y-4">
-              <div>
-                <label className="block text-sm text-neutral-400 mb-2">الاسم الكامل</label>
-                <input
-                  type="text"
-                  value={userData.name}
-                  onChange={(e) => setUserData({ ...userData, name: e.target.value })}
-                  placeholder="محمد أحمد"
-                  className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-neutral-500 focus:outline-none focus:border-green-500"
-                />
+            <div className="flex-1 space-y-6">
+              <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800">
+                <label className="block text-sm text-neutral-500 dark:text-neutral-400 mb-2">الطول (سم)</label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="100"
+                    max="250"
+                    value={userData.height}
+                    onChange={(e) => setUserData({ ...userData, height: Number(e.target.value) })}
+                    className="flex-1 accent-green-500"
+                  />
+                  <span className="text-2xl font-bold w-16 text-center">{userData.height}</span>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm text-neutral-400 mb-2">البريد الإلكتروني</label>
-                <input
-                  type="email"
-                  value={userData.email}
-                  onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-                  placeholder="you@example.com"
-                  dir="ltr"
-                  className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-neutral-500 focus:outline-none focus:border-green-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-neutral-400 mb-2">رقم الجوال</label>
-                <input
-                  type="tel"
-                  value={userData.phone}
-                  onChange={(e) => setUserData({ ...userData, phone: e.target.value })}
-                  placeholder="05XXXXXXXX"
-                  dir="ltr"
-                  className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-neutral-500 focus:outline-none focus:border-green-500"
-                />
+              <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800">
+                <label className="block text-sm text-neutral-500 dark:text-neutral-400 mb-2">الوزن (كجم)</label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="30"
+                    max="200"
+                    value={userData.weight}
+                    onChange={(e) => setUserData({ ...userData, weight: Number(e.target.value) })}
+                    className="flex-1 accent-green-500"
+                  />
+                  <span className="text-2xl font-bold w-16 text-center">{userData.weight}</span>
+                </div>
               </div>
             </div>
-
-            <button
-              onClick={nextStep}
-              disabled={!userData.name || !validateEmail(userData.email) || !validatePhone(userData.phone)}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 font-semibold text-lg shadow-lg shadow-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed mt-8"
-            >
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
               التالي
             </button>
           </div>
         )}
 
-        {/* Plan Step */}
-        {step === 'plan' && (
+        {/* Step 4: Birth Year */}
+        {step === 4 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">اختر خطتك</h2>
-              <p className="text-neutral-400">اختر الاشتراك المناسب لك</p>
+              <h2 className="text-2xl font-bold mb-2">متى ولدت؟</h2>
+              <p className="text-neutral-500 dark:text-neutral-400">يؤثر العمر على معدل الأيض واحتياجات الطاقة.</p>
             </div>
-
-            <div className="flex-1 space-y-4">
-              {/* Yearly Plan - Recommended */}
-              <button
-                onClick={() => setUserData({ ...userData, plan: 'yearly' })}
-                className={`w-full p-5 rounded-2xl text-right relative transition-all ${
-                  userData.plan === 'yearly'
-                    ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-2 border-green-500'
-                    : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                }`}
-              >
-                {/* Badge */}
-                <div className="absolute -top-3 left-4 px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full text-xs font-semibold">
-                  وفّر 50%
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-xl mb-1">الاشتراك السنوي</h3>
-                    <p className="text-sm text-neutral-400">الأفضل قيمة</p>
-                  </div>
-                  <div className="text-left">
-                    <div className="text-3xl font-bold">{plans.yearly.price}</div>
-                    <div className="text-sm text-neutral-400">ر.س / سنة</div>
-                  </div>
-                </div>
-
-                <div className="mt-3 pt-3 border-t border-white/10 text-sm text-neutral-400">
-                  ≈ {Math.round(plans.yearly.price / 12)} ر.س شهرياً
-                </div>
-              </button>
-
-              {/* Monthly Plan */}
-              <button
-                onClick={() => setUserData({ ...userData, plan: 'monthly' })}
-                className={`w-full p-5 rounded-2xl text-right transition-all ${
-                  userData.plan === 'monthly'
-                    ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-2 border-green-500'
-                    : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-xl mb-1">الاشتراك الشهري</h3>
-                    <p className="text-sm text-neutral-400">مرونة أكثر</p>
-                  </div>
-                  <div className="text-left">
-                    <div className="text-3xl font-bold">{plans.monthly.price}</div>
-                    <div className="text-sm text-neutral-400">ر.س / شهر</div>
-                  </div>
-                </div>
-              </button>
-            </div>
-
-            {/* Features */}
-            <div className="mt-6 p-4 rounded-2xl bg-white/5 border border-white/10">
-              <h4 className="font-semibold mb-3">يشمل الاشتراك:</h4>
-              <div className="space-y-2 text-sm">
-                {[
-                  'برامج تدريبية مخصصة',
-                  'أنظمة غذائية متنوعة',
-                  'فيديوهات شرح التمارين',
-                  'تتبع التقدم والإنجازات',
-                  'دعم فني متواصل',
-                ].map((feature, i) => (
-                  <div key={i} className="flex items-center gap-2 text-neutral-300">
-                    <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                    </svg>
-                    {feature}
-                  </div>
-                ))}
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
+                <span className="text-5xl font-bold block mb-4">{userData.birthYear}</span>
+                <input
+                  type="range"
+                  min="1950"
+                  max="2015"
+                  value={userData.birthYear}
+                  onChange={(e) => {
+                    const year = Number(e.target.value)
+                    setUserData({ ...userData, birthYear: year, age: new Date().getFullYear() - year })
+                  }}
+                  className="w-full accent-green-500"
+                />
+                <p className="text-neutral-500 dark:text-neutral-400 mt-4">العمر: {userData.age} سنة</p>
               </div>
             </div>
-
-            <button
-              onClick={nextStep}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 font-semibold text-lg shadow-lg shadow-green-500/30 mt-6"
-            >
-              اشترك الآن - {plans[userData.plan].price} ر.س
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+              التالي
             </button>
           </div>
         )}
 
-        {/* Payment Step */}
-        {step === 'payment' && (
+        {/* Step 5: Fitness Goal */}
+        {step === 5 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">ما هو هدفك؟</h2>
+              <p className="text-neutral-500 dark:text-neutral-400">اختر الهدف الرئيسي لنبني الخطة عليه.</p>
+            </div>
+            <div className="flex-1 space-y-3">
+              {fitnessGoals.map((goal) => (
+                <button
+                  key={goal.id}
+                  onClick={() => {
+                    setUserData({ ...userData, fitnessGoal: goal.value, targetWeight: userData.weight })
+                    nextStep()
+                  }}
+                  className={`w-full p-5 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                    userData.fitnessGoal === goal.value
+                      ? 'bg-green-500/20 border-2 border-green-500'
+                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
+                >
+                  <div className="w-14 h-14 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-2xl">
+                    {goal.emoji}
+                  </div>
+                  <h3 className="font-semibold text-lg">{goal.title}</h3>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 6: Target Weight */}
+        {step === 6 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">ما هو وزنك المثالي؟</h2>
+              <p className="text-neutral-500 dark:text-neutral-400">الهدف الذي تسعى للوصول إليه.</p>
+            </div>
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="p-8 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
+                <span className="text-6xl font-bold block mb-2">{userData.targetWeight}</span>
+                <span className="text-neutral-500 dark:text-neutral-400">كجم</span>
+                <input
+                  type="range"
+                  min="30"
+                  max="200"
+                  value={userData.targetWeight}
+                  onChange={(e) => setUserData({ ...userData, targetWeight: Number(e.target.value) })}
+                  className="w-full accent-green-500 mt-6"
+                />
+              </div>
+            </div>
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+              التالي
+            </button>
+          </div>
+        )}
+
+        {/* Step 7: Speed */}
+        {step === 7 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">ما مدى سرعة تحقيق هدفك؟</h2>
+              <p className="text-neutral-500 dark:text-neutral-400">تحكم في وتيرة خسارة أو زيادة الوزن أسبوعياً.</p>
+            </div>
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
+                <div className="flex justify-center gap-4 mb-4">
+                  <span className={`text-3xl transition-opacity ${userData.targetSpeed < 0.5 ? 'opacity-100' : 'opacity-30'}`}>🐢</span>
+                  <span className={`text-3xl transition-opacity ${userData.targetSpeed >= 0.5 && userData.targetSpeed < 1 ? 'opacity-100' : 'opacity-30'}`}>🐰</span>
+                  <span className={`text-3xl transition-opacity ${userData.targetSpeed >= 1 ? 'opacity-100' : 'opacity-30'}`}>🔥</span>
+                </div>
+                <span className="text-4xl font-bold block mb-2">{userData.targetSpeed.toFixed(1)}</span>
+                <span className="text-neutral-500 dark:text-neutral-400">كجم في الأسبوع</span>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1.5"
+                  step="0.1"
+                  value={userData.targetSpeed}
+                  onChange={(e) => setUserData({ ...userData, targetSpeed: Number(e.target.value) })}
+                  className="w-full accent-green-500 mt-6"
+                />
+                <button
+                  onClick={() => setUserData({ ...userData, targetSpeed: 0.5 })}
+                  className="mt-4 px-4 py-2 rounded-full bg-green-500/20 text-green-600 dark:text-green-400 text-sm"
+                >
+                  السرعة المستحسنة (0.5 كجم)
+                </button>
+              </div>
+            </div>
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+              التالي
+            </button>
+          </div>
+        )}
+
+        {/* Step 8: Challenges */}
+        {step === 8 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">ما الذي يمنعك من الوصول لهدفك؟</h2>
+              <p className="text-neutral-500 dark:text-neutral-400">سنساعدك في التغلب على هذه التحديات.</p>
+            </div>
+            <div className="flex-1 space-y-3">
+              {challengeOptions.map((ch) => (
+                <button
+                  key={ch.id}
+                  onClick={() => {
+                    const challenges = userData.challenges.includes(ch.id)
+                      ? userData.challenges.filter(c => c !== ch.id)
+                      : [...userData.challenges, ch.id]
+                    setUserData({ ...userData, challenges })
+                  }}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                    userData.challenges.includes(ch.id)
+                      ? 'bg-green-500/20 border-2 border-green-500'
+                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
+                >
+                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xl">
+                    {ch.emoji}
+                  </div>
+                  <span className="font-medium">{ch.title}</span>
+                  {userData.challenges.includes(ch.id) && (
+                    <svg className="w-5 h-5 text-green-500 mr-auto" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+              التالي
+            </button>
+          </div>
+        )}
+
+        {/* Step 9: Accomplishments */}
+        {step === 9 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">ما الذي تود تحقيقه؟</h2>
+              <p className="text-neutral-500 dark:text-neutral-400">سنخصص الخطة لتشمل هذه الجوانب أيضاً.</p>
+            </div>
+            <div className="flex-1 space-y-3">
+              {accomplishmentOptions.map((acc) => (
+                <button
+                  key={acc.id}
+                  onClick={() => {
+                    const accomplishments = userData.accomplishments.includes(acc.id)
+                      ? userData.accomplishments.filter(a => a !== acc.id)
+                      : [...userData.accomplishments, acc.id]
+                    setUserData({ ...userData, accomplishments })
+                  }}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                    userData.accomplishments.includes(acc.id)
+                      ? 'bg-green-500/20 border-2 border-green-500'
+                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
+                >
+                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xl">
+                    {acc.emoji}
+                  </div>
+                  <span className="font-medium">{acc.title}</span>
+                  {userData.accomplishments.includes(acc.id) && (
+                    <svg className="w-5 h-5 text-green-500 mr-auto" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+              التالي
+            </button>
+          </div>
+        )}
+
+        {/* Step 10: Social Proof */}
+        {step === 10 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">ساعدنا في نشر الصحة!</h2>
+              <p className="text-neutral-500 dark:text-neutral-400">تقييمك يساعدنا على الوصول للمزيد من الأشخاص وتغيير حياتهم.</p>
+            </div>
+
+            {/* Rating Banner */}
+            <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-center mb-6">
+              <span className="text-5xl font-bold">4.7</span>
+              <div className="flex justify-center gap-1 mt-2">
+                {[1,2,3,4,5].map(i => (
+                  <span key={i} className="text-2xl">⭐</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Testimonials */}
+            <div className="flex-1 space-y-3">
+              {testimonials.map((t, i) => (
+                <div key={i} className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800">
+                  <div className="flex gap-1 mb-2">
+                    {[1,2,3,4,5].map(s => (
+                      <span key={s} className="text-sm">⭐</span>
+                    ))}
+                  </div>
+                  <p className="text-sm mb-2">"{t.text}"</p>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">{t.name}</p>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+              التالي
+            </button>
+          </div>
+        )}
+
+        {/* Step 11: Motivation */}
+        {step === 11 && (
+          <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/20 flex items-center justify-center">
+              <span className="text-4xl">💪</span>
+            </div>
+            <h2 className="text-2xl font-bold mb-2">
+              {isLosingWeight ? 'خسارة' : 'اكتساب'} {weightDiff} كجم هو هدف واقعي جداً!
+            </h2>
+            <p className="text-neutral-500 dark:text-neutral-400 mb-8">ليس صعباً على الإطلاق!</p>
+            <p className="text-neutral-600 dark:text-neutral-300 mb-8 leading-relaxed">
+              90% من المستخدمين يقولون أن التغيير واضح جداً بعد استخدام Vega Power...
+            </p>
+            <div className="p-4 rounded-2xl bg-green-500/10 border border-green-500/20">
+              <p className="text-sm">📈 يعزز الثقة: أنا أستطيع فعلها</p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">يقلل من خطر الاستسلام</p>
+            </div>
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+              التالي
+            </button>
+          </div>
+        )}
+
+        {/* Step 12: Processing */}
+        {step === 12 && (
+          <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
+            <div className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+              {processingProgress}%
+            </div>
+            <h2 className="text-xl font-semibold mb-8">نقوم بتجهيز كل شيء لك</h2>
+            
+            {/* Progress Bar */}
+            <div className="w-full h-3 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden mb-8">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 rounded-full"
+                style={{ width: `${processingProgress}%` }}
+              />
+            </div>
+
+            {/* Checklist */}
+            <div className="space-y-3 text-right">
+              {[
+                'حساب السعرات الحرارية',
+                'توزيع الماكروز (بروتين، كارب، دهون)',
+                'تقدير العمر الأيضي',
+                'تحليل درجة الصحة',
+              ].map((item, i) => (
+                <div key={i} className={`flex items-center gap-3 transition-opacity ${completedChecks.includes(i) ? 'opacity-100' : 'opacity-30'}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${completedChecks.includes(i) ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-600'}`}>
+                    {completedChecks.includes(i) && (
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    )}
+                  </div>
+                  <span className="text-sm">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 13: Results & Payment */}
+        {step === 13 && !showPayment && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-6 pt-8">
-              <h2 className="text-2xl font-bold mb-2">إتمام الدفع</h2>
-              <p className="text-neutral-400">
-                {userData.plan === 'yearly' ? 'الاشتراك السنوي' : 'الاشتراك الشهري'} - {plans[userData.plan].price} ر.س
-              </p>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500 flex items-center justify-center">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold mb-1">تهانينا! تم إعداد خطتك</h2>
             </div>
 
-            {/* Order Summary */}
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-6">
-              <div className="flex justify-between items-center text-sm mb-2">
-                <span className="text-neutral-400">الاسم</span>
-                <span>{userData.name}</span>
+            {/* Program Card */}
+            <div className="p-6 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center mb-6">
+              <p className="text-sm opacity-80 mb-1">برنامجك</p>
+              <h3 className="text-2xl font-bold">{userData.programName}</h3>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
+                <span className="text-2xl font-bold text-green-500">{userData.calculatedCalories}</span>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">سعرة/يوم</p>
               </div>
-              <div className="flex justify-between items-center text-sm mb-2">
-                <span className="text-neutral-400">البريد</span>
+              <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
+                <span className="text-2xl font-bold text-blue-500">{userData.proteinGrams}g</span>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">بروتين</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
+                <span className="text-2xl font-bold text-purple-500">{userData.carbsGrams}g</span>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">كارب</p>
+              </div>
+            </div>
+
+            {/* Email Input */}
+            <div className="mb-6">
+              <label className="block text-sm text-neutral-500 dark:text-neutral-400 mb-2">البريد الإلكتروني</label>
+              <input
+                type="email"
+                value={userData.email}
+                onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+                placeholder="you@example.com"
+                dir="ltr"
+                className="w-full p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-green-500 outline-none"
+              />
+            </div>
+
+            {/* Plan Selection */}
+            <div className="space-y-3 mb-6">
+              <button
+                onClick={() => setSelectedPlan('yearly')}
+                className={`w-full p-4 rounded-2xl text-right relative transition-all ${
+                  selectedPlan === 'yearly'
+                    ? 'bg-green-500/20 border-2 border-green-500'
+                    : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                }`}
+              >
+                <div className="absolute -top-2 left-4 px-2 py-0.5 bg-green-500 rounded-full text-xs text-white font-medium">
+                  وفّر 50%
+                </div>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="font-semibold">سنوي</h4>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">≈ {Math.round(plans.yearly.price / 12)} ر.س/شهر</p>
+                  </div>
+                  <span className="text-xl font-bold">{plans.yearly.price} ر.س</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setSelectedPlan('monthly')}
+                className={`w-full p-4 rounded-2xl text-right transition-all ${
+                  selectedPlan === 'monthly'
+                    ? 'bg-green-500/20 border-2 border-green-500'
+                    : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <h4 className="font-semibold">شهري</h4>
+                  <span className="text-xl font-bold">{plans.monthly.price} ر.س</span>
+                </div>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowPayment(true)}
+              disabled={!validateEmail(userData.email)}
+              className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg disabled:opacity-50"
+            >
+              ابدأ البرنامج الآن - {plans[selectedPlan].price} ر.س
+            </button>
+          </div>
+        )}
+
+        {/* Payment Modal */}
+        {step === 13 && showPayment && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="flex items-center justify-between mb-6 pt-8">
+              <h2 className="text-xl font-bold">إتمام الدفع</h2>
+              <button onClick={() => { setShowPayment(false); setMoyasarInitialized(false) }} className="text-neutral-500">
+                ← رجوع
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 mb-6">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-neutral-500 dark:text-neutral-400">الخطة</span>
+                <span>{selectedPlan === 'yearly' ? 'سنوية' : 'شهرية'}</span>
+              </div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-neutral-500 dark:text-neutral-400">البريد</span>
                 <span dir="ltr">{userData.email}</span>
               </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-neutral-400">الجوال</span>
-                <span dir="ltr">{userData.phone}</span>
+              <div className="flex justify-between font-semibold pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                <span>الإجمالي</span>
+                <span>{plans[selectedPlan].price} ر.س</span>
               </div>
             </div>
 
-            {/* Moyasar Payment Form */}
-            <div className="moyasar-form mb-6 [&_.moyasar-apple-pay-button]:!rounded-xl [&_input]:!rounded-xl [&_button]:!rounded-xl"></div>
+            <div className="moyasar-form mb-6"></div>
 
             <Script
               src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.umd.min.js"
               onLoad={() => setMoyasarLoaded(true)}
             />
 
-            {/* Back Button */}
-            <button
-              onClick={prevStep}
-              className="w-full py-3 text-neutral-400 hover:text-white transition-colors"
-            >
-              ← تغيير الخطة
-            </button>
-
-            <p className="text-center text-xs text-neutral-500 mt-4">
+            <p className="text-center text-xs text-neutral-500 dark:text-neutral-400">
               🔒 دفع آمن ومشفر عبر Moyasar
             </p>
           </div>
