@@ -259,17 +259,6 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
         </div>
       </section>
 
-      {/* FOMO Banner */}
-      <section className="px-4 mb-4 animate-fade-in">
-        <div className="max-w-lg mx-auto">
-          <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-center py-2 px-4 rounded-xl text-sm font-medium flex items-center justify-center gap-2">
-            <span className="animate-pulse">🔥</span>
-            <span>عرض محدود - ينتهي قريباً!</span>
-            <span className="animate-pulse">🔥</span>
-          </div>
-        </div>
-      </section>
-
       {/* Product Card */}
       <section className="px-4 mb-8 animate-fade-in animate-delay-100">
         <div className="max-w-lg mx-auto glass-card overflow-hidden relative">
