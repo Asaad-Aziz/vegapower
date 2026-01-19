@@ -1,6 +1,18 @@
 // Fitness goal categories
 export type FitnessGoal = 'fat_loss' | 'muscle_gain' | 'body_toning' | 'all'
 
+// Store settings (universal across all products)
+export interface StoreSettings {
+  id: string
+  brand_name: string
+  bio: string
+  profile_image_url: string | null
+  testimonials: Testimonial[]
+  faqs: FAQ[]
+  social_links: SocialLink[]
+  updated_at: string
+}
+
 // Product data shape
 export interface Product {
   id: string
@@ -9,16 +21,18 @@ export interface Product {
   price_sar: number
   before_price_sar: number | null
   delivery_url: string
-  profile_image_url: string | null
   product_image_url: string | null
-  brand_name: string
-  bio: string
   goal?: FitnessGoal // Fitness goal category
-  testimonials: Testimonial[]
-  faqs: FAQ[]
-  social_links: SocialLink[]
+  times_bought: number // Number of times this program has been purchased
   custom_blocks: string | null
   updated_at: string
+  // Legacy fields (kept for backward compatibility during migration)
+  profile_image_url?: string | null
+  brand_name?: string
+  bio?: string
+  testimonials?: Testimonial[]
+  faqs?: FAQ[]
+  social_links?: SocialLink[]
 }
 
 export interface Testimonial {

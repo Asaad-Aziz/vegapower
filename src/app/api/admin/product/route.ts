@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const supabase = createServerClient()
 
-    // Insert new product
+    // Insert new product (only product-specific fields)
     const { data, error } = await supabase
       .from('product')
       .insert({
@@ -28,15 +28,10 @@ export async function POST(request: NextRequest) {
         price_sar: body.price_sar,
         before_price_sar: body.before_price_sar,
         delivery_url: body.delivery_url,
-        profile_image_url: body.profile_image_url,
         product_image_url: body.product_image_url,
-        brand_name: body.brand_name,
-        bio: body.bio,
         goal: body.goal || 'all',
+        times_bought: body.times_bought || 0,
         custom_blocks: body.custom_blocks,
-        testimonials: body.testimonials,
-        faqs: body.faqs,
-        social_links: body.social_links,
       })
       .select()
       .single()
@@ -83,7 +78,7 @@ export async function PUT(request: NextRequest) {
       targetId = existingProduct.id
     }
 
-    // Update product
+    // Update product (only product-specific fields)
     const { error } = await supabase
       .from('product')
       .update({
@@ -92,15 +87,10 @@ export async function PUT(request: NextRequest) {
         price_sar: body.price_sar,
         before_price_sar: body.before_price_sar,
         delivery_url: body.delivery_url,
-        profile_image_url: body.profile_image_url,
         product_image_url: body.product_image_url,
-        brand_name: body.brand_name,
-        bio: body.bio,
         goal: body.goal || 'all',
+        times_bought: body.times_bought || 0,
         custom_blocks: body.custom_blocks,
-        testimonials: body.testimonials,
-        faqs: body.faqs,
-        social_links: body.social_links,
       })
       .eq('id', targetId)
 

@@ -2,18 +2,20 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Product, Order, AnalyticsEvent, Testimonial, FAQ, SocialLink, FitnessGoal } from '@/types/database'
+import type { Product, Order, AnalyticsEvent, StoreSettings, FitnessGoal } from '@/types/database'
 import ProductEditor from './ProductEditor'
+import StoreSettingsEditor from './StoreSettingsEditor'
 import OrdersTable from './OrdersTable'
 import AnalyticsPanel from './AnalyticsPanel'
 
 interface AdminDashboardProps {
   products: Product[]
+  storeSettings: StoreSettings | null
   orders: Order[]
   analytics: AnalyticsEvent[]
 }
 
-type Tab = 'products' | 'orders' | 'analytics'
+type Tab = 'products' | 'store' | 'orders' | 'analytics'
 
 const goalLabels: Record<FitnessGoal, string> = {
   fat_loss: 'خسارة دهون',
@@ -22,7 +24,7 @@ const goalLabels: Record<FitnessGoal, string> = {
   all: 'الكل',
 }
 
-export default function AdminDashboard({ products, orders, analytics }: AdminDashboardProps) {
+export default function AdminDashboard({ products, storeSettings, orders, analytics }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('products')
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [isCreatingNew, setIsCreatingNew] = useState(false)
@@ -52,6 +54,7 @@ export default function AdminDashboard({ products, orders, analytics }: AdminDas
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'products', label: 'Products' },
+    { id: 'store', label: 'Store Settings' },
     { id: 'orders', label: 'Orders' },
     { id: 'analytics', label: 'Analytics' },
   ]
@@ -149,6 +152,11 @@ export default function AdminDashboard({ products, orders, analytics }: AdminDas
                               {goalLabels[product.goal]}
                             </span>
                           )}
+                          {product.times_bought > 0 && (
+                            <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">
+                              {product.times_bought} مبيعات
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -175,15 +183,13 @@ export default function AdminDashboard({ products, orders, analytics }: AdminDas
             </button>
             <ProductEditor
               product={editingProduct}
-              testimonials={(editingProduct?.testimonials as Testimonial[]) || []}
-              faqs={(editingProduct?.faqs as FAQ[]) || []}
-              socialLinks={(editingProduct?.social_links as SocialLink[]) || []}
               isNew={isCreatingNew}
               onSaved={handleBack}
             />
           </div>
         )}
 
+        {activeTab === 'store' && <StoreSettingsEditor settings={storeSettings} />}
         {activeTab === 'orders' && <OrdersTable orders={orders} />}
         {activeTab === 'analytics' && <AnalyticsPanel events={analytics} />}
       </main>
