@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
+import { createFirebaseUser, saveUserDataToFirestore } from '@/lib/firebase-admin'
 
 // Generate a random password
 function generatePassword(length = 12): string {
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
     const supabase = createServerClient()
     const { data: existingSubscription } = await supabase
       .from('app_subscriptions')
-      .select('id')
+      .select('id, firebase_uid')
       .eq('payment_id', paymentId)
       .single()
 
@@ -76,7 +77,15 @@ export async function POST(request: NextRequest) {
       expirationDate.setMonth(expirationDate.getMonth() + 1)
     }
 
-    // Prepare Firebase user data
+    // Create Firebase user with Admin SDK
+    const firebaseUid = await createFirebaseUser(metadata.email, tempPassword)
+
+    if (!firebaseUid) {
+      console.error('Failed to create Firebase user')
+      // Continue anyway to save order, but note the failure
+    }
+
+    // Prepare Firebase user data (matching iOS app structure)
     const firebaseUserData = {
       // Personal Info
       age: Number(metadata.age) || 25,
@@ -114,105 +123,27 @@ export async function POST(request: NextRequest) {
       // Subscription
       subscription: {
         isActive: true,
-        productId: metadata.productId || 'vega_monthly_moyasar',
-        expirationDate: expirationDate.toISOString(),
-        paymentMethod: 'moyasar',
+        productId: metadata.productId || 'moyasar_monthly',
+        expirationDate: expirationDate,
+        startDate: now,
+        planType: metadata.plan || 'monthly',
+        amount: payment.amount / 100,
+        currency: 'SAR',
+        source: 'moyasar_web',
+        paymentId: paymentId,
       },
 
       // Metadata
       onboardingCompleted: true,
+      hasEverSubscribed: true,
       email: metadata.email,
-      createdAt: now.toISOString(),
-      lastUpdated: now.toISOString(),
+      createdAt: now,
+      lastUpdated: now,
     }
 
-    // Create Firebase user via Firebase Admin REST API
-    const firebaseApiKey = process.env.FIREBASE_API_KEY
-    let firebaseUid = null
-
-    if (firebaseApiKey) {
-      try {
-        // Create user in Firebase Auth
-        const createUserResponse = await fetch(
-          `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseApiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: metadata.email,
-              password: tempPassword,
-              returnSecureToken: true,
-            }),
-          }
-        )
-
-        if (createUserResponse.ok) {
-          const createUserData = await createUserResponse.json()
-          firebaseUid = createUserData.localId
-
-          // Store user data in Firestore via REST API
-          const firestoreProjectId = process.env.FIREBASE_PROJECT_ID
-          if (firestoreProjectId && firebaseUid) {
-            // Convert data to Firestore format
-            const firestoreData = {
-              fields: {
-                age: { integerValue: firebaseUserData.age },
-                birthYear: { integerValue: firebaseUserData.birthYear },
-                height: { integerValue: firebaseUserData.height },
-                weight: { integerValue: firebaseUserData.weight },
-                targetWeight: { integerValue: firebaseUserData.targetWeight },
-                targetSpeed: { doubleValue: firebaseUserData.targetSpeed },
-                gender: { stringValue: firebaseUserData.gender },
-                activityLevel: { stringValue: firebaseUserData.activityLevel },
-                fitnessGoal: { stringValue: firebaseUserData.fitnessGoal },
-                fitnessLevel: { stringValue: firebaseUserData.fitnessLevel },
-                workoutLocation: { stringValue: firebaseUserData.workoutLocation },
-                challenges: { arrayValue: { values: firebaseUserData.challenges.map((c: string) => ({ stringValue: c })) } },
-                accomplishments: { arrayValue: { values: firebaseUserData.accomplishments.map((a: string) => ({ stringValue: a })) } },
-                calculatedCalories: { integerValue: firebaseUserData.calculatedCalories },
-                proteinGrams: { integerValue: firebaseUserData.proteinGrams },
-                carbsGrams: { integerValue: firebaseUserData.carbsGrams },
-                fatGrams: { integerValue: firebaseUserData.fatGrams },
-                proteinPercentage: { integerValue: firebaseUserData.proteinPercentage },
-                carbsPercentage: { integerValue: firebaseUserData.carbsPercentage },
-                fatPercentage: { integerValue: firebaseUserData.fatPercentage },
-                programName: { stringValue: firebaseUserData.programName },
-                subscription: {
-                  mapValue: {
-                    fields: {
-                      isActive: { booleanValue: true },
-                      productId: { stringValue: firebaseUserData.subscription.productId },
-                      expirationDate: { timestampValue: firebaseUserData.subscription.expirationDate },
-                      paymentMethod: { stringValue: 'moyasar' },
-                    },
-                  },
-                },
-                onboardingCompleted: { booleanValue: true },
-                email: { stringValue: firebaseUserData.email },
-                createdAt: { timestampValue: firebaseUserData.createdAt },
-                lastUpdated: { timestampValue: firebaseUserData.lastUpdated },
-              },
-            }
-
-            await fetch(
-              `https://firestore.googleapis.com/v1/projects/${firestoreProjectId}/databases/(default)/documents/users/${firebaseUid}`,
-              {
-                method: 'PATCH',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${createUserData.idToken}`,
-                },
-                body: JSON.stringify(firestoreData),
-              }
-            )
-          }
-        } else {
-          const errorData = await createUserResponse.json()
-          console.error('Firebase user creation failed:', errorData)
-        }
-      } catch (firebaseErr) {
-        console.error('Firebase error:', firebaseErr)
-      }
+    // Save user data to Firestore
+    if (firebaseUid) {
+      await saveUserDataToFirestore(firebaseUid, firebaseUserData)
     }
 
     // Store subscription in Supabase
@@ -246,51 +177,65 @@ export async function POST(request: NextRequest) {
             to: metadata.email,
             subject: 'مرحباً بك في Vega Power - بيانات تسجيل الدخول 🎉',
             html: `
-              <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="text-align: center; margin-bottom: 30px;">
-                  <h1 style="color: #10b981; margin: 0;">Vega Power</h1>
-                  <p style="color: #666;">${firebaseUserData.programName}</p>
+              <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa;">
+                <div style="background: linear-gradient(135deg, #0D1A33, #1A2640); padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 20px;">
+                  <div style="font-size: 48px; margin-bottom: 10px;">👑</div>
+                  <h1 style="color: #fff; margin: 0; font-size: 24px;">مرحباً بك في Vega Power!</h1>
+                  <p style="color: rgba(255,255,255,0.7); margin: 10px 0 0 0;">تم تفعيل اشتراكك بنجاح</p>
                 </div>
                 
-                <h2 style="color: #333;">مرحباً! 👋</h2>
-                
-                <p style="color: #666; line-height: 1.6;">
-                  تم إنشاء حسابك بنجاح وخطتك جاهزة! يمكنك الآن تسجيل الدخول إلى التطبيق.
-                </p>
-                
-                <div style="background: #f3f4f6; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                  <p style="margin: 0 0 10px 0;"><strong>البريد الإلكتروني:</strong></p>
-                  <p style="margin: 0 0 20px 0; color: #10b981; font-size: 18px;" dir="ltr">${metadata.email}</p>
+                <div style="background: #fff; padding: 25px; border-radius: 12px; margin-bottom: 20px;">
+                  <h2 style="color: #333; margin: 0 0 20px 0; font-size: 18px;">بيانات تسجيل الدخول</h2>
                   
-                  <p style="margin: 0 0 10px 0;"><strong>كلمة المرور المؤقتة:</strong></p>
-                  <p style="margin: 0; color: #10b981; font-size: 24px; font-family: monospace; background: #fff; padding: 10px; border-radius: 5px; text-align: center;" dir="ltr">${tempPassword}</p>
+                  <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">البريد الإلكتروني</p>
+                    <p style="margin: 0; color: #10b981; font-size: 16px; font-weight: bold;" dir="ltr">${metadata.email}</p>
+                  </div>
+                  
+                  <div style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+                    <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">كلمة المرور المؤقتة</p>
+                    <p style="margin: 0; color: #10b981; font-size: 24px; font-weight: bold; font-family: monospace; letter-spacing: 2px;" dir="ltr">${tempPassword}</p>
+                  </div>
                 </div>
 
-                <div style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center;">
-                  <h3 style="margin: 0 0 10px 0;">خطتك الشخصية</h3>
-                  <div style="display: flex; justify-content: space-around; margin-top: 15px;">
+                <div style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+                  <h3 style="margin: 0 0 15px 0; font-size: 16px;">خطتك الشخصية: ${firebaseUserData.programName}</h3>
+                  <div style="display: flex; justify-content: space-around;">
                     <div>
                       <div style="font-size: 24px; font-weight: bold;">${firebaseUserData.calculatedCalories}</div>
-                      <div style="font-size: 12px; opacity: 0.8;">سعرة/يوم</div>
+                      <div style="font-size: 11px; opacity: 0.8;">سعرة/يوم</div>
                     </div>
                     <div>
                       <div style="font-size: 24px; font-weight: bold;">${firebaseUserData.proteinGrams}g</div>
-                      <div style="font-size: 12px; opacity: 0.8;">بروتين</div>
+                      <div style="font-size: 11px; opacity: 0.8;">بروتين</div>
                     </div>
                     <div>
                       <div style="font-size: 24px; font-weight: bold;">${firebaseUserData.carbsGrams}g</div>
-                      <div style="font-size: 12px; opacity: 0.8;">كارب</div>
+                      <div style="font-size: 11px; opacity: 0.8;">كارب</div>
                     </div>
                   </div>
                 </div>
+
+                <div style="background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                  <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">خطوات تسجيل الدخول:</h3>
+                  <ol style="margin: 0; padding: 0 20px; color: #666; line-height: 2;">
+                    <li>حمّل تطبيق Vega Power من App Store أو Google Play</li>
+                    <li>افتح التطبيق واضغط "تسجيل الدخول"</li>
+                    <li>أدخل البريد وكلمة المرور المؤقتة أعلاه</li>
+                    <li>غيّر كلمة المرور من الإعدادات (اختياري)</li>
+                  </ol>
+                </div>
+
+                <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                  <p style="margin: 0; color: #92400e; font-size: 13px;">
+                    ⚠️ ننصحك بتغيير كلمة المرور بعد تسجيل الدخول الأول من إعدادات التطبيق للحفاظ على أمان حسابك.
+                  </p>
+                </div>
                 
-                <p style="color: #666; line-height: 1.6;">
-                  ⚠️ ننصحك بتغيير كلمة المرور بعد تسجيل الدخول الأول من إعدادات التطبيق.
-                </p>
-                
-                <div style="text-align: center; margin-top: 30px;">
-                  <p style="color: #999; font-size: 14px;">
-                    حمّل التطبيق من App Store أو Google Play وابدأ رحلتك! 💪
+                <div style="text-align: center; padding: 20px 0;">
+                  <p style="color: #999; font-size: 12px; margin: 0;">
+                    لم تستلم الإيميل؟ تحقق من مجلد السبام أو تواصل معنا<br>
+                    © Vega Power - جميع الحقوق محفوظة
                   </p>
                 </div>
               </div>
@@ -306,7 +251,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, email: metadata.email })
+    return NextResponse.json({ 
+      success: true, 
+      email: metadata.email,
+      firebaseUserCreated: !!firebaseUid,
+    })
   } catch (error) {
     console.error('Subscription verification error:', error)
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 })
