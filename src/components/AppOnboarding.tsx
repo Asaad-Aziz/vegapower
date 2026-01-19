@@ -30,7 +30,7 @@ interface UserData {
 }
 
 const plans = {
-  monthly: { price: 45, period: 'شهر', productId: 'moyasar_monthly', savings: null },
+  monthly: { price: 10, period: 'شهر', productId: 'moyasar_monthly', savings: null }, // TODO: Change back to 45 SAR after testing
   quarterly: { price: 112, period: '3 أشهر', productId: 'moyasar_3months', savings: 'وفر 23 ريال' },
   yearly: { price: 255, period: 'سنة', productId: 'moyasar_yearly', savings: 'وفر 285 ريال' },
 }
