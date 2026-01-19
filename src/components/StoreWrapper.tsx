@@ -1,25 +1,26 @@
 'use client'
 
 import { useState } from 'react'
-import type { Product } from '@/types/database'
+import type { Product, StoreSettings } from '@/types/database'
 import ProductCatalog from './ProductCatalog'
 import StorePage from './StorePage'
 
 interface StoreWrapperProps {
   products: Product[]
+  storeSettings?: StoreSettings | null
 }
 
-export default function StoreWrapper({ products }: StoreWrapperProps) {
+export default function StoreWrapper({ products, storeSettings }: StoreWrapperProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
-  // Get brand info from first product (assuming same brand for all)
-  const brandName = products[0]?.brand_name || 'المتجر'
-  const bio = products[0]?.bio || ''
-  const profileImageUrl = products[0]?.profile_image_url || null
+  // Use store settings if available, otherwise fall back to product legacy fields
+  const brandName = storeSettings?.brand_name || products[0]?.brand_name || 'المتجر'
+  const bio = storeSettings?.bio || products[0]?.bio || ''
+  const profileImageUrl = storeSettings?.profile_image_url || products[0]?.profile_image_url || null
 
   // If only one product, show it directly
   if (products.length === 1) {
-    return <StorePage product={products[0]} />
+    return <StorePage product={products[0]} storeSettings={storeSettings} />
   }
 
   // If a product is selected, show its detail page
@@ -36,7 +37,7 @@ export default function StoreWrapper({ products }: StoreWrapperProps) {
           </svg>
           جميع البرامج
         </button>
-        <StorePage product={selectedProduct} />
+        <StorePage product={selectedProduct} storeSettings={storeSettings} />
       </div>
     )
   }

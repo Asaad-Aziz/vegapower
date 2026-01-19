@@ -6,11 +6,12 @@ import Script from 'next/script'
 import ReactMarkdown from 'react-markdown'
 import { trackEvent } from '@/lib/analytics'
 import * as fbq from '@/lib/meta-pixel'
-import type { Product } from '@/types/database'
+import type { Product, StoreSettings } from '@/types/database'
 import type { MoyasarConfig } from '@/types/moyasar.d'
 
 interface StorePageProps {
   product: Product
+  storeSettings?: StoreSettings | null
 }
 
 const socialIcons: Record<string, string> = {
@@ -23,7 +24,7 @@ const socialIcons: Record<string, string> = {
 
 type PaymentMethod = 'card' | 'tamara' | null
 
-export default function StorePage({ product }: StorePageProps) {
+export default function StorePage({ product, storeSettings }: StorePageProps) {
   const [showCheckout, setShowCheckout] = useState(false)
   const [email, setEmail] = useState('')
   const [showPayment, setShowPayment] = useState(false)
@@ -34,6 +35,14 @@ export default function StorePage({ product }: StorePageProps) {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [viewersCount] = useState(() => Math.floor(Math.random() * 15) + 8) // 8-22 viewers
   const [recentBuyers] = useState(() => Math.floor(Math.random() * 20) + 12) // 12-31 recent buyers
+
+  // Use store settings if available, otherwise fall back to product legacy fields
+  const brandName = storeSettings?.brand_name || product.brand_name || 'Vega Power'
+  const bio = storeSettings?.bio || product.bio || ''
+  const profileImageUrl = storeSettings?.profile_image_url || product.profile_image_url || null
+  const testimonials = storeSettings?.testimonials || product.testimonials || []
+  const faqs = storeSettings?.faqs || product.faqs || []
+  const socialLinks = storeSettings?.social_links || product.social_links || []
 
   useEffect(() => {
     trackEvent('page_view')
@@ -162,7 +171,7 @@ export default function StorePage({ product }: StorePageProps) {
           callback_url: `${appUrl}/success`,
           methods: ['creditcard', 'applepay'],
           apple_pay: {
-            label: 'Vega Power',
+            label: brandName,
             validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
             country: 'SA',
             supported_countries: ['SA', 'AE', 'KW', 'BH', 'OM', 'QA', 'US', 'GB'],
@@ -188,7 +197,7 @@ export default function StorePage({ product }: StorePageProps) {
         setMoyasarInitialized(true)
       }, 100)
     }
-  }, [showPayment, paymentMethod, moyasarLoaded, product, email, moyasarInitialized])
+  }, [showPayment, paymentMethod, moyasarLoaded, product, email, moyasarInitialized, brandName])
 
   // Load Moyasar CSS
   useEffect(() => {
@@ -207,11 +216,11 @@ export default function StorePage({ product }: StorePageProps) {
       <section className="pt-12 pb-8 px-4 animate-fade-in">
         <div className="max-w-lg mx-auto text-center">
           {/* Profile Image */}
-          {product.profile_image_url ? (
+          {profileImageUrl ? (
             <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-2 border-white shadow-lg">
               <Image
-                src={product.profile_image_url}
-                alt={product.brand_name}
+                src={profileImageUrl}
+                alt={brandName}
                 width={96}
                 height={96}
                 className="w-full h-full object-cover"
@@ -220,16 +229,16 @@ export default function StorePage({ product }: StorePageProps) {
           ) : (
             <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-neutral-200 flex items-center justify-center">
               <span className="text-3xl font-semibold text-neutral-500">
-                {product.brand_name.charAt(0)}
+                {brandName.charAt(0)}
               </span>
             </div>
           )}
           
           {/* Brand Name */}
-          <h1 className="text-xl font-semibold mb-2">{product.brand_name}</h1>
+          <h1 className="text-xl font-semibold mb-2">{brandName}</h1>
           
           {/* Bio */}
-          <p className="text-muted text-sm leading-relaxed">{product.bio}</p>
+          <p className="text-muted text-sm leading-relaxed">{bio}</p>
         </div>
       </section>
 
@@ -281,7 +290,7 @@ export default function StorePage({ product }: StorePageProps) {
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
               </svg>
-              <span>{recentBuyers}+ اشتروا هذا المنتج اليوم</span>
+              <span>{product.times_bought > 0 ? product.times_bought : recentBuyers}+ اشتروا هذا المنتج</span>
             </div>
 
             <h2 className="text-2xl font-semibold mb-4">{product.title}</h2>
@@ -390,13 +399,13 @@ export default function StorePage({ product }: StorePageProps) {
       </section>
 
       {/* Testimonials - Horizontal Scroll */}
-      {product.testimonials && product.testimonials.length > 0 && (
+      {testimonials && testimonials.length > 0 && (
         <section className="mb-8 animate-fade-in animate-delay-200">
           <div className="max-w-lg mx-auto px-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">آراء العملاء</h3>
               <span className="text-sm text-muted">
-                {product.testimonials.length} تقييم
+                {testimonials.length} تقييم
               </span>
             </div>
           </div>
@@ -412,7 +421,7 @@ export default function StorePage({ product }: StorePageProps) {
               {/* Start spacer for centering on larger screens */}
               <div className="flex-shrink-0 w-[calc((100vw-32rem)/2)] max-lg:hidden" />
               
-              {product.testimonials.map((testimonial) => (
+              {testimonials.map((testimonial) => (
                 <div 
                   key={testimonial.id} 
                   className="glass-card p-5 flex-shrink-0 w-72 snap-center"
@@ -461,12 +470,12 @@ export default function StorePage({ product }: StorePageProps) {
       )}
 
       {/* FAQ */}
-      {product.faqs && product.faqs.length > 0 && (
+      {faqs && faqs.length > 0 && (
         <section className="px-4 mb-8 animate-fade-in animate-delay-300">
           <div className="max-w-lg mx-auto">
             <h3 className="text-lg font-semibold mb-4">FAQ</h3>
             <div className="space-y-3">
-              {product.faqs.map((faq) => (
+              {faqs.map((faq) => (
                 <details key={faq.id} className="glass-card group">
                   <summary className="p-4 cursor-pointer font-medium flex items-center justify-between">
                     {faq.question}
@@ -501,10 +510,10 @@ export default function StorePage({ product }: StorePageProps) {
       )}
 
       {/* Social Links */}
-      {product.social_links && product.social_links.length > 0 && (
+      {socialLinks && socialLinks.length > 0 && (
         <section className="px-4 mb-8">
           <div className="max-w-lg mx-auto flex justify-center gap-4">
-            {product.social_links.map((link) => (
+            {socialLinks.map((link) => (
               <a
                 key={link.id}
                 href={link.url}
@@ -523,7 +532,7 @@ export default function StorePage({ product }: StorePageProps) {
 
       {/* Footer */}
       <footer className="text-center text-muted text-xs">
-        <p>© {new Date().getFullYear()} {product.brand_name}</p>
+        <p>© {new Date().getFullYear()} {brandName}</p>
       </footer>
 
       {/* Checkout Modal */}
@@ -845,4 +854,3 @@ export default function StorePage({ product }: StorePageProps) {
     </main>
   )
 }
-
