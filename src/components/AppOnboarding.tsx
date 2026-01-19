@@ -30,9 +30,27 @@ interface UserData {
 }
 
 const plans = {
-  monthly: { price: 49, period: 'شهرياً', productId: 'vega_monthly_moyasar' },
-  yearly: { price: 299, period: 'سنوياً', productId: 'vega_yearly_moyasar', savings: '50%' },
+  monthly: { price: 45, period: 'شهر', productId: 'moyasar_monthly', savings: null },
+  quarterly: { price: 112, period: '3 أشهر', productId: 'moyasar_3months', savings: 'وفر 23 ريال' },
+  yearly: { price: 255, period: 'سنة', productId: 'moyasar_yearly', savings: 'وفر 285 ريال' },
 }
+
+type PlanType = 'monthly' | 'quarterly' | 'yearly'
+
+// Paywall features
+const paywallFeatures = [
+  { emoji: '🏃', text: 'برامج تدريب متكاملة' },
+  { emoji: '📈', text: 'تتبع تقدمك' },
+  { emoji: '✨', text: 'حساب السعرات بالذكاء الاصطناعي' },
+  { emoji: '🔥', text: 'تتبع سعراتك اليومية' },
+]
+
+// Paywall reviews
+const paywallReviews = [
+  { name: 'سارة م.', text: 'تطبيق رائع! خسرت 5 كيلو في شهر 💪' },
+  { name: 'خالد ع.', text: 'أفضل تطبيق للتمارين والتغذية 🔥' },
+  { name: 'نورة س.', text: 'سهل ونتائج مضمونة مع الالتزام ⭐' },
+]
 
 // Activity level mappings
 const activityLevels = [
@@ -74,7 +92,7 @@ const testimonials = [
 
 export default function AppOnboarding() {
   const [step, setStep] = useState<Step>(0)
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly')
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly')
   const [showPayment, setShowPayment] = useState(false)
   const [processingProgress, setProcessingProgress] = useState(0)
   const [completedChecks, setCompletedChecks] = useState<number[]>([])
@@ -244,7 +262,7 @@ export default function AppOnboarding() {
           element: '.moyasar-form',
           amount: plan.price * 100,
           currency: 'SAR',
-          description: `Vega Power App - ${selectedPlan === 'yearly' ? 'اشتراك سنوي' : 'اشتراك شهري'}`,
+          description: `Vega Power App - ${selectedPlan === 'yearly' ? 'اشتراك سنوي' : selectedPlan === 'quarterly' ? 'اشتراك 3 أشهر' : 'اشتراك شهري'}`,
           publishable_api_key: publishableKey,
           callback_url: `${appUrl}/app/success`,
           methods: ['creditcard', 'applepay'],
@@ -754,134 +772,155 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 13: Results & Payment */}
-        {step === 13 && !showPayment && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-6 pt-8">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500 flex items-center justify-center">
-                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+        {/* Step 13: Paywall - PaywallView3 Design */}
+        {step === 13 && (
+          <div className="flex-1 flex flex-col animate-fade-in -mx-6 -my-16">
+            {/* Dark Blue Gradient Background */}
+            <div className="min-h-screen bg-gradient-to-b from-[#0D1A33] to-[#1A2640] text-white px-6 py-8 overflow-auto">
+              
+              {/* Header */}
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
+                  <span className="text-3xl">👑</span>
+                </div>
+                <h1 className="text-2xl font-bold mb-1">اشترك في VegaPower</h1>
+                <p className="text-white/70">احصل على جميع المميزات</p>
+              </div>
+
+              {/* Features Grid */}
+              <div className="bg-white/10 rounded-2xl p-4 mb-6">
+                {paywallFeatures.map((feature, i) => (
+                  <div key={i} className={`flex items-center justify-between py-3 ${i < paywallFeatures.length - 1 ? 'border-b border-white/10' : ''}`}>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl text-blue-400">{feature.emoji}</span>
+                      <span className="text-sm">{feature.text}</span>
+                    </div>
+                    <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                ))}
+              </div>
+
+              {/* Reviews Carousel */}
+              <div className="mb-6 -mx-2 overflow-x-auto scrollbar-hide">
+                <div className="flex gap-3 px-2" style={{ width: 'max-content' }}>
+                  {paywallReviews.map((review, i) => (
+                    <div key={i} className="w-[200px] p-4 bg-white/10 rounded-xl flex-shrink-0">
+                      <div className="flex gap-0.5 mb-2">
+                        {[1,2,3,4,5].map(s => (
+                          <span key={s} className="text-xs text-yellow-400">⭐</span>
+                        ))}
+                      </div>
+                      <p className="text-xs text-white/80 mb-2">"{review.text}"</p>
+                      <p className="text-xs text-white/50">{review.name}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Email Input */}
+              <div className="mb-4">
+                <input
+                  type="email"
+                  value={userData.email}
+                  onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+                  placeholder="البريد الإلكتروني"
+                  dir="ltr"
+                  className="w-full p-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-blue-400"
+                />
+              </div>
+
+              {/* Plan Selection - 3 Horizontal Cards */}
+              <div className="flex gap-2 mb-4">
+                {[
+                  { key: 'monthly' as PlanType, label: 'شهر', price: plans.monthly.price, savings: null },
+                  { key: 'quarterly' as PlanType, label: '3 أشهر', price: plans.quarterly.price, savings: plans.quarterly.savings },
+                  { key: 'yearly' as PlanType, label: 'سنة', price: plans.yearly.price, savings: plans.yearly.savings },
+                ].map((plan) => (
+                  <button
+                    key={plan.key}
+                    onClick={() => setSelectedPlan(plan.key)}
+                    className={`flex-1 p-3 rounded-xl text-center transition-all relative ${
+                      selectedPlan === plan.key
+                        ? 'bg-blue-500/30 border-2 border-blue-400 scale-[1.02]'
+                        : 'bg-white/10 border border-white/20'
+                    }`}
+                  >
+                    {plan.savings && (
+                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-orange-500 rounded-full text-[10px] font-medium whitespace-nowrap">
+                        {plan.savings}
+                      </div>
+                    )}
+                    <div className="text-xs text-white/60 mb-1 mt-1">{plan.label}</div>
+                    <div className="text-lg font-bold">{plan.price}</div>
+                    <div className="text-xs text-white/60">ريال</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* No Auto-Renewal Badge */}
+              <div className="flex items-center justify-center gap-2 p-3 bg-green-500/20 rounded-xl mb-4">
+                <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                 </svg>
+                <span className="text-sm text-green-300">بدون تجديد تلقائي - جدد متى ما أردت</span>
               </div>
-              <h2 className="text-2xl font-bold mb-1">تهانينا! تم إعداد خطتك</h2>
-            </div>
 
-            {/* Program Card */}
-            <div className="p-6 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center mb-6">
-              <p className="text-sm opacity-80 mb-1">برنامجك</p>
-              <h3 className="text-2xl font-bold">{userData.programName}</h3>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
-                <span className="text-2xl font-bold text-green-500">{userData.calculatedCalories}</span>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">سعرة/يوم</p>
-              </div>
-              <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
-                <span className="text-2xl font-bold text-blue-500">{userData.proteinGrams}g</span>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">بروتين</p>
-              </div>
-              <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
-                <span className="text-2xl font-bold text-purple-500">{userData.carbsGrams}g</span>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">كارب</p>
-              </div>
-            </div>
-
-            {/* Email Input */}
-            <div className="mb-6">
-              <label className="block text-sm text-neutral-500 dark:text-neutral-400 mb-2">البريد الإلكتروني</label>
-              <input
-                type="email"
-                value={userData.email}
-                onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-                placeholder="you@example.com"
-                dir="ltr"
-                className="w-full p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-green-500 outline-none"
-              />
-            </div>
-
-            {/* Plan Selection */}
-            <div className="space-y-3 mb-6">
-              <button
-                onClick={() => setSelectedPlan('yearly')}
-                className={`w-full p-4 rounded-2xl text-right relative transition-all ${
-                  selectedPlan === 'yearly'
-                    ? 'bg-green-500/20 border-2 border-green-500'
-                    : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                }`}
-              >
-                <div className="absolute -top-2 left-4 px-2 py-0.5 bg-green-500 rounded-full text-xs text-white font-medium">
-                  وفّر 50%
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h4 className="font-semibold">سنوي</h4>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400">≈ {Math.round(plans.yearly.price / 12)} ر.س/شهر</p>
+              {/* Payment Button */}
+              {!showPayment ? (
+                <button
+                  onClick={() => setShowPayment(true)}
+                  disabled={!validateEmail(userData.email)}
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-lg disabled:opacity-50 shadow-lg shadow-blue-500/30"
+                >
+                  💳 الدفع بالبطاقة - {plans[selectedPlan].price} ريال
+                </button>
+              ) : (
+                <div className="space-y-4">
+                  {/* Order Summary */}
+                  <div className="p-4 rounded-xl bg-white/10 border border-white/20">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-white/60">الخطة</span>
+                      <span>{selectedPlan === 'yearly' ? 'سنوية' : selectedPlan === 'quarterly' ? '3 أشهر' : 'شهرية'}</span>
+                    </div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-white/60">البريد</span>
+                      <span dir="ltr" className="text-sm">{userData.email}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold pt-2 border-t border-white/20">
+                      <span>الإجمالي</span>
+                      <span>{plans[selectedPlan].price} ريال</span>
+                    </div>
                   </div>
-                  <span className="text-xl font-bold">{plans.yearly.price} ر.س</span>
+
+                  {/* Moyasar Payment Form */}
+                  <div className="moyasar-form [&_input]:!bg-white/10 [&_input]:!border-white/20 [&_input]:!text-white [&_.moyasar-apple-pay-button]:!rounded-xl [&_button]:!rounded-xl"></div>
+
+                  <Script
+                    src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.umd.min.js"
+                    onLoad={() => setMoyasarLoaded(true)}
+                  />
+
+                  <button
+                    onClick={() => { setShowPayment(false); setMoyasarInitialized(false) }}
+                    className="w-full py-3 text-white/60 hover:text-white transition-colors text-sm"
+                  >
+                    ← تغيير الخطة
+                  </button>
                 </div>
-              </button>
-              <button
-                onClick={() => setSelectedPlan('monthly')}
-                className={`w-full p-4 rounded-2xl text-right transition-all ${
-                  selectedPlan === 'monthly'
-                    ? 'bg-green-500/20 border-2 border-green-500'
-                    : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                }`}
-              >
-                <div className="flex justify-between items-center">
-                  <h4 className="font-semibold">شهري</h4>
-                  <span className="text-xl font-bold">{plans.monthly.price} ر.س</span>
+              )}
+
+              {/* Footer */}
+              <div className="mt-6 text-center">
+                <div className="flex justify-center gap-4 text-xs text-blue-400 mb-3">
+                  <a href="#" className="hover:underline">شروط الاستخدام</a>
+                  <span className="text-white/30">|</span>
+                  <a href="#" className="hover:underline">سياسة الخصوصية</a>
                 </div>
-              </button>
-            </div>
-
-            <button
-              onClick={() => setShowPayment(true)}
-              disabled={!validateEmail(userData.email)}
-              className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg disabled:opacity-50"
-            >
-              ابدأ البرنامج الآن - {plans[selectedPlan].price} ر.س
-            </button>
-          </div>
-        )}
-
-        {/* Payment Modal */}
-        {step === 13 && showPayment && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="flex items-center justify-between mb-6 pt-8">
-              <h2 className="text-xl font-bold">إتمام الدفع</h2>
-              <button onClick={() => { setShowPayment(false); setMoyasarInitialized(false) }} className="text-neutral-500">
-                ← رجوع
-              </button>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 mb-6">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-neutral-500 dark:text-neutral-400">الخطة</span>
-                <span>{selectedPlan === 'yearly' ? 'سنوية' : 'شهرية'}</span>
-              </div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-neutral-500 dark:text-neutral-400">البريد</span>
-                <span dir="ltr">{userData.email}</span>
-              </div>
-              <div className="flex justify-between font-semibold pt-2 border-t border-neutral-200 dark:border-neutral-700">
-                <span>الإجمالي</span>
-                <span>{plans[selectedPlan].price} ر.س</span>
+                <p className="text-xs text-white/40">🔒 مدعوم بواسطة Moyasar</p>
               </div>
             </div>
-
-            <div className="moyasar-form mb-6"></div>
-
-            <Script
-              src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.umd.min.js"
-              onLoad={() => setMoyasarLoaded(true)}
-            />
-
-            <p className="text-center text-xs text-neutral-500 dark:text-neutral-400">
-              🔒 دفع آمن ومشفر عبر Moyasar
-            </p>
           </div>
         )}
       </div>

@@ -70,6 +70,8 @@ export async function POST(request: NextRequest) {
     const expirationDate = new Date(now)
     if (metadata.plan === 'yearly') {
       expirationDate.setFullYear(expirationDate.getFullYear() + 1)
+    } else if (metadata.plan === 'quarterly') {
+      expirationDate.setMonth(expirationDate.getMonth() + 3)
     } else {
       expirationDate.setMonth(expirationDate.getMonth() + 1)
     }
