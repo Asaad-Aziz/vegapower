@@ -13,7 +13,6 @@ interface ProductCatalogProps {
 }
 
 const goals: { id: FitnessGoal; label: string; emoji: string }[] = [
-  { id: 'all', label: 'الكل', emoji: '🎯' },
   { id: 'fat_loss', label: 'خسارة دهون', emoji: '🔥' },
   { id: 'muscle_gain', label: 'زيادة عضل', emoji: '💪' },
   { id: 'body_toning', label: 'شد الجسم', emoji: '✨' },
@@ -26,7 +25,7 @@ export default function ProductCatalog({
   bio, 
   profileImageUrl 
 }: ProductCatalogProps) {
-  const [selectedGoal, setSelectedGoal] = useState<FitnessGoal>('all')
+  const [selectedGoal, setSelectedGoal] = useState<FitnessGoal>('fat_loss')
 
   const filteredProducts = selectedGoal === 'all' 
     ? products 
@@ -70,8 +69,8 @@ export default function ProductCatalog({
           <div className="glass-card p-5 bg-gradient-to-br from-green-50 to-emerald-50 border-green-100">
             {/* Main Stat */}
             <div className="text-center mb-4">
-              <div className="text-4xl font-bold text-green-600 mb-1">+5,000</div>
-              <p className="text-sm text-neutral-600">شخص غيّر حياته مع برامجنا</p>
+              <div className="text-4xl font-bold text-green-600 mb-1">+28,900</div>
+              <p className="text-sm text-neutral-600">شخص بدأ رياضته مع برامجنا</p>
             </div>
             
             {/* Stats Grid */}
@@ -85,7 +84,7 @@ export default function ProductCatalog({
                 <p className="text-[10px] text-muted">تقييم العملاء</p>
               </div>
               <div className="text-center p-2 bg-white/60 rounded-xl">
-                <div className="text-xl font-bold text-neutral-800">130+</div>
+                <div className="text-xl font-bold text-neutral-800">1000+</div>
                 <p className="text-[10px] text-muted">تقييم إيجابي</p>
               </div>
             </div>
