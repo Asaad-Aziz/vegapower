@@ -1,7 +1,8 @@
--- Update testimonials with 120+ curated reviews from CSV
+-- Update testimonials with 120+ curated reviews
 -- Run this in Supabase SQL Editor
+-- NOTE: Testimonials are now stored in store_settings table (universal across all products)
 
-UPDATE product SET testimonials = '[
+UPDATE store_settings SET testimonials = '[
   {"id": "1", "name": "ام ليان", "text": "حقيقي ملف اسطوري مره سهل، الله يسهل لكم مثل م سهلتو لي. جدا جدا مختصر ودقيق بنفس الوقت، معك خطوه بخطوه"},
   {"id": "2", "name": "وسن فهد", "text": "انصحكم فيه بالذات الي توهم داخلين، جداً ممتاز ملف شامل لكل شي من ناحية الرياضه والتغذيه 🤍"},
   {"id": "3", "name": "Layan Carlos", "text": "البرنامج جداً ممتاز ومنظم، فيه جداول غذائيه وجدول للتمارين تخليك تعرفين كل يوم ايش تسوين، السعر يستاهل اكثر من كذا ❤️"},
