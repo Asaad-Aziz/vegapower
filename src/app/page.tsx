@@ -1,33 +1,33 @@
 import { createServerClient } from '@/lib/supabase'
-import StorePage from '@/components/StorePage'
+import StoreWrapper from '@/components/StoreWrapper'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
-async function getProduct() {
+async function getProducts() {
   try {
     const supabase = createServerClient()
     const { data, error } = await supabase
       .from('product')
       .select('*')
-      .single()
+      .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Failed to fetch product:', error)
-      return null
+      console.error('Failed to fetch products:', error)
+      return []
     }
 
-    return data
+    return data || []
   } catch (error) {
     console.error('Database connection error:', error)
-    return null
+    return []
   }
 }
 
 export default async function Home() {
-  const product = await getProduct()
+  const products = await getProducts()
 
-  if (!product) {
+  if (products.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -38,5 +38,5 @@ export default async function Home() {
     )
   }
 
-  return <StorePage product={product} />
+  return <StoreWrapper products={products} />
 }

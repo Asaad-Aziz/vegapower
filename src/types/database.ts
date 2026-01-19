@@ -1,3 +1,6 @@
+// Fitness goal categories
+export type FitnessGoal = 'fat_loss' | 'muscle_gain' | 'body_toning' | 'all'
+
 // Product data shape
 export interface Product {
   id: string
@@ -10,6 +13,7 @@ export interface Product {
   product_image_url: string | null
   brand_name: string
   bio: string
+  goal?: FitnessGoal // Fitness goal category
   testimonials: Testimonial[]
   faqs: FAQ[]
   social_links: SocialLink[]
