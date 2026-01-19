@@ -115,12 +115,15 @@ export default function ProductCatalog({
                 >
                   {/* Product Image */}
                   {product.product_image_url && (
-                    <div className="relative w-full aspect-video overflow-hidden">
+                    <div className="relative w-full overflow-hidden">
                       <Image
                         src={product.product_image_url}
                         alt={product.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        width={0}
+                        height={0}
+                        sizes="100vw"
+                        className="w-full h-auto group-hover:scale-105 transition-transform duration-500"
+                        style={{ width: '100%', height: 'auto' }}
                       />
                       {/* Goal Badge */}
                       {product.goal && product.goal !== 'all' && (
