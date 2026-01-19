@@ -64,6 +64,86 @@ export default function ProductCatalog({
         </div>
       </section>
 
+      {/* Social Proof Stats */}
+      <section className="px-4 mb-6 animate-fade-in">
+        <div className="max-w-lg mx-auto">
+          <div className="glass-card p-5 bg-gradient-to-br from-green-50 to-emerald-50 border-green-100">
+            {/* Main Stat */}
+            <div className="text-center mb-4">
+              <div className="text-4xl font-bold text-green-600 mb-1">+5,000</div>
+              <p className="text-sm text-neutral-600">شخص غيّر حياته مع برامجنا</p>
+            </div>
+            
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="text-center p-2 bg-white/60 rounded-xl">
+                <div className="text-xl font-bold text-neutral-800">98%</div>
+                <p className="text-[10px] text-muted">نسبة الرضا</p>
+              </div>
+              <div className="text-center p-2 bg-white/60 rounded-xl">
+                <div className="text-xl font-bold text-neutral-800">4.9</div>
+                <p className="text-[10px] text-muted">تقييم العملاء</p>
+              </div>
+              <div className="text-center p-2 bg-white/60 rounded-xl">
+                <div className="text-xl font-bold text-neutral-800">130+</div>
+                <p className="text-[10px] text-muted">تقييم إيجابي</p>
+              </div>
+            </div>
+
+            {/* Trust Badges */}
+            <div className="flex items-center justify-center gap-4 text-xs text-neutral-500">
+              <span className="flex items-center gap-1">
+                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                </svg>
+                توصيل فوري
+              </span>
+              <span className="flex items-center gap-1">
+                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                </svg>
+                دعم متواصل
+              </span>
+              <span className="flex items-center gap-1">
+                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                </svg>
+                نتائج مضمونة
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What You Get Section */}
+      <section className="px-4 mb-6 animate-fade-in">
+        <div className="max-w-lg mx-auto">
+          <h2 className="text-lg font-semibold mb-3 text-center">ماذا ستحصل؟ 📦</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="glass-card p-3 text-center">
+              <div className="text-2xl mb-1">📋</div>
+              <h4 className="font-medium text-sm mb-0.5">جدول تمارين</h4>
+              <p className="text-[10px] text-muted">مفصّل لكل يوم</p>
+            </div>
+            <div className="glass-card p-3 text-center">
+              <div className="text-2xl mb-1">🍽️</div>
+              <h4 className="font-medium text-sm mb-0.5">نظام غذائي</h4>
+              <p className="text-[10px] text-muted">سعرات محسوبة</p>
+            </div>
+            <div className="glass-card p-3 text-center">
+              <div className="text-2xl mb-1">🎥</div>
+              <h4 className="font-medium text-sm mb-0.5">فيديوهات</h4>
+              <p className="text-[10px] text-muted">شرح كل تمرين</p>
+            </div>
+            <div className="glass-card p-3 text-center">
+              <div className="text-2xl mb-1">💬</div>
+              <h4 className="font-medium text-sm mb-0.5">دعم مستمر</h4>
+              <p className="text-[10px] text-muted">رد على استفساراتك</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Goal Selection Header */}
       <section className="px-4 mb-2">
         <div className="max-w-lg mx-auto text-center">
