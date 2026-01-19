@@ -35,6 +35,23 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [viewersCount] = useState(() => Math.floor(Math.random() * 15) + 8) // 8-22 viewers
   const [recentBuyers] = useState(() => Math.floor(Math.random() * 20) + 12) // 12-31 recent buyers
+  const [discountCode, setDiscountCode] = useState('2026')
+  const [discountApplied, setDiscountApplied] = useState(false)
+
+  // Calculate prices with discount
+  const discountPercent = 10
+  const finalPrice = discountApplied 
+    ? product.price_sar * (1 - discountPercent / 100) 
+    : product.price_sar
+  const discountAmount = discountApplied 
+    ? product.price_sar * (discountPercent / 100) 
+    : 0
+
+  const handleApplyDiscount = () => {
+    if (discountCode === '2026') {
+      setDiscountApplied(true)
+    }
+  }
 
   // Use store settings if available, otherwise fall back to product legacy fields
   const brandName = storeSettings?.brand_name || product.brand_name || 'Vega Power'
@@ -147,7 +164,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
       
       const publishableKey = process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || ''
       logToServer('MOYASAR_INIT', 'Initializing Moyasar Payment Form', {
-        amount: Math.round(product.price_sar * 100),
+        amount: Math.round(finalPrice * 100),
         appUrl,
         hasPublishableKey: !!publishableKey,
         keyPrefix: publishableKey.substring(0, 10),
@@ -164,7 +181,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
         
         window.Moyasar.init({
           element: '.moyasar-form',
-          amount: Math.round(product.price_sar * 100),
+          amount: Math.round(finalPrice * 100),
           currency: 'SAR',
           description: product.title,
           publishable_api_key: publishableKey,
@@ -197,7 +214,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
         setMoyasarInitialized(true)
       }, 100)
     }
-  }, [showPayment, paymentMethod, moyasarLoaded, product, email, moyasarInitialized, brandName])
+  }, [showPayment, paymentMethod, moyasarLoaded, product, email, moyasarInitialized, brandName, finalPrice])
 
   // Load Moyasar CSS
   useEffect(() => {
@@ -565,23 +582,13 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
               </div>
 
               <div className="p-6">
-                {/* FOMO: Others checking out */}
-                <div className="flex items-center justify-center gap-2 mb-4 py-2 bg-orange-50 rounded-lg border border-orange-100">
-                  <div className="flex -space-x-2 rtl:space-x-reverse">
-                    <div className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-[10px] text-white font-bold">م</div>
-                    <div className="w-6 h-6 rounded-full bg-green-500 border-2 border-white flex items-center justify-center text-[10px] text-white font-bold">س</div>
-                    <div className="w-6 h-6 rounded-full bg-purple-500 border-2 border-white flex items-center justify-center text-[10px] text-white font-bold">أ</div>
-                  </div>
-                  <span className="text-xs text-orange-700">
-                    <span className="font-semibold">{Math.floor(Math.random() * 5) + 3}</span> أشخاص يتمون الشراء الآن
-                  </span>
-                </div>
-
                 {/* Order Summary */}
                 <div className="bg-neutral-50 rounded-xl p-4 mb-4">
                   <div className="flex justify-between items-center py-2 border-b border-neutral-200">
                     <span className="text-muted text-sm">{product.title}</span>
-                    <span className="font-medium">{product.price_sar.toFixed(0)} ر.س</span>
+                    <span className={`font-medium ${discountApplied ? 'line-through text-muted' : ''}`}>
+                      {product.price_sar.toFixed(0)} ر.س
+                    </span>
                   </div>
                   {product.before_price_sar && product.before_price_sar > product.price_sar && (
                     <div className="flex justify-between items-center py-2 border-b border-neutral-200 text-green-600">
@@ -589,18 +596,50 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                       <span className="font-medium">-{(product.before_price_sar - product.price_sar).toFixed(0)} ر.س</span>
                     </div>
                   )}
+                  {discountApplied && (
+                    <div className="flex justify-between items-center py-2 border-b border-neutral-200 text-green-600">
+                      <span className="text-sm">🎁 كود الخصم ({discountPercent}%)</span>
+                      <span className="font-medium">-{discountAmount.toFixed(0)} ر.س</span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center pt-2">
                     <span className="font-semibold">الإجمالي</span>
-                    <span className="text-xl font-bold text-green-600">{product.price_sar.toFixed(0)} ر.س</span>
+                    <span className="text-xl font-bold text-green-600">{finalPrice.toFixed(0)} ر.س</span>
                   </div>
                 </div>
 
-                {/* FOMO: Limited offer warning */}
-                <div className="flex items-center gap-2 mb-4 text-xs text-red-600 bg-red-50 p-2 rounded-lg">
-                  <svg className="w-4 h-4 flex-shrink-0 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
-                  </svg>
-                  <span>⚠️ العرض قد ينتهي في أي لحظة - أكمل طلبك الآن!</span>
+                {/* Discount Code */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-2">كود الخصم</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={discountCode}
+                      onChange={(e) => {
+                        setDiscountCode(e.target.value)
+                        setDiscountApplied(false)
+                      }}
+                      placeholder="أدخل كود الخصم"
+                      className="input-field flex-1"
+                      dir="ltr"
+                      disabled={discountApplied}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyDiscount}
+                      disabled={discountApplied || !discountCode}
+                      className={`px-4 py-2 rounded-xl font-medium transition-all ${
+                        discountApplied 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-neutral-900 text-white hover:bg-neutral-800'
+                      }`}
+                    >
+                      {discountApplied ? '✓ تم' : 'تطبيق'}
+                    </button>
+                  </div>
+                  {discountApplied && (
+                    <p className="text-xs text-green-600 mt-1">🎉 تم تطبيق الخصم بنجاح!</p>
+                  )}
                 </div>
 
                 {/* Email Form */}
@@ -692,7 +731,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-neutral-800">
-                            ادفع <span className="font-semibold bg-gradient-to-r from-[#F97316] via-[#EC4899] to-[#8B5CF6] bg-clip-text text-transparent">{Math.round(product.price_sar / 4)} ر.س</span>/شهريًا أو على 4 دفعات
+                            ادفع <span className="font-semibold bg-gradient-to-r from-[#F97316] via-[#EC4899] to-[#8B5CF6] bg-clip-text text-transparent">{Math.round(finalPrice / 4)} ر.س</span>/شهريًا أو على 4 دفعات
                           </p>
                           <p className="text-xs text-neutral-500 mt-0.5">متوافقة مع الشريعة الإسلامية</p>
                         </div>
@@ -738,7 +777,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                       <div className="text-center mb-4">
                         <p className="text-lg font-medium bg-gradient-to-r from-[#F97316] via-[#EC4899] to-[#8B5CF6] bg-clip-text text-transparent">دفعاتك، على راحتك</p>
                         <p className="text-sm text-neutral-500 mt-1">
-                          ادفع <span className="font-semibold text-neutral-800">{Math.round(product.price_sar / 4)} ر.س</span> أو على 4 دفعات
+                          ادفع <span className="font-semibold text-neutral-800">{Math.round(finalPrice / 4)} ر.س</span> أو على 4 دفعات
                         </p>
                       </div>
 
@@ -751,7 +790,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                             </div>
                             <span className="text-sm text-neutral-600">4 دفعات شهرية</span>
                           </div>
-                          <span className="font-bold text-neutral-800">{(product.price_sar / 4).toFixed(0)} ر.س</span>
+                          <span className="font-bold text-neutral-800">{(finalPrice / 4).toFixed(0)} ر.س</span>
                         </div>
                       </div>
 
