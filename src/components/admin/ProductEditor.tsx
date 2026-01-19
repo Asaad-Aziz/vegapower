@@ -2,37 +2,50 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Product, Testimonial, FAQ, SocialLink } from '@/types/database'
+import type { Product, Testimonial, FAQ, SocialLink, FitnessGoal } from '@/types/database'
 import ImageUpload from './ImageUpload'
 
 interface ProductEditorProps {
-  product: Product
+  product: Product | null
   testimonials: Testimonial[]
   faqs: FAQ[]
   socialLinks: SocialLink[]
+  isNew?: boolean
+  onSaved?: () => void
 }
+
+const goalOptions: { value: FitnessGoal; label: string }[] = [
+  { value: 'fat_loss', label: 'خسارة دهون' },
+  { value: 'muscle_gain', label: 'زيادة عضل' },
+  { value: 'body_toning', label: 'شد الجسم' },
+  { value: 'all', label: 'الكل' },
+]
 
 export default function ProductEditor({
   product,
   testimonials: initialTestimonials,
   faqs: initialFaqs,
   socialLinks: initialSocialLinks,
+  isNew = false,
+  onSaved,
 }: ProductEditorProps) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   // Form state
-  const [title, setTitle] = useState(product.title)
-  const [description, setDescription] = useState(product.description)
-  const [priceSar, setPriceSar] = useState(product.price_sar.toString())
-  const [beforePriceSar, setBeforePriceSar] = useState(product.before_price_sar?.toString() || '')
-  const [deliveryUrl, setDeliveryUrl] = useState(product.delivery_url)
-  const [profileImageUrl, setProfileImageUrl] = useState(product.profile_image_url || '')
-  const [productImageUrl, setProductImageUrl] = useState(product.product_image_url || '')
-  const [brandName, setBrandName] = useState(product.brand_name)
-  const [bio, setBio] = useState(product.bio)
-  const [customBlocks, setCustomBlocks] = useState(product.custom_blocks || '')
+  const [title, setTitle] = useState(product?.title || '')
+  const [description, setDescription] = useState(product?.description || '')
+  const [priceSar, setPriceSar] = useState(product?.price_sar?.toString() || '')
+  const [beforePriceSar, setBeforePriceSar] = useState(product?.before_price_sar?.toString() || '')
+  const [deliveryUrl, setDeliveryUrl] = useState(product?.delivery_url || '')
+  const [profileImageUrl, setProfileImageUrl] = useState(product?.profile_image_url || '')
+  const [productImageUrl, setProductImageUrl] = useState(product?.product_image_url || '')
+  const [brandName, setBrandName] = useState(product?.brand_name || '')
+  const [bio, setBio] = useState(product?.bio || '')
+  const [goal, setGoal] = useState<FitnessGoal>(product?.goal || 'all')
+  const [customBlocks, setCustomBlocks] = useState(product?.custom_blocks || '')
   const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials)
   const [faqs, setFaqs] = useState<FAQ[]>(initialFaqs)
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(initialSocialLinks)
@@ -42,31 +55,40 @@ export default function ProductEditor({
     setMessage(null)
 
     try {
-      const response = await fetch('/api/admin/product', {
-        method: 'PUT',
+      const payload = {
+        title,
+        description,
+        price_sar: parseFloat(priceSar),
+        before_price_sar: beforePriceSar ? parseFloat(beforePriceSar) : null,
+        delivery_url: deliveryUrl,
+        profile_image_url: profileImageUrl || null,
+        product_image_url: productImageUrl || null,
+        brand_name: brandName,
+        bio,
+        goal,
+        custom_blocks: customBlocks || null,
+        testimonials,
+        faqs,
+        social_links: socialLinks,
+      }
+
+      const method = isNew ? 'POST' : 'PUT'
+      const url = isNew ? '/api/admin/product' : `/api/admin/product?id=${product?.id}`
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          description,
-          price_sar: parseFloat(priceSar),
-          before_price_sar: beforePriceSar ? parseFloat(beforePriceSar) : null,
-          delivery_url: deliveryUrl,
-          profile_image_url: profileImageUrl || null,
-          product_image_url: productImageUrl || null,
-          brand_name: brandName,
-          bio,
-          custom_blocks: customBlocks || null,
-          testimonials,
-          faqs,
-          social_links: socialLinks,
-        }),
+        body: JSON.stringify(payload),
       })
 
       const data = await response.json()
 
       if (data.success) {
-        setMessage({ type: 'success', text: 'Product saved successfully!' })
+        setMessage({ type: 'success', text: isNew ? 'Product created successfully!' : 'Product saved successfully!' })
         router.refresh()
+        if (onSaved) {
+          setTimeout(onSaved, 1000)
+        }
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to save' })
       }
@@ -74,6 +96,38 @@ export default function ProductEditor({
       setMessage({ type: 'error', text: 'Failed to save product' })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!product?.id) return
+    
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+      return
+    }
+
+    setDeleting(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch(`/api/admin/product?id=${product.id}`, {
+        method: 'DELETE',
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setMessage({ type: 'success', text: 'Product deleted successfully!' })
+        if (onSaved) {
+          setTimeout(onSaved, 500)
+        }
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to delete' })
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to delete product' })
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -177,6 +231,7 @@ export default function ProductEditor({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="input-field"
+              placeholder="Product title"
             />
           </div>
           <div>
@@ -186,9 +241,10 @@ export default function ProductEditor({
               onChange={(e) => setDescription(e.target.value)}
               className="input-field min-h-[200px] font-mono text-sm"
               rows={8}
+              placeholder="Product description in markdown..."
             />
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <div>
               <label className="block text-sm font-medium mb-2">السعر (ر.س)</label>
               <input
@@ -198,6 +254,7 @@ export default function ProductEditor({
                 className="input-field"
                 step="0.01"
                 min="0"
+                placeholder="99"
               />
             </div>
             <div>
@@ -221,6 +278,20 @@ export default function ProductEditor({
                 className="input-field"
                 placeholder="https://drive.google.com/..."
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">هدف اللياقة</label>
+              <select
+                value={goal}
+                onChange={(e) => setGoal(e.target.value as FitnessGoal)}
+                className="input-field"
+              >
+                {goalOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
@@ -375,10 +446,20 @@ export default function ProductEditor({
         />
       </section>
 
-      {/* Save Button */}
-      <div className="flex justify-end">
+      {/* Action Buttons */}
+      <div className="flex justify-between">
+        {!isNew && product && (
+          <button
+            onClick={handleDelete}
+            className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting...' : 'Delete Product'}
+          </button>
+        )}
+        <div className="flex-1" />
         <button onClick={handleSave} className="btn-primary" disabled={saving}>
-          {saving ? 'Saving...' : 'Save Changes'}
+          {saving ? 'Saving...' : isNew ? 'Create Product' : 'Save Changes'}
         </button>
       </div>
     </div>

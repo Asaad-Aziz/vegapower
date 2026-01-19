@@ -7,7 +7,8 @@ async function isAuthenticated() {
   return !!cookieStore.get('admin_session')?.value
 }
 
-export async function PUT(request: NextRequest) {
+// Create new product
+export async function POST(request: NextRequest) {
   const authenticated = await isAuthenticated()
   
   if (!authenticated) {
@@ -18,14 +19,68 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const supabase = createServerClient()
 
-    // Get the single product row
-    const { data: existingProduct } = await supabase
+    // Insert new product
+    const { data, error } = await supabase
       .from('product')
-      .select('id')
+      .insert({
+        title: body.title,
+        description: body.description,
+        price_sar: body.price_sar,
+        before_price_sar: body.before_price_sar,
+        delivery_url: body.delivery_url,
+        profile_image_url: body.profile_image_url,
+        product_image_url: body.product_image_url,
+        brand_name: body.brand_name,
+        bio: body.bio,
+        goal: body.goal || 'all',
+        custom_blocks: body.custom_blocks,
+        testimonials: body.testimonials,
+        faqs: body.faqs,
+        social_links: body.social_links,
+      })
+      .select()
       .single()
 
-    if (!existingProduct) {
-      return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 })
+    if (error) {
+      console.error('Failed to create product:', error)
+      return NextResponse.json({ success: false, error: 'Failed to create product' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, product: data })
+  } catch (error) {
+    console.error('Product create error:', error)
+    return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400 })
+  }
+}
+
+// Update existing product
+export async function PUT(request: NextRequest) {
+  const authenticated = await isAuthenticated()
+  
+  if (!authenticated) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const { searchParams } = new URL(request.url)
+    const productId = searchParams.get('id')
+    const body = await request.json()
+    const supabase = createServerClient()
+
+    let targetId = productId
+
+    // If no ID provided, get the first product (backward compatibility)
+    if (!targetId) {
+      const { data: existingProduct } = await supabase
+        .from('product')
+        .select('id')
+        .limit(1)
+        .single()
+
+      if (!existingProduct) {
+        return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 })
+      }
+      targetId = existingProduct.id
     }
 
     // Update product
@@ -41,12 +96,13 @@ export async function PUT(request: NextRequest) {
         product_image_url: body.product_image_url,
         brand_name: body.brand_name,
         bio: body.bio,
+        goal: body.goal || 'all',
         custom_blocks: body.custom_blocks,
         testimonials: body.testimonials,
         faqs: body.faqs,
         social_links: body.social_links,
       })
-      .eq('id', existingProduct.id)
+      .eq('id', targetId)
 
     if (error) {
       console.error('Failed to update product:', error)
@@ -56,6 +112,41 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Product update error:', error)
+    return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400 })
+  }
+}
+
+// Delete product
+export async function DELETE(request: NextRequest) {
+  const authenticated = await isAuthenticated()
+  
+  if (!authenticated) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const { searchParams } = new URL(request.url)
+    const productId = searchParams.get('id')
+
+    if (!productId) {
+      return NextResponse.json({ success: false, error: 'Product ID required' }, { status: 400 })
+    }
+
+    const supabase = createServerClient()
+
+    const { error } = await supabase
+      .from('product')
+      .delete()
+      .eq('id', productId)
+
+    if (error) {
+      console.error('Failed to delete product:', error)
+      return NextResponse.json({ success: false, error: 'Failed to delete product' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Product delete error:', error)
     return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400 })
   }
 }

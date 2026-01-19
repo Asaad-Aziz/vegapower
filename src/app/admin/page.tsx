@@ -10,20 +10,20 @@ async function getData() {
   try {
     const supabase = createServerClient()
 
-    const [productResult, ordersResult, analyticsResult] = await Promise.all([
-      supabase.from('product').select('*').single(),
+    const [productsResult, ordersResult, analyticsResult] = await Promise.all([
+      supabase.from('product').select('*'),
       supabase.from('orders').select('*').order('created_at', { ascending: false }),
       supabase.from('analytics_events').select('*'),
     ])
 
     return {
-      product: productResult.data,
+      products: productsResult.data || [],
       orders: ordersResult.data || [],
       analytics: analyticsResult.data || [],
     }
   } catch (error) {
     console.error('Failed to fetch admin data:', error)
-    return { product: null, orders: [], analytics: [] }
+    return { products: [], orders: [], analytics: [] }
   }
 }
 
@@ -34,15 +34,7 @@ export default async function AdminPage() {
     redirect('/admin/login')
   }
 
-  const { product, orders, analytics } = await getData()
+  const { products, orders, analytics } = await getData()
 
-  if (!product) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Product not found. Please run the database schema.</p>
-      </div>
-    )
-  }
-
-  return <AdminDashboard product={product} orders={orders} analytics={analytics} />
+  return <AdminDashboard products={products} orders={orders} analytics={analytics} />
 }

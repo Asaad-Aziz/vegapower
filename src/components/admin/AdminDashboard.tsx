@@ -2,21 +2,30 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Product, Order, AnalyticsEvent, Testimonial, FAQ, SocialLink } from '@/types/database'
+import type { Product, Order, AnalyticsEvent, Testimonial, FAQ, SocialLink, FitnessGoal } from '@/types/database'
 import ProductEditor from './ProductEditor'
 import OrdersTable from './OrdersTable'
 import AnalyticsPanel from './AnalyticsPanel'
 
 interface AdminDashboardProps {
-  product: Product
+  products: Product[]
   orders: Order[]
   analytics: AnalyticsEvent[]
 }
 
-type Tab = 'product' | 'orders' | 'analytics'
+type Tab = 'products' | 'orders' | 'analytics'
 
-export default function AdminDashboard({ product, orders, analytics }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('product')
+const goalLabels: Record<FitnessGoal, string> = {
+  fat_loss: 'خسارة دهون',
+  muscle_gain: 'زيادة عضل',
+  body_toning: 'شد الجسم',
+  all: 'الكل',
+}
+
+export default function AdminDashboard({ products, orders, analytics }: AdminDashboardProps) {
+  const [activeTab, setActiveTab] = useState<Tab>('products')
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [isCreatingNew, setIsCreatingNew] = useState(false)
   const router = useRouter()
 
   const handleLogout = async () => {
@@ -25,8 +34,24 @@ export default function AdminDashboard({ product, orders, analytics }: AdminDash
     router.refresh()
   }
 
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product)
+    setIsCreatingNew(false)
+  }
+
+  const handleCreateNew = () => {
+    setEditingProduct(null)
+    setIsCreatingNew(true)
+  }
+
+  const handleBack = () => {
+    setEditingProduct(null)
+    setIsCreatingNew(false)
+    router.refresh()
+  }
+
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'product', label: 'Product' },
+    { id: 'products', label: 'Products' },
     { id: 'orders', label: 'Orders' },
     { id: 'analytics', label: 'Analytics' },
   ]
@@ -62,7 +87,11 @@ export default function AdminDashboard({ product, orders, analytics }: AdminDash
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id)
+                  setEditingProduct(null)
+                  setIsCreatingNew(false)
+                }}
                 className={`py-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.id
                     ? 'border-neutral-900 text-neutral-900'
@@ -78,18 +107,86 @@ export default function AdminDashboard({ product, orders, analytics }: AdminDash
 
       {/* Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
-        {activeTab === 'product' && (
-          <ProductEditor
-            product={product}
-            testimonials={product.testimonials as Testimonial[]}
-            faqs={product.faqs as FAQ[]}
-            socialLinks={product.social_links as SocialLink[]}
-          />
+        {activeTab === 'products' && !editingProduct && !isCreatingNew && (
+          <div className="space-y-6">
+            {/* Add New Product Button */}
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold">All Products ({products.length})</h2>
+              <button onClick={handleCreateNew} className="btn-primary">
+                + Add New Product
+              </button>
+            </div>
+
+            {/* Products List */}
+            {products.length === 0 ? (
+              <div className="glass-card p-12 text-center">
+                <p className="text-muted mb-4">No products yet. Create your first product!</p>
+                <button onClick={handleCreateNew} className="btn-primary">
+                  + Add New Product
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {products.map((product) => (
+                  <div
+                    key={product.id}
+                    className="glass-card p-4 flex items-center justify-between hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-center gap-4">
+                      {product.product_image_url && (
+                        <img
+                          src={product.product_image_url}
+                          alt={product.title}
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                      )}
+                      <div>
+                        <h3 className="font-medium">{product.title}</h3>
+                        <div className="flex items-center gap-3 text-sm text-muted">
+                          <span>{product.price_sar} ر.س</span>
+                          {product.goal && (
+                            <span className="px-2 py-0.5 bg-neutral-100 rounded-full text-xs">
+                              {goalLabels[product.goal]}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleEditProduct(product)}
+                      className="btn-secondary text-sm"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
+
+        {activeTab === 'products' && (editingProduct || isCreatingNew) && (
+          <div>
+            <button
+              onClick={handleBack}
+              className="mb-4 text-sm text-muted hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              ← Back to Products
+            </button>
+            <ProductEditor
+              product={editingProduct}
+              testimonials={(editingProduct?.testimonials as Testimonial[]) || []}
+              faqs={(editingProduct?.faqs as FAQ[]) || []}
+              socialLinks={(editingProduct?.social_links as SocialLink[]) || []}
+              isNew={isCreatingNew}
+              onSaved={handleBack}
+            />
+          </div>
+        )}
+
         {activeTab === 'orders' && <OrdersTable orders={orders} />}
         {activeTab === 'analytics' && <AnalyticsPanel events={analytics} />}
       </main>
     </div>
   )
 }
-
