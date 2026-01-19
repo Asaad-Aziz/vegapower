@@ -271,14 +271,16 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
 
           {/* Product Image */}
           {product.product_image_url && (
-            <div className="w-full aspect-square bg-neutral-100">
+            <div className="w-full relative">
               <Image
                 src={product.product_image_url}
                 alt={product.title}
-                width={500}
-                height={500}
+                width={0}
+                height={0}
                 sizes="100vw"
-                className="w-full h-full object-cover"
+                className="w-full h-auto"
+                style={{ width: '100%', height: 'auto' }}
+                priority
               />
             </div>
           )}
