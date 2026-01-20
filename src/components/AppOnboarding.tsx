@@ -33,7 +33,7 @@ interface UserData {
 const plans = {
   monthly: { price: 10, period: 'شهر', productId: 'moyasar_monthly', savings: null }, // TODO: Change back to 45 SAR after testing
   quarterly: { price: 112, period: '3 أشهر', productId: 'moyasar_3months', savings: 'وفر 23 ريال' },
-  yearly: { price: 255, period: 'سنة', productId: 'moyasar_yearly', savings: 'وفر 285 ريال' },
+  yearly: { price: 155, period: 'سنة', productId: 'moyasar_yearly', savings: '🎉 عرض السنة الجديدة!' }, // Special New Year offer - was 255
 }
 
 type PlanType = 'monthly' | 'quarterly' | 'yearly'
@@ -747,7 +747,7 @@ export default function AppOnboarding() {
             <div className="grid grid-cols-2 gap-2 mb-4">
               {[
                 { emoji: '🏋️', text: 'برامج تدريب متكاملة', color: 'from-blue-500/20 to-blue-600/20' },
-                { emoji: '🍽️', text: 'خطط غذائية مخصصة', color: 'from-green-500/20 to-green-600/20' },
+                { emoji: '📸', text: 'صوّر أكلك واعرف السعرات بالذكاء الاصطناعي', color: 'from-green-500/20 to-green-600/20' },
                 { emoji: '📊', text: 'تتبع تقدمك يومياً', color: 'from-purple-500/20 to-purple-600/20' },
                 { emoji: '🎯', text: 'أهداف واقعية ومحفزة', color: 'from-orange-500/20 to-orange-600/20' },
               ].map((feature, i) => (
@@ -811,12 +811,22 @@ export default function AppOnboarding() {
               />
             </div>
 
+            {/* New Year Special Offer Banner */}
+            <div className="p-3 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 text-white mb-3 text-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvc3ZnPg==')] opacity-50"></div>
+              <div className="relative">
+                <p className="text-xs font-bold mb-1">🎊 عرض السنة الجديدة 2026 🎊</p>
+                <p className="text-lg font-black">سنة كاملة بـ <span className="line-through opacity-60">255</span> 155 ريال فقط!</p>
+                <p className="text-[10px] opacity-80 mt-1">⏰ عرض محدود - لأول 100 مشترك فقط</p>
+              </div>
+            </div>
+
             {/* Plan Selection - Colorful Cards */}
             <div className="flex gap-2 mb-3">
               {[
                 { key: 'monthly' as PlanType, label: 'شهر', price: plans.monthly.price, savings: null, gradient: 'from-slate-500 to-slate-600' },
                 { key: 'quarterly' as PlanType, label: '3 أشهر', price: plans.quarterly.price, savings: plans.quarterly.savings, gradient: 'from-blue-500 to-blue-600' },
-                { key: 'yearly' as PlanType, label: 'سنة', price: plans.yearly.price, savings: plans.yearly.savings, gradient: 'from-amber-500 to-orange-500' },
+                { key: 'yearly' as PlanType, label: 'سنة', price: plans.yearly.price, savings: plans.yearly.savings, gradient: 'from-red-500 to-pink-500' },
               ].map((plan) => (
                 <button
                   key={plan.key}
@@ -829,7 +839,7 @@ export default function AppOnboarding() {
                 >
                   {plan.savings && (
                     <div className={`absolute -top-0.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap ${
-                      selectedPlan === plan.key ? 'bg-white/30 text-white' : 'bg-amber-500 text-white'
+                      selectedPlan === plan.key ? 'bg-white/30 text-white' : 'bg-red-500 text-white'
                     }`}>
                       {plan.savings}
                     </div>
