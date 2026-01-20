@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Script from 'next/script'
 import Image from 'next/image'
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
 
 interface UserData {
   gender: 'male' | 'female' | ''
@@ -38,21 +38,6 @@ const plans = {
 
 type PlanType = 'monthly' | 'quarterly' | 'yearly'
 
-// Paywall features
-const paywallFeatures = [
-  { emoji: '🏃', text: 'برامج تدريب متكاملة' },
-  { emoji: '📈', text: 'تتبع تقدمك' },
-  { emoji: '✨', text: 'حساب السعرات بالذكاء الاصطناعي' },
-  { emoji: '🔥', text: 'تتبع سعراتك اليومية' },
-]
-
-// Paywall reviews
-const paywallReviews = [
-  { name: 'سارة م.', text: 'تطبيق رائع! خسرت 5 كيلو في شهر 💪' },
-  { name: 'خالد ع.', text: 'أفضل تطبيق للتمارين والتغذية 🔥' },
-  { name: 'نورة س.', text: 'سهل ونتائج مضمونة مع الالتزام ⭐' },
-]
-
 // Activity level mappings
 const activityLevels = [
   { id: 'lightlyActive', emoji: '🐢', title: '0-2 تمارين', subtitle: 'نشاط خفيف أو خامل', value: 'نشاط خفيف (تمرين خفيف 1-3 أيام/أسبوع)', multiplier: 1.375 },
@@ -82,13 +67,6 @@ const accomplishmentOptions = [
   { id: 'boost_energy', emoji: '☀️', title: 'زيادة طاقتي ومزاجي' },
   { id: 'stay_motivated', emoji: '💪', title: 'البقاء متحفزاً ومستمراً' },
   { id: 'body_confidence', emoji: '🧍', title: 'الشعور بالرضا عن جسمي' },
-]
-
-// Testimonials
-const testimonials = [
-  { name: 'سارة م.', text: 'تطبيق رائع جداً! خسرت 5 كيلو في شهر واحد فقط.' },
-  { name: 'خالد ع.', text: 'أفضل تطبيق جربته للتمارين والتغذية. أنصح به بشدة.' },
-  { name: 'نورة س.', text: 'سهل الاستخدام والنتائج مضمونة مع الالتزام.' },
 ]
 
 export default function AppOnboarding() {
@@ -187,7 +165,7 @@ export default function AppOnboarding() {
 
   // Calculate all values when reaching step 12
   useEffect(() => {
-    if (step === 12) {
+    if (step === 11) {
       const calories = calculateCalories()
       const macros = getMacroPercentages()
       const programName = getProgramName()
@@ -313,7 +291,7 @@ export default function AppOnboarding() {
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white" dir="rtl">
       {/* Progress Bar */}
-      {step > 0 && step < 13 && (
+      {step > 0 && step < 12 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
           <div className="w-[200px] h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
             <div 
@@ -325,7 +303,7 @@ export default function AppOnboarding() {
       )}
 
       {/* Back Button */}
-      {step > 0 && step < 12 && !showPayment && (
+      {step > 0 && step < 11 && !showPayment && (
         <button
           onClick={prevStep}
           className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center"
@@ -678,47 +656,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 10: Social Proof */}
+        {/* Step 10: Motivation */}
         {step === 10 && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">ساعدنا في نشر الصحة!</h2>
-              <p className="text-neutral-500 dark:text-neutral-400">تقييمك يساعدنا على الوصول للمزيد من الأشخاص وتغيير حياتهم.</p>
-            </div>
-
-            {/* Rating Banner */}
-            <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-center mb-6">
-              <span className="text-5xl font-bold">4.7</span>
-              <div className="flex justify-center gap-1 mt-2">
-                {[1,2,3,4,5].map(i => (
-                  <span key={i} className="text-2xl">⭐</span>
-                ))}
-              </div>
-            </div>
-
-            {/* Testimonials */}
-            <div className="flex-1 space-y-3">
-              {testimonials.map((t, i) => (
-                <div key={i} className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800">
-                  <div className="flex gap-1 mb-2">
-                    {[1,2,3,4,5].map(s => (
-                      <span key={s} className="text-sm">⭐</span>
-                    ))}
-                  </div>
-                  <p className="text-sm mb-2">"{t.text}"</p>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400">{t.name}</p>
-                </div>
-              ))}
-            </div>
-
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
-              التالي
-            </button>
-          </div>
-        )}
-
-        {/* Step 11: Motivation */}
-        {step === 11 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-neutral-500/20 flex items-center justify-center">
               <span className="text-4xl">💪</span>
@@ -740,8 +679,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 12: Processing */}
-        {step === 12 && (
+        {/* Step 11: Processing */}
+        {step === 11 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
             <div className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
               {processingProgress}%
@@ -779,154 +718,139 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 13: Paywall - PaywallView3 Design */}
-        {step === 13 && (
-          <div className="flex-1 flex flex-col animate-fade-in -mx-6 -my-16">
-            {/* Dark Blue Gradient Background */}
-            <div className="min-h-screen bg-gradient-to-b from-[#0D1A33] to-[#1A2640] text-white px-6 py-8 overflow-auto">
-              
-              {/* Header */}
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
-                  <span className="text-3xl">👑</span>
-                </div>
-                <h1 className="text-2xl font-bold mb-1">اشترك في VegaPower</h1>
-                <p className="text-white/70">احصل على جميع المميزات</p>
-              </div>
-
-              {/* Features Grid */}
-              <div className="bg-white/10 rounded-2xl p-4 mb-6">
-                {paywallFeatures.map((feature, i) => (
-                  <div key={i} className={`flex items-center justify-between py-3 ${i < paywallFeatures.length - 1 ? 'border-b border-white/10' : ''}`}>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl text-blue-400">{feature.emoji}</span>
-                      <span className="text-sm">{feature.text}</span>
-                    </div>
-                    <svg className="w-5 h-5 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                    </svg>
-                  </div>
-                ))}
-              </div>
-
-              {/* Reviews Carousel */}
-              <div className="mb-6 -mx-2 overflow-x-auto scrollbar-hide">
-                <div className="flex gap-3 px-2" style={{ width: 'max-content' }}>
-                  {paywallReviews.map((review, i) => (
-                    <div key={i} className="w-[200px] p-4 bg-white/10 rounded-xl flex-shrink-0">
-                      <div className="flex gap-0.5 mb-2">
-                        {[1,2,3,4,5].map(s => (
-                          <span key={s} className="text-xs text-yellow-400">⭐</span>
-                        ))}
-                      </div>
-                      <p className="text-xs text-white/80 mb-2">"{review.text}"</p>
-                      <p className="text-xs text-white/50">{review.name}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Email Input */}
-              <div className="mb-4">
-                <input
-                  type="email"
-                  value={userData.email}
-                  onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-                  placeholder="البريد الإلكتروني"
-                  dir="ltr"
-                  className="w-full p-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-blue-400"
+        {/* Step 12: Payment - Consistent Design */}
+        {step === 12 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-6 pt-8">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-lg overflow-hidden">
+                <Image
+                  src="/Vegapower Logo-05.jpg"
+                  alt="Vega Power"
+                  width={80}
+                  height={80}
+                  className="w-full h-full object-contain"
                 />
               </div>
+              <h2 className="text-2xl font-bold mb-1">اشترك في VegaPower</h2>
+              <p className="text-neutral-500 dark:text-neutral-400">احصل على جميع المميزات</p>
+            </div>
 
-              {/* Plan Selection - 3 Horizontal Cards */}
-              <div className="flex gap-2 mb-4">
-                {[
-                  { key: 'monthly' as PlanType, label: 'شهر', price: plans.monthly.price, savings: null },
-                  { key: 'quarterly' as PlanType, label: '3 أشهر', price: plans.quarterly.price, savings: plans.quarterly.savings },
-                  { key: 'yearly' as PlanType, label: 'سنة', price: plans.yearly.price, savings: plans.yearly.savings },
-                ].map((plan) => (
-                  <button
-                    key={plan.key}
-                    onClick={() => setSelectedPlan(plan.key)}
-                    className={`flex-1 p-3 rounded-xl text-center transition-all relative ${
-                      selectedPlan === plan.key
-                        ? 'bg-blue-500/30 border-2 border-blue-400 scale-[1.02]'
-                        : 'bg-white/10 border border-white/20'
-                    }`}
-                  >
-                    {plan.savings && (
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-orange-500 rounded-full text-[10px] font-medium whitespace-nowrap">
-                        {plan.savings}
-                      </div>
-                    )}
-                    <div className="text-xs text-white/60 mb-1 mt-1">{plan.label}</div>
-                    <div className="text-lg font-bold">{plan.price}</div>
-                    <div className="text-xs text-white/60">ريال</div>
-                  </button>
-                ))}
+            {/* Program Card */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-neutral-700 to-neutral-900 text-white text-center mb-4">
+              <p className="text-sm opacity-80 mb-1">برنامجك</p>
+              <h3 className="text-xl font-bold">{userData.programName}</h3>
+              <div className="flex justify-center gap-6 mt-3">
+                <div>
+                  <div className="text-lg font-bold">{userData.calculatedCalories}</div>
+                  <div className="text-xs opacity-70">سعرة/يوم</div>
+                </div>
+                <div>
+                  <div className="text-lg font-bold">{userData.proteinGrams}g</div>
+                  <div className="text-xs opacity-70">بروتين</div>
+                </div>
+                <div>
+                  <div className="text-lg font-bold">{userData.carbsGrams}g</div>
+                  <div className="text-xs opacity-70">كارب</div>
+                </div>
               </div>
+            </div>
 
-              {/* No Auto-Renewal Badge */}
-              <div className="flex items-center justify-center gap-2 p-3 bg-neutral-500/20 rounded-xl mb-4">
-                <svg className="w-4 h-4 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                </svg>
-                <span className="text-sm text-neutral-300">بدون تجديد تلقائي - جدد متى ما أردت</span>
-              </div>
+            {/* Email Input */}
+            <div className="mb-4">
+              <label className="block text-sm text-neutral-500 dark:text-neutral-400 mb-2">البريد الإلكتروني</label>
+              <input
+                type="email"
+                value={userData.email}
+                onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+                placeholder="you@example.com"
+                dir="ltr"
+                className="w-full p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-neutral-500 outline-none"
+              />
+            </div>
 
-              {/* Payment Button */}
-              {!showPayment ? (
+            {/* Plan Selection - 3 Horizontal Cards */}
+            <div className="flex gap-2 mb-4">
+              {[
+                { key: 'monthly' as PlanType, label: 'شهر', price: plans.monthly.price, savings: null },
+                { key: 'quarterly' as PlanType, label: '3 أشهر', price: plans.quarterly.price, savings: plans.quarterly.savings },
+                { key: 'yearly' as PlanType, label: 'سنة', price: plans.yearly.price, savings: plans.yearly.savings },
+              ].map((plan) => (
                 <button
-                  onClick={() => setShowPayment(true)}
-                  disabled={!validateEmail(userData.email)}
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-lg disabled:opacity-50 shadow-lg shadow-blue-500/30"
+                  key={plan.key}
+                  onClick={() => setSelectedPlan(plan.key)}
+                  className={`flex-1 p-3 rounded-xl text-center transition-all relative ${
+                    selectedPlan === plan.key
+                      ? 'bg-neutral-500/20 border-2 border-neutral-500 scale-[1.02]'
+                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
                 >
-                  💳 الدفع بالبطاقة - {plans[selectedPlan].price} ريال
+                  {plan.savings && (
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-neutral-700 text-white rounded-full text-[10px] font-medium whitespace-nowrap">
+                      {plan.savings}
+                    </div>
+                  )}
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1 mt-1">{plan.label}</div>
+                  <div className="text-lg font-bold">{plan.price}</div>
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">ريال</div>
                 </button>
-              ) : (
-                <div className="space-y-4">
-                  {/* Order Summary */}
-                  <div className="p-4 rounded-xl bg-white/10 border border-white/20">
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-white/60">الخطة</span>
-                      <span>{selectedPlan === 'yearly' ? 'سنوية' : selectedPlan === 'quarterly' ? '3 أشهر' : 'شهرية'}</span>
-                    </div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-white/60">البريد</span>
-                      <span dir="ltr" className="text-sm">{userData.email}</span>
-                    </div>
-                    <div className="flex justify-between font-semibold pt-2 border-t border-white/20">
-                      <span>الإجمالي</span>
-                      <span>{plans[selectedPlan].price} ريال</span>
-                    </div>
+              ))}
+            </div>
+
+            {/* No Auto-Renewal Badge */}
+            <div className="flex items-center justify-center gap-2 p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl mb-4">
+              <svg className="w-4 h-4 text-neutral-600 dark:text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+              </svg>
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">بدون تجديد تلقائي</span>
+            </div>
+
+            {/* Payment Button or Form */}
+            {!showPayment ? (
+              <button
+                onClick={() => setShowPayment(true)}
+                disabled={!validateEmail(userData.email)}
+                className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg disabled:opacity-50 shadow-lg"
+              >
+                💳 الدفع - {plans[selectedPlan].price} ريال
+              </button>
+            ) : (
+              <div className="space-y-4">
+                {/* Order Summary */}
+                <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-neutral-500 dark:text-neutral-400">الخطة</span>
+                    <span>{selectedPlan === 'yearly' ? 'سنوية' : selectedPlan === 'quarterly' ? '3 أشهر' : 'شهرية'}</span>
                   </div>
-
-                  {/* Moyasar Payment Form */}
-                  <div className="moyasar-form [&_input]:!bg-white/10 [&_input]:!border-white/20 [&_input]:!text-white [&_.moyasar-apple-pay-button]:!rounded-xl [&_button]:!rounded-xl"></div>
-
-                  <Script
-                    src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.umd.min.js"
-                    onLoad={() => setMoyasarLoaded(true)}
-                  />
-
-                  <button
-                    onClick={() => { setShowPayment(false); setMoyasarInitialized(false) }}
-                    className="w-full py-3 text-white/60 hover:text-white transition-colors text-sm"
-                  >
-                    ← تغيير الخطة
-                  </button>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-neutral-500 dark:text-neutral-400">البريد</span>
+                    <span dir="ltr" className="text-sm">{userData.email}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                    <span>الإجمالي</span>
+                    <span>{plans[selectedPlan].price} ريال</span>
+                  </div>
                 </div>
-              )}
 
-              {/* Footer */}
-              <div className="mt-6 text-center">
-                <div className="flex justify-center gap-4 text-xs text-blue-400 mb-3">
-                  <a href="#" className="hover:underline">شروط الاستخدام</a>
-                  <span className="text-white/30">|</span>
-                  <a href="#" className="hover:underline">سياسة الخصوصية</a>
-                </div>
-                <p className="text-xs text-white/40">🔒 مدعوم بواسطة Moyasar</p>
+                {/* Moyasar Payment Form */}
+                <div className="moyasar-form"></div>
+
+                <Script
+                  src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.umd.min.js"
+                  onLoad={() => setMoyasarLoaded(true)}
+                />
+
+                <button
+                  onClick={() => { setShowPayment(false); setMoyasarInitialized(false) }}
+                  className="w-full py-3 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors text-sm"
+                >
+                  ← تغيير الخطة
+                </button>
               </div>
+            )}
+
+            {/* Footer */}
+            <div className="mt-4 text-center">
+              <p className="text-xs text-neutral-400">🔒 دفع آمن ومشفر عبر Moyasar</p>
             </div>
           </div>
         )}
