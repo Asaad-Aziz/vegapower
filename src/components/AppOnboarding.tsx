@@ -718,90 +718,135 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 12: Payment - Consistent Design */}
+        {/* Step 12: Payment - Full Featured */}
         {step === 12 && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-6 pt-8">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-lg overflow-hidden">
+          <div className="flex-1 flex flex-col animate-fade-in overflow-auto -my-8 py-8">
+            {/* Header */}
+            <div className="text-center mb-4">
+              <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-lg overflow-hidden">
                 <Image
                   src="/Vegapower Logo-05.jpg"
                   alt="Vega Power"
-                  width={80}
-                  height={80}
+                  width={64}
+                  height={64}
                   className="w-full h-full object-contain"
                 />
               </div>
               <h2 className="text-2xl font-bold mb-1">اشترك في VegaPower</h2>
-              <p className="text-neutral-500 dark:text-neutral-400">احصل على جميع المميزات</p>
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm">التطبيق الوحيد اللي تحتاجه لتحقيق أهدافك 💪</p>
             </div>
 
-            {/* Program Card */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-neutral-700 to-neutral-900 text-white text-center mb-4">
-              <p className="text-sm opacity-80 mb-1">برنامجك</p>
-              <h3 className="text-xl font-bold">{userData.programName}</h3>
-              <div className="flex justify-center gap-6 mt-3">
-                <div>
-                  <div className="text-lg font-bold">{userData.calculatedCalories}</div>
-                  <div className="text-xs opacity-70">سعرة/يوم</div>
+            {/* Encouraging Message */}
+            <div className="p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 mb-4 text-center">
+              <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                🏆 انضم لآلاف المستخدمين اللي شافوا نتائج حقيقية
+              </p>
+            </div>
+
+            {/* Features Grid */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {[
+                { emoji: '🏋️', text: 'برامج تدريب متكاملة', color: 'from-blue-500/20 to-blue-600/20' },
+                { emoji: '🍽️', text: 'خطط غذائية مخصصة', color: 'from-green-500/20 to-green-600/20' },
+                { emoji: '📊', text: 'تتبع تقدمك يومياً', color: 'from-purple-500/20 to-purple-600/20' },
+                { emoji: '🎯', text: 'أهداف واقعية ومحفزة', color: 'from-orange-500/20 to-orange-600/20' },
+              ].map((feature, i) => (
+                <div key={i} className={`p-3 rounded-xl bg-gradient-to-br ${feature.color} flex items-center gap-2`}>
+                  <span className="text-xl">{feature.emoji}</span>
+                  <span className="text-xs font-medium">{feature.text}</span>
                 </div>
+              ))}
+            </div>
+
+            {/* Reviews */}
+            <div className="mb-4 -mx-2 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-2 px-2" style={{ width: 'max-content' }}>
+                {[
+                  { name: 'سارة', text: 'خسرت 8 كيلو في شهرين! 🔥', rating: 5 },
+                  { name: 'محمد', text: 'أفضل استثمار في صحتي 💪', rating: 5 },
+                  { name: 'نورة', text: 'التطبيق غير حياتي! ⭐', rating: 5 },
+                ].map((review, i) => (
+                  <div key={i} className="w-[160px] p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex-shrink-0">
+                    <div className="flex gap-0.5 mb-1">
+                      {[...Array(review.rating)].map((_, s) => (
+                        <span key={s} className="text-[10px] text-amber-500">⭐</span>
+                      ))}
+                    </div>
+                    <p className="text-xs mb-1">"{review.text}"</p>
+                    <p className="text-[10px] text-neutral-500 dark:text-neutral-400">- {review.name}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Program Summary */}
+            <div className="p-3 rounded-xl bg-gradient-to-r from-neutral-800 to-neutral-900 text-white mb-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-lg font-bold">{userData.proteinGrams}g</div>
-                  <div className="text-xs opacity-70">بروتين</div>
+                  <p className="text-[10px] opacity-70">برنامجك</p>
+                  <p className="font-bold text-sm">{userData.programName}</p>
                 </div>
-                <div>
-                  <div className="text-lg font-bold">{userData.carbsGrams}g</div>
-                  <div className="text-xs opacity-70">كارب</div>
+                <div className="flex gap-4 text-center">
+                  <div>
+                    <p className="font-bold">{userData.calculatedCalories}</p>
+                    <p className="text-[10px] opacity-70">سعرة</p>
+                  </div>
+                  <div>
+                    <p className="font-bold">{userData.proteinGrams}g</p>
+                    <p className="text-[10px] opacity-70">بروتين</p>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Email Input */}
-            <div className="mb-4">
-              <label className="block text-sm text-neutral-500 dark:text-neutral-400 mb-2">البريد الإلكتروني</label>
+            <div className="mb-3">
               <input
                 type="email"
                 value={userData.email}
                 onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-                placeholder="you@example.com"
+                placeholder="البريد الإلكتروني"
                 dir="ltr"
-                className="w-full p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-neutral-500 outline-none"
+                className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-neutral-400 outline-none text-sm"
               />
             </div>
 
-            {/* Plan Selection - 3 Horizontal Cards */}
-            <div className="flex gap-2 mb-4">
+            {/* Plan Selection - Colorful Cards */}
+            <div className="flex gap-2 mb-3">
               {[
-                { key: 'monthly' as PlanType, label: 'شهر', price: plans.monthly.price, savings: null },
-                { key: 'quarterly' as PlanType, label: '3 أشهر', price: plans.quarterly.price, savings: plans.quarterly.savings },
-                { key: 'yearly' as PlanType, label: 'سنة', price: plans.yearly.price, savings: plans.yearly.savings },
+                { key: 'monthly' as PlanType, label: 'شهر', price: plans.monthly.price, savings: null, gradient: 'from-slate-500 to-slate-600' },
+                { key: 'quarterly' as PlanType, label: '3 أشهر', price: plans.quarterly.price, savings: plans.quarterly.savings, gradient: 'from-blue-500 to-blue-600' },
+                { key: 'yearly' as PlanType, label: 'سنة', price: plans.yearly.price, savings: plans.yearly.savings, gradient: 'from-amber-500 to-orange-500' },
               ].map((plan) => (
                 <button
                   key={plan.key}
                   onClick={() => setSelectedPlan(plan.key)}
-                  className={`flex-1 p-3 rounded-xl text-center transition-all relative ${
+                  className={`flex-1 p-3 rounded-xl text-center transition-all relative overflow-hidden ${
                     selectedPlan === plan.key
-                      ? 'bg-neutral-500/20 border-2 border-neutral-500 scale-[1.02]'
+                      ? `bg-gradient-to-br ${plan.gradient} text-white scale-[1.02] shadow-lg`
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
                   {plan.savings && (
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-neutral-700 text-white rounded-full text-[10px] font-medium whitespace-nowrap">
+                    <div className={`absolute -top-0.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap ${
+                      selectedPlan === plan.key ? 'bg-white/30 text-white' : 'bg-amber-500 text-white'
+                    }`}>
                       {plan.savings}
                     </div>
                   )}
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1 mt-1">{plan.label}</div>
-                  <div className="text-lg font-bold">{plan.price}</div>
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">ريال</div>
+                  <div className={`text-[10px] mb-0.5 mt-2 ${selectedPlan === plan.key ? 'opacity-80' : 'text-neutral-500 dark:text-neutral-400'}`}>{plan.label}</div>
+                  <div className="text-xl font-bold">{plan.price}</div>
+                  <div className={`text-[10px] ${selectedPlan === plan.key ? 'opacity-80' : 'text-neutral-500 dark:text-neutral-400'}`}>ريال</div>
                 </button>
               ))}
             </div>
 
-            {/* No Auto-Renewal Badge */}
-            <div className="flex items-center justify-center gap-2 p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl mb-4">
-              <svg className="w-4 h-4 text-neutral-600 dark:text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+            {/* No Auto-Renewal */}
+            <div className="flex items-center justify-center gap-2 p-2 bg-green-500/10 rounded-lg mb-3">
+              <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
               </svg>
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">بدون تجديد تلقائي</span>
+              <span className="text-xs text-green-700 dark:text-green-400">بدون تجديد تلقائي - ادفع مرة واحدة فقط</span>
             </div>
 
             {/* Payment Button or Form */}
@@ -809,14 +854,14 @@ export default function AppOnboarding() {
               <button
                 onClick={() => setShowPayment(true)}
                 disabled={!validateEmail(userData.email)}
-                className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg disabled:opacity-50 shadow-lg"
+                className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-700 to-neutral-900 text-white font-semibold text-lg disabled:opacity-50 shadow-lg"
               >
-                💳 الدفع - {plans[selectedPlan].price} ريال
+                🚀 ابدأ الآن - {plans[selectedPlan].price} ريال
               </button>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {/* Order Summary */}
-                <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800">
+                <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800">
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-neutral-500 dark:text-neutral-400">الخطة</span>
                     <span>{selectedPlan === 'yearly' ? 'سنوية' : selectedPlan === 'quarterly' ? '3 أشهر' : 'شهرية'}</span>
@@ -841,7 +886,7 @@ export default function AppOnboarding() {
 
                 <button
                   onClick={() => { setShowPayment(false); setMoyasarInitialized(false) }}
-                  className="w-full py-3 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors text-sm"
+                  className="w-full py-2 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors text-sm"
                 >
                   ← تغيير الخطة
                 </button>
@@ -849,8 +894,8 @@ export default function AppOnboarding() {
             )}
 
             {/* Footer */}
-            <div className="mt-4 text-center">
-              <p className="text-xs text-neutral-400">🔒 دفع آمن ومشفر عبر Moyasar</p>
+            <div className="mt-3 text-center">
+              <p className="text-[10px] text-neutral-400">🔒 دفع آمن ومشفر عبر Moyasar</p>
             </div>
           </div>
         )}
