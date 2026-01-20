@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Script from 'next/script'
+import Image from 'next/image'
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
 
@@ -316,7 +317,7 @@ export default function AppOnboarding() {
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
           <div className="w-[200px] h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-green-500 to-emerald-600 transition-all duration-500 rounded-full"
+              className="h-full bg-gradient-to-r from-neutral-500 to-neutral-700 transition-all duration-500 rounded-full"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -340,14 +341,20 @@ export default function AppOnboarding() {
         {/* Step 0: Welcome */}
         {step === 0 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
-            <div className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-xl">
-              <span className="text-5xl">🏃</span>
+            <div className="w-28 h-28 mx-auto mb-8 rounded-3xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-xl overflow-hidden">
+              <Image
+                src="/Vegapower Logo-05.jpg"
+                alt="Vega Power"
+                width={112}
+                height={112}
+                className="w-full h-full object-contain"
+              />
             </div>
             <h1 className="text-3xl font-bold mb-4">أهلاً بك في Vega Power</h1>
             <p className="text-neutral-500 dark:text-neutral-400 mb-12 leading-relaxed">
               دعنا نخصص لك خطة تدريبية وغذائية تناسب احتياجات جسمك 100%
             </p>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg">
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg shadow-lg">
               ابدأ الآن
             </button>
           </div>
@@ -373,7 +380,7 @@ export default function AppOnboarding() {
                   }}
                   className={`p-6 rounded-2xl text-center transition-all ${
                     userData.gender === g.id
-                      ? 'bg-green-500/20 border-2 border-green-500'
+                      ? 'bg-neutral-500/20 border-2 border-neutral-500'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
@@ -402,7 +409,7 @@ export default function AppOnboarding() {
                   }}
                   className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
                     userData.activityLevel === level.value
-                      ? 'bg-green-500/20 border-2 border-green-500'
+                      ? 'bg-neutral-500/20 border-2 border-neutral-500'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
@@ -436,7 +443,7 @@ export default function AppOnboarding() {
                     max="250"
                     value={userData.height}
                     onChange={(e) => setUserData({ ...userData, height: Number(e.target.value) })}
-                    className="flex-1 accent-green-500"
+                    className="flex-1 accent-neutral-500"
                   />
                   <span className="text-2xl font-bold w-16 text-center">{userData.height}</span>
                 </div>
@@ -450,13 +457,13 @@ export default function AppOnboarding() {
                     max="200"
                     value={userData.weight}
                     onChange={(e) => setUserData({ ...userData, weight: Number(e.target.value) })}
-                    className="flex-1 accent-green-500"
+                    className="flex-1 accent-neutral-500"
                   />
                   <span className="text-2xl font-bold w-16 text-center">{userData.weight}</span>
                 </div>
               </div>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
               التالي
             </button>
           </div>
@@ -481,12 +488,12 @@ export default function AppOnboarding() {
                     const year = Number(e.target.value)
                     setUserData({ ...userData, birthYear: year, age: new Date().getFullYear() - year })
                   }}
-                  className="w-full accent-green-500"
+                  className="w-full accent-neutral-500"
                 />
                 <p className="text-neutral-500 dark:text-neutral-400 mt-4">العمر: {userData.age} سنة</p>
               </div>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
               التالي
             </button>
           </div>
@@ -509,7 +516,7 @@ export default function AppOnboarding() {
                   }}
                   className={`w-full p-5 rounded-2xl text-right flex items-center gap-4 transition-all ${
                     userData.fitnessGoal === goal.value
-                      ? 'bg-green-500/20 border-2 border-green-500'
+                      ? 'bg-neutral-500/20 border-2 border-neutral-500'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
@@ -540,11 +547,11 @@ export default function AppOnboarding() {
                   max="200"
                   value={userData.targetWeight}
                   onChange={(e) => setUserData({ ...userData, targetWeight: Number(e.target.value) })}
-                  className="w-full accent-green-500 mt-6"
+                  className="w-full accent-neutral-500 mt-6"
                 />
               </div>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
               التالي
             </button>
           </div>
@@ -573,17 +580,17 @@ export default function AppOnboarding() {
                   step="0.1"
                   value={userData.targetSpeed}
                   onChange={(e) => setUserData({ ...userData, targetSpeed: Number(e.target.value) })}
-                  className="w-full accent-green-500 mt-6"
+                  className="w-full accent-neutral-500 mt-6"
                 />
                 <button
                   onClick={() => setUserData({ ...userData, targetSpeed: 0.5 })}
-                  className="mt-4 px-4 py-2 rounded-full bg-green-500/20 text-green-600 dark:text-green-400 text-sm"
+                  className="mt-4 px-4 py-2 rounded-full bg-neutral-500/20 text-neutral-600 dark:text-neutral-400 text-sm"
                 >
                   السرعة المستحسنة (0.5 كجم)
                 </button>
               </div>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
               التالي
             </button>
           </div>
@@ -608,7 +615,7 @@ export default function AppOnboarding() {
                   }}
                   className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
                     userData.challenges.includes(ch.id)
-                      ? 'bg-green-500/20 border-2 border-green-500'
+                      ? 'bg-neutral-500/20 border-2 border-neutral-500'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
@@ -617,14 +624,14 @@ export default function AppOnboarding() {
                   </div>
                   <span className="font-medium">{ch.title}</span>
                   {userData.challenges.includes(ch.id) && (
-                    <svg className="w-5 h-5 text-green-500 mr-auto" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-neutral-500 mr-auto" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                     </svg>
                   )}
                 </button>
               ))}
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
               التالي
             </button>
           </div>
@@ -649,7 +656,7 @@ export default function AppOnboarding() {
                   }}
                   className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
                     userData.accomplishments.includes(acc.id)
-                      ? 'bg-green-500/20 border-2 border-green-500'
+                      ? 'bg-neutral-500/20 border-2 border-neutral-500'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
@@ -658,14 +665,14 @@ export default function AppOnboarding() {
                   </div>
                   <span className="font-medium">{acc.title}</span>
                   {userData.accomplishments.includes(acc.id) && (
-                    <svg className="w-5 h-5 text-green-500 mr-auto" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-neutral-500 mr-auto" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                     </svg>
                   )}
                 </button>
               ))}
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
               التالي
             </button>
           </div>
@@ -704,7 +711,7 @@ export default function AppOnboarding() {
               ))}
             </div>
 
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
               التالي
             </button>
           </div>
@@ -713,7 +720,7 @@ export default function AppOnboarding() {
         {/* Step 11: Motivation */}
         {step === 11 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/20 flex items-center justify-center">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-neutral-500/20 flex items-center justify-center">
               <span className="text-4xl">💪</span>
             </div>
             <h2 className="text-2xl font-bold mb-2">
@@ -723,11 +730,11 @@ export default function AppOnboarding() {
             <p className="text-neutral-600 dark:text-neutral-300 mb-8 leading-relaxed">
               90% من المستخدمين يقولون أن التغيير واضح جداً بعد استخدام Vega Power...
             </p>
-            <div className="p-4 rounded-2xl bg-green-500/10 border border-green-500/20">
+            <div className="p-4 rounded-2xl bg-neutral-500/10 border border-neutral-500/20">
               <p className="text-sm">📈 يعزز الثقة: أنا أستطيع فعلها</p>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">يقلل من خطر الاستسلام</p>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-green-500 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
               التالي
             </button>
           </div>
@@ -758,7 +765,7 @@ export default function AppOnboarding() {
                 'تحليل درجة الصحة',
               ].map((item, i) => (
                 <div key={i} className={`flex items-center gap-3 transition-opacity ${completedChecks.includes(i) ? 'opacity-100' : 'opacity-30'}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${completedChecks.includes(i) ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-600'}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${completedChecks.includes(i) ? 'bg-neutral-600' : 'bg-neutral-300 dark:bg-neutral-600'}`}>
                     {completedChecks.includes(i) && (
                       <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
@@ -795,7 +802,7 @@ export default function AppOnboarding() {
                       <span className="text-xl text-blue-400">{feature.emoji}</span>
                       <span className="text-sm">{feature.text}</span>
                     </div>
-                    <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                     </svg>
                   </div>
@@ -860,11 +867,11 @@ export default function AppOnboarding() {
               </div>
 
               {/* No Auto-Renewal Badge */}
-              <div className="flex items-center justify-center gap-2 p-3 bg-green-500/20 rounded-xl mb-4">
-                <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+              <div className="flex items-center justify-center gap-2 p-3 bg-neutral-500/20 rounded-xl mb-4">
+                <svg className="w-4 h-4 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                 </svg>
-                <span className="text-sm text-green-300">بدون تجديد تلقائي - جدد متى ما أردت</span>
+                <span className="text-sm text-neutral-300">بدون تجديد تلقائي - جدد متى ما أردت</span>
               </div>
 
               {/* Payment Button */}
