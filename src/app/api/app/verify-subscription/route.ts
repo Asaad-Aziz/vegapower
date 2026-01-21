@@ -261,6 +261,8 @@ export async function POST(request: NextRequest) {
       success: true, 
       email: metadata.email,
       firebaseUserCreated: !!firebaseUid,
+      amount: payment.amount / 100,
+      plan: metadata.plan,
     })
   } catch (error) {
     console.error('Subscription verification error:', error)

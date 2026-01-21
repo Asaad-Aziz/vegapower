@@ -2,12 +2,14 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { purchase } from '@/lib/meta-pixel'
 
 function AppSuccessInner() {
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
+  const [hasTrackedPurchase, setHasTrackedPurchase] = useState(false)
 
   useEffect(() => {
     const verifyAndCreateAccount = async () => {
@@ -31,6 +33,19 @@ function AppSuccessInner() {
         if (data.success) {
           setStatus('success')
           setEmail(data.email)
+          
+          // Track purchase with Meta Pixel (only once)
+          if (!hasTrackedPurchase && !data.alreadyProcessed) {
+            purchase({
+              content_name: 'Vega Power App Subscription',
+              content_ids: ['vega_app_subscription'],
+              content_type: 'product',
+              value: data.amount || 155, // Use the amount from response or default
+              currency: 'SAR',
+              num_items: 1,
+            })
+            setHasTrackedPurchase(true)
+          }
         } else {
           setStatus('error')
           setError(data.error || 'حدث خطأ أثناء معالجة الطلب')
@@ -42,7 +57,7 @@ function AppSuccessInner() {
     }
 
     verifyAndCreateAccount()
-  }, [searchParams])
+  }, [searchParams, hasTrackedPurchase])
 
   if (status === 'loading') {
     return (
@@ -132,7 +147,9 @@ function AppSuccessInner() {
         {/* App Store Buttons */}
         <div className="flex gap-3 justify-center mb-6">
           <a
-            href="#"
+            href="https://apps.apple.com/sa/app/vega-power/id6740749036"
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
@@ -145,7 +162,9 @@ function AppSuccessInner() {
           </a>
           
           <a
-            href="#"
+            href="https://play.google.com/store/apps/details?id=com.vegapower.vegapowerandroid"
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
