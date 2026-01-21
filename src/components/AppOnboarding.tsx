@@ -31,9 +31,9 @@ interface UserData {
 }
 
 const plans = {
-  monthly: { price: 10, period: 'شهر', productId: 'moyasar_monthly', savings: null }, // TODO: Change back to 45 SAR after testing
+  monthly: { price: 45, period: 'شهر', productId: 'moyasar_monthly', savings: null }, // TODO: Change back to 45 SAR after testing
   quarterly: { price: 112, period: '3 أشهر', productId: 'moyasar_3months', savings: 'وفر 23 ريال' },
-  yearly: { price: 155, period: 'سنة', productId: 'moyasar_yearly', savings: '🎉 عرض السنة الجديدة!' }, // Special New Year offer - was 255
+  yearly: { price: 155, period: 'سنة', productId: 'moyasar_yearly', savings: 'وفر 293 ريال' }, // Special New Year offer - was 448
 }
 
 type PlanType = 'monthly' | 'quarterly' | 'yearly'
@@ -816,7 +816,7 @@ export default function AppOnboarding() {
               <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvc3ZnPg==')] opacity-50"></div>
               <div className="relative">
                 <p className="text-xs font-bold mb-1">🎊 عرض السنة الجديدة 2026 🎊</p>
-                <p className="text-lg font-black">سنة كاملة بـ <span className="line-through opacity-60">255</span> 155 ريال فقط!</p>
+                <p className="text-lg font-black">سنة كاملة بـ <span className="line-through opacity-60">448</span> 155 ريال فقط!</p>
                 <p className="text-[10px] opacity-80 mt-1">⏰ عرض محدود - لأول 100 مشترك فقط</p>
               </div>
             </div>
