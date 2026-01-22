@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Script from 'next/script'
 import Image from 'next/image'
+import { initiateCheckout, addPaymentInfo } from '@/lib/meta-pixel'
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
 
@@ -232,6 +233,14 @@ export default function AppOnboarding() {
       const appUrl = (process.env.NEXT_PUBLIC_APP_URL || window.location.origin).replace(/\/$/, '')
       const publishableKey = process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || ''
       const plan = plans[selectedPlan]
+
+      // Track AddPaymentInfo when payment form is shown
+      addPaymentInfo({
+        content_ids: [plan.productId],
+        content_type: 'product',
+        value: plan.price,
+        currency: 'SAR',
+      })
 
       setTimeout(() => {
         const el = document.querySelector('.moyasar-form')
@@ -862,7 +871,17 @@ export default function AppOnboarding() {
             {/* Payment Button or Form */}
             {!showPayment ? (
               <button
-                onClick={() => setShowPayment(true)}
+                onClick={() => {
+                  // Track InitiateCheckout event for Meta Pixel
+                  initiateCheckout({
+                    content_ids: [plans[selectedPlan].productId],
+                    content_type: 'product',
+                    value: plans[selectedPlan].price,
+                    currency: 'SAR',
+                    num_items: 1,
+                  })
+                  setShowPayment(true)
+                }}
                 disabled={!validateEmail(userData.email)}
                 className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-700 to-neutral-900 text-white font-semibold text-lg disabled:opacity-50 shadow-lg"
               >

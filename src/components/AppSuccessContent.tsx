@@ -36,15 +36,20 @@ function AppSuccessInner() {
           
           // Track purchase with Meta Pixel (only once)
           if (!hasTrackedPurchase && !data.alreadyProcessed) {
+            // Use the actual plan product ID if available
+            const productId = data.plan ? `moyasar_${data.plan === 'yearly' ? 'yearly' : data.plan === 'quarterly' ? '3months' : 'monthly'}` : 'vega_app_subscription'
+            
+            // Fire purchase event - this now waits for fbq to be ready
             purchase({
-              content_name: 'Vega Power App Subscription',
-              content_ids: ['vega_app_subscription'],
+              content_name: `Vega Power App - ${data.plan === 'yearly' ? 'سنوي' : data.plan === 'quarterly' ? '3 أشهر' : 'شهري'}`,
+              content_ids: [productId],
               content_type: 'product',
-              value: data.amount || 155, // Use the amount from response or default
+              value: data.amount || 155,
               currency: 'SAR',
               num_items: 1,
             })
             setHasTrackedPurchase(true)
+            console.log('Purchase tracking initiated:', { productId, amount: data.amount, plan: data.plan })
           }
         } else {
           setStatus('error')
