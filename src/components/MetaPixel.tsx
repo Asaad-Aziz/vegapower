@@ -9,6 +9,9 @@ export default function MetaPixel() {
   const pathname = usePathname()
 
   useEffect(() => {
+    // Debug: Log pixel status
+    console.log('Meta Pixel ID:', FB_PIXEL_ID ? 'Configured' : 'NOT CONFIGURED')
+    
     // Track pageview on route change
     if (FB_PIXEL_ID) {
       pageview()
@@ -16,6 +19,7 @@ export default function MetaPixel() {
   }, [pathname])
 
   if (!FB_PIXEL_ID) {
+    console.warn('Meta Pixel: NEXT_PUBLIC_META_PIXEL_ID environment variable is not set')
     return null
   }
 
