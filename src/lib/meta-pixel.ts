@@ -2,12 +2,12 @@
 
 declare global {
   interface Window {
-    fbq: (
+    fbq?: (
       action: string,
       eventName: string,
       params?: Record<string, unknown>
     ) => void
-    _fbq: unknown
+    _fbq?: unknown
   }
 }
 
@@ -18,7 +18,7 @@ const waitForFbq = (maxAttempts = 50): Promise<boolean> => {
   return new Promise((resolve) => {
     let attempts = 0
     const checkFbq = () => {
-      if (typeof window !== 'undefined' && window.fbq) {
+      if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
         resolve(true)
         return
       }
