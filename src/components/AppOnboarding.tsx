@@ -5,7 +5,7 @@ import Script from 'next/script'
 import Image from 'next/image'
 import { initiateCheckout, addPaymentInfo } from '@/lib/meta-pixel'
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15
 
 interface UserData {
   gender: 'male' | 'female' | ''
@@ -102,11 +102,11 @@ export default function AppOnboarding() {
     programName: '',
   })
 
-  const totalSteps = 14
+  const totalSteps = 17
   const progress = (step / (totalSteps - 1)) * 100
 
   const nextStep = () => {
-    if (step < 13) setStep((step + 1) as Step)
+    if (step < 16) setStep((step + 1) as Step)
   }
 
   const prevStep = () => {
@@ -164,9 +164,9 @@ export default function AppOnboarding() {
     }
   }
 
-  // Calculate all values when reaching step 12
+  // Calculate all values when reaching step 14 (Processing)
   useEffect(() => {
-    if (step === 11) {
+    if (step === 14) {
       const calories = calculateCalories()
       const macros = getMacroPercentages()
       const programName = getProgramName()
@@ -300,7 +300,7 @@ export default function AppOnboarding() {
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white" dir="rtl">
       {/* Progress Bar */}
-      {step > 0 && step < 12 && (
+      {step > 0 && step < 15 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
           <div className="w-[200px] h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
             <div 
@@ -312,7 +312,7 @@ export default function AppOnboarding() {
       )}
 
       {/* Back Button */}
-      {step > 0 && step < 11 && !showPayment && (
+      {step > 0 && step < 14 && !showPayment && (
         <button
           onClick={prevStep}
           className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center"
@@ -665,8 +665,203 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 10: Motivation */}
+        {/* Step 10: Nutrition Tracking Question */}
         {step === 10 && (
+          <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-400/20 to-emerald-500/20 flex items-center justify-center">
+              <span className="text-5xl">📸</span>
+            </div>
+            <h2 className="text-2xl font-bold mb-4">هل تتمنى أن يكون تتبع الغذاء أسهل؟</h2>
+            <p className="text-neutral-500 dark:text-neutral-400 mb-8 leading-relaxed">
+              كثير من الناس يتركون الدايت لأن حساب السعرات صعب ومُتعب...
+            </p>
+            
+            <div className="space-y-4 mb-8">
+              <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-right">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">😫</span>
+                  <div>
+                    <p className="font-medium text-red-600 dark:text-red-400">الطريقة القديمة</p>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">البحث عن كل صنف وإدخاله يدوياً</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-4 rounded-2xl bg-green-500/10 border border-green-500/20 text-right">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🤩</span>
+                  <div>
+                    <p className="font-medium text-green-600 dark:text-green-400">مع Vega Power</p>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">صوّر أكلك والذكاء الاصطناعي يحسب كل شيء!</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold text-lg shadow-lg">
+              أريد هذه الميزة! ✨
+            </button>
+          </div>
+        )}
+
+        {/* Step 11: Investment Commitment Question */}
+        {step === 11 && (
+          <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-amber-400/20 to-orange-500/20 flex items-center justify-center">
+              <span className="text-5xl">💎</span>
+            </div>
+            <h2 className="text-2xl font-bold mb-4">هل أنت مستعد للاستثمار في صحتك؟</h2>
+            <p className="text-neutral-500 dark:text-neutral-400 mb-6 leading-relaxed">
+              صحتك هي أغلى ما تملك. الاستثمار فيها اليوم يعني حياة أفضل غداً.
+            </p>
+            
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 mb-6">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <span className="text-3xl">☕</span>
+                <span className="text-xl">=</span>
+                <span className="text-3xl">💪</span>
+              </div>
+              <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                بسعر كوب قهوة يومياً، تحصل على مدرب شخصي وأخصائي تغذية في جيبك!
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 mb-8">
+              <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-center">
+                <p className="text-2xl font-bold text-green-500">94%</p>
+                <p className="text-[10px] text-neutral-500 dark:text-neutral-400">شافوا نتائج</p>
+              </div>
+              <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-center">
+                <p className="text-2xl font-bold text-blue-500">+50K</p>
+                <p className="text-[10px] text-neutral-500 dark:text-neutral-400">مستخدم</p>
+              </div>
+              <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-center">
+                <p className="text-2xl font-bold text-purple-500">4.9⭐</p>
+                <p className="text-[10px] text-neutral-500 dark:text-neutral-400">تقييم</p>
+              </div>
+            </div>
+
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold text-lg shadow-lg">
+              نعم، أنا مستعد! 🚀
+            </button>
+          </div>
+        )}
+
+        {/* Step 12: Our Story - Why We Built This */}
+        {step === 12 && (
+          <div className="flex-1 flex flex-col animate-fade-in overflow-auto -my-4 py-4">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                <span className="text-4xl">💜</span>
+              </div>
+              <h2 className="text-2xl font-bold mb-2">قصتنا معك</h2>
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm">لماذا بنينا Vega Power</p>
+            </div>
+
+            {/* Story Content */}
+            <div className="space-y-4 mb-6 text-right">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">😤</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">المشكلة اللي واجهناها</p>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                      جربنا تطبيقات كثيرة، لكن كلها كانت معقدة أو بالإنجليزي أو ما تفهم أكلنا العربي. حسينا إن محتاج يكون في حل أفضل.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">💡</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-purple-600 dark:text-purple-400 mb-1">الحل اللي صنعناه</p>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                      تطبيق عربي 100%، يفهم أكلك ويحسب سعراتك بصورة وحدة! مع برامج تمارين مصممة لك شخصياً.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-600/10 border border-green-500/20">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">🎯</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-green-600 dark:text-green-400 mb-1">هدفنا</p>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                      نبي نساعدك تشوف نتائج حقيقية وتستمر عليها. مش مجرد تطبيق، إحنا شركاء في رحلتك.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Features Highlight */}
+            <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 mb-6">
+              <p className="font-semibold mb-3 text-center">كيف نساعدك تنجح؟</p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                    <span>📸</span>
+                  </div>
+                  <p className="text-sm">صوّر وجبتك والذكاء الاصطناعي يحسب السعرات فوراً</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <span>🏋️</span>
+                  </div>
+                  <p className="text-sm">برامج تمارين مخصصة حسب هدفك ومستواك</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                    <span>📊</span>
+                  </div>
+                  <p className="text-sm">تتبع تقدمك يومياً وشوف نتائجك تتحسن</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                    <span>👥</span>
+                  </div>
+                  <p className="text-sm">انضم لمجتمع من الناس اللي مثلك يسعون للأفضل</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Community Stats */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-neutral-800 to-neutral-900 text-white mb-6">
+              <p className="text-center text-sm mb-3 opacity-80">انضم لعائلة Vega Power</p>
+              <div className="flex justify-around">
+                <div className="text-center">
+                  <p className="text-2xl font-bold">+50,000</p>
+                  <p className="text-xs opacity-70">مستخدم سعودي</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold">+2M</p>
+                  <p className="text-xs opacity-70">وجبة تم تتبعها</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold">+100K</p>
+                  <p className="text-xs opacity-70">كيلو تم خسارته</p>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-lg shadow-lg">
+              أريد أن أكون جزءاً من هذا! 🌟
+            </button>
+          </div>
+        )}
+
+        {/* Step 13: Motivation */}
+        {step === 13 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-neutral-500/20 flex items-center justify-center">
               <span className="text-4xl">💪</span>
@@ -688,8 +883,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 11: Processing */}
-        {step === 11 && (
+        {/* Step 14: Processing */}
+        {step === 14 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
             <div className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
               {processingProgress}%
@@ -727,8 +922,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 12: Payment - Full Featured */}
-        {step === 12 && (
+        {/* Step 15: Payment - Full Featured */}
+        {step === 15 && (
           <div className="flex-1 flex flex-col animate-fade-in overflow-auto -my-8 py-8">
             {/* Header */}
             <div className="text-center mb-4">
