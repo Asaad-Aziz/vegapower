@@ -1028,21 +1028,126 @@ export default function AppOnboarding() {
               </div>
             </div>
 
-            {/* Program Summary */}
-            <div className="p-3 rounded-xl bg-gradient-to-r from-neutral-800 to-neutral-900 text-white mb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] opacity-70">برنامجك</p>
-                  <p className="font-bold text-sm">{userData.programName}</p>
-                </div>
-                <div className="flex gap-4 text-center">
-                  <div>
-                    <p className="font-bold">{userData.calculatedCalories}</p>
-                    <p className="text-[10px] opacity-70">سعرة</p>
+            {/* Personalized Program Summary */}
+            <div className="rounded-2xl bg-gradient-to-br from-neutral-800 via-neutral-900 to-black text-white mb-4 overflow-hidden">
+              {/* Header with program name and stats */}
+              <div className="p-4 border-b border-white/10">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
                   <div>
-                    <p className="font-bold">{userData.proteinGrams}g</p>
+                    <p className="text-[10px] opacity-70">برنامجك جاهز! ✨</p>
+                    <p className="font-bold text-lg">{userData.programName}</p>
+                  </div>
+                </div>
+                <div className="flex justify-around text-center bg-white/5 rounded-xl p-3">
+                  <div>
+                    <p className="text-xl font-bold text-green-400">{userData.calculatedCalories}</p>
+                    <p className="text-[10px] opacity-70">سعرة/يوم</p>
+                  </div>
+                  <div className="border-r border-white/10"></div>
+                  <div>
+                    <p className="text-xl font-bold text-blue-400">{userData.proteinGrams}g</p>
                     <p className="text-[10px] opacity-70">بروتين</p>
+                  </div>
+                  <div className="border-r border-white/10"></div>
+                  <div>
+                    <p className="text-xl font-bold text-purple-400">{userData.carbsGrams}g</p>
+                    <p className="text-[10px] opacity-70">كارب</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Personalized message based on their goal */}
+              <div className="p-4 border-b border-white/10">
+                <p className="text-sm leading-relaxed">
+                  {userData.fitnessGoal === 'Lose Fat (Cut)' && (
+                    <>بناءً على بياناتك، صممنا لك خطة لـ<span className="text-green-400 font-semibold"> خسارة {Math.abs(userData.weight - userData.targetWeight)} كجم </span>بطريقة صحية ومستدامة.</>
+                  )}
+                  {userData.fitnessGoal === 'Build Muscle (Bulk)' && (
+                    <>بناءً على بياناتك، صممنا لك خطة لـ<span className="text-blue-400 font-semibold"> بناء العضلات وزيادة {Math.abs(userData.weight - userData.targetWeight)} كجم </span>من الكتلة العضلية.</>
+                  )}
+                  {userData.fitnessGoal === 'Body Recomposition' && (
+                    <>بناءً على بياناتك، صممنا لك خطة لـ<span className="text-purple-400 font-semibold"> تحسين تكوين جسمك </span>وزيادة العضلات مع حرق الدهون.</>
+                  )}
+                </p>
+              </div>
+
+              {/* How we'll help with their challenges */}
+              {userData.challenges.length > 0 && (
+                <div className="p-4 border-b border-white/10">
+                  <p className="text-[10px] opacity-70 mb-2">سنساعدك في التغلب على:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {userData.challenges.includes('lack_consistency') && (
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-orange-500/20 text-orange-300 text-[10px]">
+                        <span>📊</span> تذكيرات يومية للاستمرار
+                      </div>
+                    )}
+                    {userData.challenges.includes('unhealthy_habits') && (
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-300 text-[10px]">
+                        <span>🍴</span> وجبات صحية بديلة
+                      </div>
+                    )}
+                    {userData.challenges.includes('lack_support') && (
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-500/20 text-blue-300 text-[10px]">
+                        <span>👥</span> مجتمع داعم ومحفز
+                      </div>
+                    )}
+                    {userData.challenges.includes('busy_schedule') && (
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 text-[10px]">
+                        <span>📅</span> تمارين سريعة (15-30 دقيقة)
+                      </div>
+                    )}
+                    {userData.challenges.includes('meal_inspiration') && (
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-pink-500/20 text-pink-300 text-[10px]">
+                        <span>💡</span> +500 وصفة صحية
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* What they'll achieve */}
+              {userData.accomplishments.length > 0 && (
+                <div className="p-4 border-b border-white/10">
+                  <p className="text-[10px] opacity-70 mb-2">ستحقق معنا:</p>
+                  <div className="space-y-2">
+                    {userData.accomplishments.includes('healthier_lifestyle') && (
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-green-400">✓</span> أكل وحياة صحية أكثر
+                      </div>
+                    )}
+                    {userData.accomplishments.includes('boost_energy') && (
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-yellow-400">✓</span> زيادة طاقتك ومزاجك
+                      </div>
+                    )}
+                    {userData.accomplishments.includes('stay_motivated') && (
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-blue-400">✓</span> البقاء متحفزاً ومستمراً
+                      </div>
+                    )}
+                    {userData.accomplishments.includes('body_confidence') && (
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-pink-400">✓</span> الشعور بالرضا عن جسمك
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Call to action */}
+              <div className="p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-500/30 flex items-center justify-center animate-pulse">
+                    <span className="text-xl">🚀</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">برنامجك جاهز وينتظرك!</p>
+                    <p className="text-[10px] opacity-70">فقط فعّل اشتراكك وسجل دخولك للتطبيق</p>
                   </div>
                 </div>
               </div>
