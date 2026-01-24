@@ -32,9 +32,17 @@ interface UserData {
 }
 
 const plans = {
-  monthly: { price: 45, period: 'شهر', productId: 'moyasar_monthly', savings: null }, // TODO: Change back to 45 SAR after testing
-  quarterly: { price: 112, period: '3 أشهر', productId: 'moyasar_3months', savings: 'وفر 23 ريال' },
-  yearly: { price: 155, period: 'سنة', productId: 'moyasar_yearly', savings: 'وفر 293 ريال' }, // Special New Year offer - was 448
+  monthly: { price: 45, period: 'شهر', productId: 'moyasar_monthly', savings: null, days: 30 },
+  quarterly: { price: 112, period: '3 أشهر', productId: 'moyasar_3months', savings: 'وفر 23 ريال', days: 90 },
+  yearly: { price: 155, period: 'سنة', productId: 'moyasar_yearly', savings: 'وفر 293 ريال', days: 365 }, // Special New Year offer - was 448
+}
+
+// Discount codes configuration
+const discountCodes: Record<string, { percent: number; label: string }> = {
+  'VEGA10': { percent: 10, label: '10%' },
+  'VEGA20': { percent: 20, label: '20%' },
+  'NEWYEAR': { percent: 15, label: '15%' },
+  'FITNESS': { percent: 10, label: '10%' },
 }
 
 type PlanType = 'monthly' | 'quarterly' | 'yearly'
@@ -78,6 +86,9 @@ export default function AppOnboarding() {
   const [completedChecks, setCompletedChecks] = useState<number[]>([])
   const [moyasarLoaded, setMoyasarLoaded] = useState(false)
   const [moyasarInitialized, setMoyasarInitialized] = useState(false)
+  const [discountCode, setDiscountCode] = useState('')
+  const [appliedDiscount, setAppliedDiscount] = useState<{ percent: number; label: string } | null>(null)
+  const [discountError, setDiscountError] = useState('')
 
   const [userData, setUserData] = useState<UserData>({
     gender: '',
@@ -233,12 +244,17 @@ export default function AppOnboarding() {
       const appUrl = (process.env.NEXT_PUBLIC_APP_URL || window.location.origin).replace(/\/$/, '')
       const publishableKey = process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || ''
       const plan = plans[selectedPlan]
+      
+      // Calculate final price with any applied discount
+      const finalPrice = appliedDiscount 
+        ? Math.round(plan.price * (1 - appliedDiscount.percent / 100))
+        : plan.price
 
       // Track AddPaymentInfo when payment form is shown
       addPaymentInfo({
         content_ids: [plan.productId],
         content_type: 'product',
-        value: plan.price,
+        value: finalPrice,
         currency: 'SAR',
       })
 
@@ -248,9 +264,9 @@ export default function AppOnboarding() {
 
         window.Moyasar.init({
           element: '.moyasar-form',
-          amount: plan.price * 100,
+          amount: finalPrice * 100,
           currency: 'SAR',
-          description: `Vega Power App - ${selectedPlan === 'yearly' ? 'اشتراك سنوي' : selectedPlan === 'quarterly' ? 'اشتراك 3 أشهر' : 'اشتراك شهري'}`,
+          description: `Vega Power App - ${selectedPlan === 'yearly' ? 'اشتراك سنوي' : selectedPlan === 'quarterly' ? 'اشتراك 3 أشهر' : 'اشتراك شهري'}${appliedDiscount ? ` (خصم ${appliedDiscount.label})` : ''}`,
           publishable_api_key: publishableKey,
           callback_url: `${appUrl}/app/success`,
           methods: ['creditcard', 'applepay'],
@@ -265,6 +281,10 @@ export default function AppOnboarding() {
             type: 'app_subscription',
             plan: selectedPlan,
             productId: plan.productId,
+            discountCode: appliedDiscount ? discountCode : '',
+            discountPercent: appliedDiscount ? String(appliedDiscount.percent) : '0',
+            originalPrice: String(plan.price),
+            finalPrice: String(finalPrice),
             gender: userData.gender,
             activityLevel: userData.activityLevel,
             height: String(userData.height),
@@ -290,9 +310,34 @@ export default function AppOnboarding() {
         setMoyasarInitialized(true)
       }, 100)
     }
-  }, [showPayment, moyasarLoaded, moyasarInitialized, selectedPlan, userData])
+  }, [showPayment, moyasarLoaded, moyasarInitialized, selectedPlan, userData, appliedDiscount, discountCode])
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+
+  // Apply discount code
+  const applyDiscountCode = () => {
+    const code = discountCode.toUpperCase().trim()
+    if (discountCodes[code]) {
+      setAppliedDiscount(discountCodes[code])
+      setDiscountError('')
+    } else {
+      setAppliedDiscount(null)
+      setDiscountError('كود الخصم غير صالح')
+    }
+  }
+
+  // Calculate final price with discount
+  const getFinalPrice = (basePrice: number) => {
+    if (appliedDiscount) {
+      return Math.round(basePrice * (1 - appliedDiscount.percent / 100))
+    }
+    return basePrice
+  }
+
+  // Calculate daily cost
+  const getDailyCost = (price: number, days: number) => {
+    return (price / days).toFixed(2)
+  }
 
   const weightDiff = Math.abs(userData.weight - userData.targetWeight)
   const isLosingWeight = userData.targetWeight < userData.weight
@@ -1025,34 +1070,98 @@ export default function AppOnboarding() {
               </div>
             </div>
 
-            {/* Plan Selection - Colorful Cards */}
+            {/* Plan Selection - Colorful Cards with Daily Cost */}
             <div className="flex gap-2 mb-3">
               {[
-                { key: 'monthly' as PlanType, label: 'شهر', price: plans.monthly.price, savings: null, gradient: 'from-slate-500 to-slate-600' },
-                { key: 'quarterly' as PlanType, label: '3 أشهر', price: plans.quarterly.price, savings: plans.quarterly.savings, gradient: 'from-blue-500 to-blue-600' },
-                { key: 'yearly' as PlanType, label: 'سنة', price: plans.yearly.price, savings: plans.yearly.savings, gradient: 'from-red-500 to-pink-500' },
-              ].map((plan) => (
-                <button
-                  key={plan.key}
-                  onClick={() => setSelectedPlan(plan.key)}
-                  className={`flex-1 p-3 rounded-xl text-center transition-all relative overflow-hidden ${
-                    selectedPlan === plan.key
-                      ? `bg-gradient-to-br ${plan.gradient} text-white scale-[1.02] shadow-lg`
-                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                  }`}
-                >
-                  {plan.savings && (
-                    <div className={`absolute -top-0.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap ${
-                      selectedPlan === plan.key ? 'bg-white/30 text-white' : 'bg-red-500 text-white'
+                { key: 'monthly' as PlanType, label: 'شهر', price: plans.monthly.price, days: plans.monthly.days, savings: null, gradient: 'from-slate-500 to-slate-600' },
+                { key: 'quarterly' as PlanType, label: '3 أشهر', price: plans.quarterly.price, days: plans.quarterly.days, savings: plans.quarterly.savings, gradient: 'from-blue-500 to-blue-600' },
+                { key: 'yearly' as PlanType, label: 'سنة', price: plans.yearly.price, days: plans.yearly.days, savings: plans.yearly.savings, gradient: 'from-red-500 to-pink-500' },
+              ].map((plan) => {
+                const finalPrice = getFinalPrice(plan.price)
+                const dailyCost = getDailyCost(finalPrice, plan.days)
+                return (
+                  <button
+                    key={plan.key}
+                    onClick={() => setSelectedPlan(plan.key)}
+                    className={`flex-1 p-3 rounded-xl text-center transition-all relative overflow-hidden ${
+                      selectedPlan === plan.key
+                        ? `bg-gradient-to-br ${plan.gradient} text-white scale-[1.02] shadow-lg`
+                        : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                    }`}
+                  >
+                    {plan.savings && (
+                      <div className={`absolute -top-0.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap ${
+                        selectedPlan === plan.key ? 'bg-white/30 text-white' : 'bg-red-500 text-white'
+                      }`}>
+                        {plan.savings}
+                      </div>
+                    )}
+                    <div className={`text-[10px] mb-0.5 mt-2 ${selectedPlan === plan.key ? 'opacity-80' : 'text-neutral-500 dark:text-neutral-400'}`}>{plan.label}</div>
+                    {appliedDiscount && finalPrice !== plan.price ? (
+                      <>
+                        <div className="text-sm line-through opacity-50">{plan.price}</div>
+                        <div className="text-xl font-bold">{finalPrice}</div>
+                      </>
+                    ) : (
+                      <div className="text-xl font-bold">{plan.price}</div>
+                    )}
+                    <div className={`text-[10px] ${selectedPlan === plan.key ? 'opacity-80' : 'text-neutral-500 dark:text-neutral-400'}`}>ريال</div>
+                    <div className={`text-[9px] mt-1 px-2 py-0.5 rounded-full ${
+                      selectedPlan === plan.key ? 'bg-white/20' : 'bg-neutral-200 dark:bg-neutral-700'
                     }`}>
-                      {plan.savings}
+                      {dailyCost} ر.س/يوم
                     </div>
-                  )}
-                  <div className={`text-[10px] mb-0.5 mt-2 ${selectedPlan === plan.key ? 'opacity-80' : 'text-neutral-500 dark:text-neutral-400'}`}>{plan.label}</div>
-                  <div className="text-xl font-bold">{plan.price}</div>
-                  <div className={`text-[10px] ${selectedPlan === plan.key ? 'opacity-80' : 'text-neutral-500 dark:text-neutral-400'}`}>ريال</div>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Discount Code Input */}
+            <div className="mb-3">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={discountCode}
+                  onChange={(e) => {
+                    setDiscountCode(e.target.value.toUpperCase())
+                    setDiscountError('')
+                  }}
+                  placeholder="كود الخصم (اختياري)"
+                  className="flex-1 p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-neutral-400 outline-none text-sm text-center"
+                  dir="ltr"
+                />
+                <button
+                  onClick={applyDiscountCode}
+                  disabled={!discountCode.trim()}
+                  className="px-4 py-2.5 rounded-xl bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 disabled:opacity-50 text-sm font-medium transition-colors"
+                >
+                  تطبيق
                 </button>
-              ))}
+              </div>
+              {discountError && (
+                <p className="text-red-500 text-xs mt-1 text-center">{discountError}</p>
+              )}
+              {appliedDiscount && (
+                <div className="flex items-center justify-center gap-2 mt-2 p-2 bg-green-500/10 rounded-lg">
+                  <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                  </svg>
+                  <span className="text-xs text-green-700 dark:text-green-400">
+                    تم تطبيق خصم {appliedDiscount.label}! 🎉
+                  </span>
+                  <button
+                    onClick={() => {
+                      setAppliedDiscount(null)
+                      setDiscountCode('')
+                    }}
+                    className="text-neutral-500 hover:text-red-500 mr-auto"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* No Auto-Renewal */}
@@ -1067,11 +1176,12 @@ export default function AppOnboarding() {
             {!showPayment ? (
               <button
                 onClick={() => {
+                  const finalPrice = getFinalPrice(plans[selectedPlan].price)
                   // Track InitiateCheckout event for Meta Pixel
                   initiateCheckout({
                     content_ids: [plans[selectedPlan].productId],
                     content_type: 'product',
-                    value: plans[selectedPlan].price,
+                    value: finalPrice,
                     currency: 'SAR',
                     num_items: 1,
                   })
@@ -1080,7 +1190,11 @@ export default function AppOnboarding() {
                 disabled={!validateEmail(userData.email)}
                 className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-700 to-neutral-900 text-white font-semibold text-lg disabled:opacity-50 shadow-lg"
               >
-                🚀 ابدأ الآن - {plans[selectedPlan].price} ريال
+                {appliedDiscount ? (
+                  <>🚀 ابدأ الآن - <span className="line-through opacity-60 mx-1">{plans[selectedPlan].price}</span> {getFinalPrice(plans[selectedPlan].price)} ريال</>
+                ) : (
+                  <>🚀 ابدأ الآن - {plans[selectedPlan].price} ريال</>
+                )}
               </button>
             ) : (
               <div className="space-y-3">
@@ -1094,9 +1208,21 @@ export default function AppOnboarding() {
                     <span className="text-neutral-500 dark:text-neutral-400">البريد</span>
                     <span dir="ltr" className="text-sm">{userData.email}</span>
                   </div>
+                  {appliedDiscount && (
+                    <>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-neutral-500 dark:text-neutral-400">السعر الأصلي</span>
+                        <span className="line-through">{plans[selectedPlan].price} ريال</span>
+                      </div>
+                      <div className="flex justify-between text-sm mb-2 text-green-600">
+                        <span>الخصم ({appliedDiscount.label})</span>
+                        <span>- {plans[selectedPlan].price - getFinalPrice(plans[selectedPlan].price)} ريال</span>
+                      </div>
+                    </>
+                  )}
                   <div className="flex justify-between font-semibold pt-2 border-t border-neutral-200 dark:border-neutral-700">
                     <span>الإجمالي</span>
-                    <span>{plans[selectedPlan].price} ريال</span>
+                    <span className={appliedDiscount ? 'text-green-600' : ''}>{getFinalPrice(plans[selectedPlan].price)} ريال</span>
                   </div>
                 </div>
 
