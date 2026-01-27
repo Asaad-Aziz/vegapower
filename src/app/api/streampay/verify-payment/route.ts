@@ -22,9 +22,25 @@ const plans: Record<string, { days: number; productId: string }> = {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { sessionId, email, plan, amount, userData, discountCode } = body
+    const { 
+      sessionId, 
+      email, 
+      plan, 
+      amount, 
+      userData, 
+      discountCode,
+      streampayConsumerId,  // StreamPay consumer ID for subscription management
+      streampayProductId,   // StreamPay product ID from dashboard
+    } = body
 
-    console.log('StreamPay verify-payment called:', { sessionId, email, plan, amount })
+    console.log('StreamPay verify-payment called:', { 
+      sessionId, 
+      email, 
+      plan, 
+      amount,
+      streampayConsumerId,
+      streampayProductId,
+    })
 
     // Validate required fields
     if (!email || !plan) {
@@ -129,7 +145,7 @@ export async function POST(request: NextRequest) {
       // Subscription
       subscription: {
         isActive: true,
-        productId: planConfig.productId,
+        productId: streampayProductId || planConfig.productId, // Use actual StreamPay product ID if available
         expirationDate: expirationDate,
         startDate: now,
         planType: plan,
@@ -137,6 +153,9 @@ export async function POST(request: NextRequest) {
         currency: 'SAR',
         source: 'streampay_web',
         paymentId: sessionId,
+        // StreamPay specific IDs for subscription management/cancellation
+        streampayConsumerId: streampayConsumerId || null,
+        streampayProductId: streampayProductId || null,
       },
 
       // Metadata
@@ -152,7 +171,7 @@ export async function POST(request: NextRequest) {
       await saveUserDataToFirestore(firebaseUid, firebaseUserData)
     }
 
-    // Store subscription in Supabase
+    // Store subscription in Supabase (including StreamPay IDs for cancellation)
     const { error: insertError } = await supabase.from('app_subscriptions').insert({
       payment_id: sessionId || `streampay_${Date.now()}`,
       email: email,
@@ -160,7 +179,12 @@ export async function POST(request: NextRequest) {
       plan: plan,
       amount: parseFloat(amount) || 155,
       status: 'active',
-      user_data: firebaseUserData,
+      user_data: {
+        ...firebaseUserData,
+        // Ensure StreamPay IDs are stored in user_data as well
+        streampayConsumerId: streampayConsumerId || null,
+        streampayProductId: streampayProductId || null,
+      },
       expires_at: expirationDate.toISOString(),
       payment_source: 'streampay',
       discount_code: discountCode || null,

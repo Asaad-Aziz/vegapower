@@ -23,6 +23,9 @@ function AppSuccessInner() {
         const sessionId = searchParams.get('session')
         const userDataParam = searchParams.get('userData')
         const discountCode = searchParams.get('discountCode')
+        // StreamPay IDs for subscription management
+        const streampayConsumerId = searchParams.get('streampayConsumerId')
+        const streampayProductId = searchParams.get('streampayProductId')
         
         if (!emailParam) {
           setStatus('error')
@@ -42,6 +45,8 @@ function AppSuccessInner() {
               amount,
               userData: userDataParam ? decodeURIComponent(userDataParam) : null,
               discountCode,
+              streampayConsumerId,
+              streampayProductId,
             }),
           })
 

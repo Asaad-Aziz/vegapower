@@ -113,6 +113,10 @@ export async function POST(request: NextRequest) {
     if (discountCode) {
       successUrlWithParams.searchParams.set('discountCode', discountCode)
     }
+    // Add existing product ID if using dashboard products
+    if (existingProductId) {
+      successUrlWithParams.searchParams.set('streampayProductId', existingProductId)
+    }
 
     let result: { paymentUrl: string; consumerId?: string; productId?: string }
 
@@ -126,6 +130,9 @@ export async function POST(request: NextRequest) {
         name: email.split('@')[0],
         email: email,
       })
+
+      // Add consumer ID to success URL for tracking/cancellation
+      successUrlWithParams.searchParams.set('streampayConsumerId', consumer.id)
 
       // Create payment link with existing product
       const paymentLink = await client.createPaymentLink({
@@ -149,7 +156,7 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Create new product on-the-fly (one-time payment)
-      result = await client.createSimplePaymentLink({
+      const simpleResult = await client.createSimplePaymentLink({
         name: `Vega Power App - ${selectedPlan.productName}`,
         amount: price,
         consumer: {
@@ -163,6 +170,15 @@ export async function POST(request: NextRequest) {
         successRedirectUrl: successUrlWithParams.toString(),
         failureRedirectUrl: `${baseUrl}/app?payment=failed`,
       })
+
+      // Note: For simple payment links, consumer/product are created automatically
+      // We need to update the success URL with the consumer ID
+      if (simpleResult.consumerId) {
+        // Re-create payment link with consumer ID in URL (or handle via webhook)
+        console.log('Simple payment created with consumerId:', simpleResult.consumerId)
+      }
+
+      result = simpleResult
     }
 
     console.log('StreamPay payment link created:', {

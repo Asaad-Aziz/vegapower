@@ -173,3 +173,9 @@ Edit `src/components/CheckoutForm.tsx` - modify the `methods` array in Moyasar c
 ## License
 
 MIT
+
+## deploying
+
+git add -A
+git commit -m "2f"
+git push origin master
