@@ -46,6 +46,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Log API key format (only first/last few chars for security)
+    console.log('StreamPay API Key format:', {
+      length: apiKey.length,
+      prefix: apiKey.substring(0, 8) + '...',
+      suffix: '...' + apiKey.substring(apiKey.length - 4),
+    })
+
     // Initialize StreamPay SDK
     const client = StreamSDK.init(apiKey)
 
@@ -113,10 +120,23 @@ export async function POST(request: NextRequest) {
       productId: result.productId,
     })
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('StreamPay payment link creation error:', error)
+    
+    // Extract error details for debugging
+    const errorDetails = {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      status: (error as { status?: number })?.status,
+      body: (error as { body?: unknown })?.body,
+    }
+    console.error('Error details:', JSON.stringify(errorDetails, null, 2))
+    
     return NextResponse.json(
-      { success: false, error: 'Failed to create payment link' },
+      { 
+        success: false, 
+        error: 'Failed to create payment link',
+        details: process.env.NODE_ENV === 'development' ? errorDetails : undefined
+      },
       { status: 500 }
     )
   }
