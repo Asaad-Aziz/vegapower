@@ -64,30 +64,10 @@ export async function POST(request: NextRequest) {
     // Get base URL for redirects
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vegapowerstore.com'
 
-    // Create payment link with StreamPay SDK
-    const result = await client.createSimplePaymentLink({
-      name: `Vega Power App - ${selectedPlan.productName}`,
-      amount: price,
-      consumer: {
-        email: email,
-        name: email.split('@')[0], // Use email prefix as name if not provided
-      },
-      product: {
-        name: selectedPlan.productName,
-        price: price,
-      },
-      successRedirectUrl: `${baseUrl}/app/success?source=streampay`,
-      failureRedirectUrl: `${baseUrl}/app?payment=failed`,
-      // Store metadata for webhook processing
-      // Note: StreamPay may have a different way to pass metadata
-      // We'll encode it in the success URL as backup
-    })
-
     // Create a session ID to track this payment
     const sessionId = `sp_${Date.now()}_${Math.random().toString(36).substring(7)}`
 
-    // Store payment session data in a way the webhook can access
-    // For now, we'll encode essential data in the success URL
+    // Build success URL with all necessary data for account creation
     const successUrlWithParams = new URL(`${baseUrl}/app/success`)
     successUrlWithParams.searchParams.set('source', 'streampay')
     successUrlWithParams.searchParams.set('session', sessionId)
@@ -102,6 +82,22 @@ export async function POST(request: NextRequest) {
     if (discountCode) {
       successUrlWithParams.searchParams.set('discountCode', discountCode)
     }
+
+    // Create payment link with StreamPay SDK
+    const result = await client.createSimplePaymentLink({
+      name: `Vega Power App - ${selectedPlan.productName}`,
+      amount: price,
+      consumer: {
+        email: email,
+        name: email.split('@')[0], // Use email prefix as name if not provided
+      },
+      product: {
+        name: selectedPlan.productName,
+        price: price,
+      },
+      successRedirectUrl: successUrlWithParams.toString(),
+      failureRedirectUrl: `${baseUrl}/app?payment=failed`,
+    })
 
     console.log('StreamPay payment link created:', {
       paymentUrl: result.paymentUrl,

@@ -15,35 +15,64 @@ function AppSuccessInner() {
     const processPayment = async () => {
       const source = searchParams.get('source')
       
-      // StreamPay flow - webhook handles account creation
+      // StreamPay flow - call verification endpoint to create account
       if (source === 'streampay') {
         const emailParam = searchParams.get('email')
         const plan = searchParams.get('plan') || 'monthly'
         const amount = searchParams.get('amount')
+        const sessionId = searchParams.get('session')
+        const userDataParam = searchParams.get('userData')
+        const discountCode = searchParams.get('discountCode')
         
-        if (emailParam) {
-          setEmail(emailParam)
-          setStatus('success')
-          
-          // Track purchase with Meta Pixel
-          if (!hasTrackedPurchase) {
-            const productId = `streampay_${plan === 'yearly' ? 'yearly' : plan === 'quarterly' ? '3months' : 'monthly'}`
+        if (!emailParam) {
+          setStatus('error')
+          setError('معلومات الدفع غير مكتملة')
+          return
+        }
+
+        try {
+          // Call verification endpoint to create Firebase user and send email
+          const response = await fetch('/api/streampay/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId,
+              email: emailParam,
+              plan,
+              amount,
+              userData: userDataParam ? decodeURIComponent(userDataParam) : null,
+              discountCode,
+            }),
+          })
+
+          const data = await response.json()
+
+          if (data.success) {
+            setEmail(emailParam)
+            setStatus('success')
             
-            purchase({
-              content_name: `Vega Power App - ${plan === 'yearly' ? 'سنوي' : plan === 'quarterly' ? '3 أشهر' : 'شهري'}`,
-              content_ids: [productId],
-              content_type: 'product',
-              value: amount ? parseFloat(amount) : 155,
-              currency: 'SAR',
-              num_items: 1,
-            })
-            setHasTrackedPurchase(true)
-            console.log('StreamPay purchase tracking:', { productId, amount, plan })
+            // Track purchase with Meta Pixel
+            if (!hasTrackedPurchase && !data.alreadyProcessed) {
+              const productId = `streampay_${plan === 'yearly' ? 'yearly' : plan === 'quarterly' ? '3months' : 'monthly'}`
+              
+              purchase({
+                content_name: `Vega Power App - ${plan === 'yearly' ? 'سنوي' : plan === 'quarterly' ? '3 أشهر' : 'شهري'}`,
+                content_ids: [productId],
+                content_type: 'product',
+                value: amount ? parseFloat(amount) : 155,
+                currency: 'SAR',
+                num_items: 1,
+              })
+              setHasTrackedPurchase(true)
+              console.log('StreamPay purchase tracking:', { productId, amount, plan })
+            }
+          } else {
+            setStatus('error')
+            setError(data.error || 'حدث خطأ أثناء إنشاء الحساب')
           }
-        } else {
-          // If no email in URL, show success anyway (webhook will have processed)
-          setStatus('success')
-          setEmail('تحقق من بريدك الإلكتروني')
+        } catch {
+          setStatus('error')
+          setError('حدث خطأ في الاتصال')
         }
         return
       }
