@@ -89,18 +89,23 @@ export async function POST(request: NextRequest) {
     console.log('StreamPay webhook received:', JSON.stringify(body, null, 2))
 
     // Log webhook event for debugging (optional - can be removed later)
-    const supabaseForLogging = createServerClient()
-    await supabaseForLogging.from('webhook_logs').insert({
-      source: 'streampay',
-      event_type: body.event_type || 'unknown',
-      payload: body,
-      processed_at: new Date().toISOString(),
-    }).then(() => {
-      console.log('Webhook logged to database')
-    }).catch((err) => {
+    try {
+      const supabaseForLogging = createServerClient()
+      const { error: logError } = await supabaseForLogging.from('webhook_logs').insert({
+        source: 'streampay',
+        event_type: body.event_type || 'unknown',
+        payload: body,
+        processed_at: new Date().toISOString(),
+      })
+      if (logError) {
+        console.log('Webhook logging skipped (table may not exist):', logError.message)
+      } else {
+        console.log('Webhook logged to database')
+      }
+    } catch (logErr) {
       // Don't fail if logging table doesn't exist
-      console.log('Webhook logging skipped (table may not exist):', err.message)
-    })
+      console.log('Webhook logging skipped:', logErr)
+    }
 
     const {
       event_type,
