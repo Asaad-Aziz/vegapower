@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
-import { createFirebaseUser, saveUserDataToFirestore } from '@/lib/firebase-admin'
+import { 
+  createFirebaseUser, 
+  saveUserDataToFirestore,
+  getFirebaseUidByEmail,
+  getUserDataFromFirestore,
+  updateSubscriptionInFirestore,
+  findUserByStreampayConsumerId,
+} from '@/lib/firebase-admin'
 
 // Generate a random password
 function generatePassword(length = 12): string {
@@ -19,6 +26,41 @@ const plans: Record<string, { days: number; productId: string }> = {
   yearly: { days: 365, productId: 'streampay_yearly' },
 }
 
+// Calculate new expiration date based on plan
+function calculateExpirationDate(plan: string, fromDate?: Date): Date {
+  const date = fromDate ? new Date(fromDate) : new Date()
+  
+  if (plan === 'yearly') {
+    date.setFullYear(date.getFullYear() + 1)
+  } else if (plan === 'quarterly') {
+    date.setMonth(date.getMonth() + 3)
+  } else {
+    date.setMonth(date.getMonth() + 1)
+  }
+  
+  return date
+}
+
+// Detect plan from product ID or amount
+function detectPlanFromProduct(productId?: string, amount?: number): string {
+  // Check product ID patterns
+  if (productId) {
+    const id = productId.toLowerCase()
+    if (id.includes('year') || id.includes('annual')) return 'yearly'
+    if (id.includes('quarter') || id.includes('3month')) return 'quarterly'
+    if (id.includes('month')) return 'monthly'
+  }
+  
+  // Fallback to amount detection (in SAR)
+  if (amount) {
+    const amountSAR = amount > 1000 ? amount / 100 : amount // Handle halalas
+    if (amountSAR >= 150) return 'yearly'
+    if (amountSAR >= 100) return 'quarterly'
+  }
+  
+  return 'monthly'
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -28,6 +70,9 @@ export async function POST(request: NextRequest) {
     const {
       event_type,
       payment_id,
+      subscription_id,
+      consumer_id,
+      product_id,
       status,
       customer,
       amount,
@@ -35,7 +80,230 @@ export async function POST(request: NextRequest) {
       metadata,
     } = body
 
-    // Handle successful payment events
+    const email = customer?.email || metadata?.email
+    const consumerId = consumer_id || customer?.id || metadata?.consumerId
+    const productId = product_id || metadata?.productId
+
+    // =========================================
+    // HANDLE SUBSCRIPTION RENEWALS
+    // =========================================
+    const renewalEvents = [
+      'subscription.renewed',
+      'subscription.payment_successful',
+      'recurring_payment.successful',
+    ]
+
+    if (renewalEvents.includes(event_type)) {
+      console.log('Processing subscription renewal:', { event_type, email, consumerId })
+      
+      // Find user by email or consumer ID
+      let firebaseUid: string | null = null
+      let userData: Record<string, unknown> | null = null
+      
+      if (email) {
+        firebaseUid = await getFirebaseUidByEmail(email)
+      }
+      
+      if (!firebaseUid && consumerId) {
+        const userByConsumer = await findUserByStreampayConsumerId(consumerId)
+        if (userByConsumer) {
+          firebaseUid = userByConsumer.uid
+          userData = userByConsumer.data
+        }
+      }
+
+      if (!firebaseUid) {
+        console.error('Renewal failed: User not found', { email, consumerId })
+        return NextResponse.json({ received: true, error: 'User not found for renewal' }, { status: 404 })
+      }
+
+      // Get current user data if not already fetched
+      if (!userData) {
+        userData = await getUserDataFromFirestore(firebaseUid)
+      }
+
+      // Detect plan type
+      const currentSubscription = userData?.subscription as Record<string, unknown> | undefined
+      const plan = detectPlanFromProduct(productId, amount) || currentSubscription?.planType as string || 'monthly'
+      const planConfig = plans[plan] || plans.monthly
+
+      // Calculate new expiration (extend from current expiration if still active)
+      const currentExpiration = currentSubscription?.expirationDate
+      const baseDate = currentExpiration && new Date(currentExpiration as string) > new Date() 
+        ? new Date(currentExpiration as string) 
+        : new Date()
+      const newExpirationDate = calculateExpirationDate(plan, baseDate)
+
+      // Update subscription in Firebase
+      const subscriptionUpdate = {
+        ...(currentSubscription || {}),
+        isActive: true,
+        expirationDate: newExpirationDate,
+        lastRenewalDate: new Date(),
+        lastPaymentId: payment_id,
+        renewalCount: ((currentSubscription?.renewalCount as number) || 0) + 1,
+      }
+
+      await updateSubscriptionInFirestore(firebaseUid, subscriptionUpdate)
+
+      // Update Supabase
+      const supabase = createServerClient()
+      await supabase.from('app_subscriptions').insert({
+        payment_id: payment_id || `renewal_${Date.now()}`,
+        email: email || userData?.email as string,
+        firebase_uid: firebaseUid,
+        plan: plan,
+        amount: typeof amount === 'number' ? (amount > 1000 ? amount / 100 : amount) : planConfig.days,
+        status: 'active',
+        expires_at: newExpirationDate.toISOString(),
+        payment_source: 'streampay_renewal',
+      })
+
+      console.log('Subscription renewal processed:', {
+        firebaseUid,
+        plan,
+        newExpiration: newExpirationDate,
+      })
+
+      return NextResponse.json({
+        received: true,
+        processed: true,
+        event: 'renewal',
+        newExpiration: newExpirationDate,
+      })
+    }
+
+    // =========================================
+    // HANDLE SUBSCRIPTION CANCELLATIONS
+    // =========================================
+    const cancellationEvents = [
+      'subscription.cancelled',
+      'subscription.canceled',
+      'subscription.ended',
+      'subscription.expired',
+    ]
+
+    if (cancellationEvents.includes(event_type)) {
+      console.log('Processing subscription cancellation:', { event_type, email, consumerId })
+      
+      // Find user
+      let firebaseUid: string | null = null
+      
+      if (email) {
+        firebaseUid = await getFirebaseUidByEmail(email)
+      }
+      
+      if (!firebaseUid && consumerId) {
+        const userByConsumer = await findUserByStreampayConsumerId(consumerId)
+        if (userByConsumer) {
+          firebaseUid = userByConsumer.uid
+        }
+      }
+
+      if (!firebaseUid) {
+        console.error('Cancellation: User not found', { email, consumerId })
+        return NextResponse.json({ received: true, error: 'User not found' }, { status: 404 })
+      }
+
+      // Get current subscription data
+      const userData = await getUserDataFromFirestore(firebaseUid)
+      const currentSubscription = userData?.subscription as Record<string, unknown> | undefined
+
+      // Update subscription to cancelled (but keep expiration date for access until then)
+      const subscriptionUpdate = {
+        ...(currentSubscription || {}),
+        isActive: false,
+        cancelledAt: new Date(),
+        autoRenew: false,
+        status: 'cancelled',
+      }
+
+      await updateSubscriptionInFirestore(firebaseUid, subscriptionUpdate)
+
+      // Update Supabase
+      const supabase = createServerClient()
+      await supabase.from('app_subscriptions')
+        .update({ status: 'cancelled' })
+        .eq('firebase_uid', firebaseUid)
+        .eq('status', 'active')
+
+      console.log('Subscription cancellation processed:', { firebaseUid })
+
+      return NextResponse.json({
+        received: true,
+        processed: true,
+        event: 'cancellation',
+      })
+    }
+
+    // =========================================
+    // HANDLE FAILED PAYMENTS
+    // =========================================
+    const failedEvents = [
+      'payment.failed',
+      'subscription.payment_failed',
+      'recurring_payment.failed',
+    ]
+
+    if (failedEvents.includes(event_type)) {
+      console.log('Processing failed payment:', { event_type, email, consumerId })
+      
+      // Find user
+      let firebaseUid: string | null = null
+      
+      if (email) {
+        firebaseUid = await getFirebaseUidByEmail(email)
+      }
+      
+      if (!firebaseUid && consumerId) {
+        const userByConsumer = await findUserByStreampayConsumerId(consumerId)
+        if (userByConsumer) {
+          firebaseUid = userByConsumer.uid
+        }
+      }
+
+      if (firebaseUid) {
+        // Get current subscription
+        const userData = await getUserDataFromFirestore(firebaseUid)
+        const currentSubscription = userData?.subscription as Record<string, unknown> | undefined
+
+        // Mark payment failed (don't deactivate immediately - grace period)
+        const subscriptionUpdate = {
+          ...(currentSubscription || {}),
+          lastPaymentFailed: true,
+          lastPaymentFailedAt: new Date(),
+          paymentFailCount: ((currentSubscription?.paymentFailCount as number) || 0) + 1,
+        }
+
+        await updateSubscriptionInFirestore(firebaseUid, subscriptionUpdate)
+      }
+
+      // Log to Supabase for tracking
+      const supabase = createServerClient()
+      await supabase.from('app_subscriptions').insert({
+        payment_id: payment_id || `failed_${Date.now()}`,
+        email: email || 'unknown',
+        firebase_uid: firebaseUid,
+        plan: detectPlanFromProduct(productId, amount),
+        amount: typeof amount === 'number' ? (amount > 1000 ? amount / 100 : amount) : 0,
+        status: 'failed',
+        payment_source: 'streampay_failed',
+      })
+
+      console.log('Failed payment logged:', { firebaseUid, email })
+
+      // TODO: Send email notification about failed payment
+
+      return NextResponse.json({
+        received: true,
+        processed: true,
+        event: 'payment_failed',
+      })
+    }
+
+    // =========================================
+    // HANDLE NEW PAYMENTS (Initial subscription)
+    // =========================================
     const successEvents = [
       'payment.successful',
       'payment.completed',
@@ -47,8 +315,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, processed: false })
     }
 
-    const email = customer?.email || metadata?.email
-    const plan = metadata?.plan || 'monthly'
+    const plan = metadata?.plan || detectPlanFromProduct(productId, amount)
     const userDataFromMeta = metadata?.userData ? JSON.parse(metadata.userData) : null
 
     if (!email) {
@@ -74,16 +341,8 @@ export async function POST(request: NextRequest) {
 
     // Calculate subscription expiration
     const now = new Date()
-    const expirationDate = new Date(now)
+    const expirationDate = calculateExpirationDate(plan)
     const planConfig = plans[plan] || plans.monthly
-    
-    if (plan === 'yearly') {
-      expirationDate.setFullYear(expirationDate.getFullYear() + 1)
-    } else if (plan === 'quarterly') {
-      expirationDate.setMonth(expirationDate.getMonth() + 3)
-    } else {
-      expirationDate.setMonth(expirationDate.getMonth() + 1)
-    }
 
     // Create Firebase user
     console.log('Creating Firebase user for:', email)
@@ -130,17 +389,23 @@ export async function POST(request: NextRequest) {
       // Program Info
       programName: userDataFromMeta?.programName || 'Vega Shred 🔥',
 
-      // Subscription
+      // Subscription with StreamPay IDs
       subscription: {
         isActive: true,
-        productId: planConfig.productId,
+        productId: productId || planConfig.productId,
         expirationDate: expirationDate,
         startDate: now,
         planType: plan,
-        amount: amount / 100, // StreamPay might send in halalas
+        amount: typeof amount === 'number' ? (amount > 1000 ? amount / 100 : amount) : planConfig.days,
         currency: currency || 'SAR',
         source: 'streampay_web',
         paymentId: payment_id,
+        // StreamPay IDs for subscription management
+        streampayConsumerId: consumerId || null,
+        streampayProductId: productId || null,
+        streampaySubscriptionId: subscription_id || null,
+        autoRenew: true,
+        renewalCount: 0,
       },
 
       // Metadata
@@ -162,7 +427,7 @@ export async function POST(request: NextRequest) {
       email: email,
       firebase_uid: firebaseUid,
       plan: plan,
-      amount: typeof amount === 'number' ? amount / 100 : amount,
+      amount: typeof amount === 'number' ? (amount > 1000 ? amount / 100 : amount) : planConfig.days,
       status: 'active',
       user_data: firebaseUserData,
       expires_at: expirationDate.toISOString(),

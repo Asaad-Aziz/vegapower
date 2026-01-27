@@ -117,3 +117,109 @@ export async function saveUserDataToFirestore(uid: string, userData: Record<stri
     return false
   }
 }
+
+// Get Firebase UID by email
+export async function getFirebaseUidByEmail(email: string): Promise<string | null> {
+  const app = getFirebaseAdmin()
+  if (!app) {
+    console.error('Firebase Admin app not available')
+    return null
+  }
+
+  try {
+    const user = await admin.auth().getUserByEmail(email)
+    return user.uid
+  } catch (error: unknown) {
+    const errorCode = (error as { code?: string })?.code
+    if (errorCode === 'auth/user-not-found') {
+      console.log('User not found for email:', email)
+      return null
+    }
+    console.error('Error getting user by email:', error)
+    return null
+  }
+}
+
+// Get user data from Firestore by UID
+export async function getUserDataFromFirestore(uid: string): Promise<Record<string, unknown> | null> {
+  const app = getFirebaseAdmin()
+  if (!app) {
+    console.error('Firebase Admin app not available for Firestore')
+    return null
+  }
+
+  try {
+    const db = admin.firestore()
+    const doc = await db.collection('users').doc(uid).get()
+    if (doc.exists) {
+      return doc.data() as Record<string, unknown>
+    }
+    return null
+  } catch (error: unknown) {
+    console.error('Error getting user data from Firestore:', error)
+    return null
+  }
+}
+
+// Update subscription in Firestore (for renewals, cancellations, etc.)
+export async function updateSubscriptionInFirestore(
+  uid: string, 
+  subscriptionUpdate: Record<string, unknown>
+): Promise<boolean> {
+  console.log('Updating subscription in Firestore for:', uid)
+  
+  const app = getFirebaseAdmin()
+  if (!app) {
+    console.error('Firebase Admin app not available for Firestore')
+    return false
+  }
+
+  try {
+    const db = admin.firestore()
+    await db.collection('users').doc(uid).update({
+      'subscription': subscriptionUpdate,
+      'lastUpdated': new Date(),
+    })
+    console.log('Updated subscription in Firestore successfully for:', uid)
+    return true
+  } catch (error: unknown) {
+    const firestoreError = error as { code?: string; message?: string }
+    console.error('Error updating subscription in Firestore:', {
+      code: firestoreError.code,
+      message: firestoreError.message,
+      uid,
+    })
+    return false
+  }
+}
+
+// Find Firebase user by StreamPay consumer ID (searches Firestore)
+export async function findUserByStreampayConsumerId(consumerId: string): Promise<{ uid: string; data: Record<string, unknown> } | null> {
+  const app = getFirebaseAdmin()
+  if (!app) {
+    console.error('Firebase Admin app not available for Firestore')
+    return null
+  }
+
+  try {
+    const db = admin.firestore()
+    const snapshot = await db.collection('users')
+      .where('subscription.streampayConsumerId', '==', consumerId)
+      .limit(1)
+      .get()
+    
+    if (snapshot.empty) {
+      console.log('No user found with StreamPay consumer ID:', consumerId)
+      return null
+    }
+
+    const doc = snapshot.docs[0]
+    return {
+      uid: doc.id,
+      data: doc.data() as Record<string, unknown>,
+    }
+  } catch (error: unknown) {
+    console.error('Error finding user by StreamPay consumer ID:', error)
+    return null
+  }
+}
