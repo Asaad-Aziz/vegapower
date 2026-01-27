@@ -11,14 +11,14 @@ const plans = {
     // Set via STREAMPAY_PRODUCT_MONTHLY env var
   },
   quarterly: { 
-    price: 112, 
+    price: 92, 
     period: '3 أشهر', 
     productName: 'اشتراك 3 أشهر - Vega Power', 
     days: 90,
     // Set via STREAMPAY_PRODUCT_QUARTERLY env var
   },
   yearly: { 
-    price: 155, 
+    price: 187, 
     period: 'سنة', 
     productName: 'اشتراك سنوي - Vega Power', 
     days: 365,
