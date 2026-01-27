@@ -138,10 +138,14 @@ export async function POST(request: NextRequest) {
 
       const paymentUrl = client.getPaymentUrl(paymentLink)
 
+      if (!paymentUrl) {
+        throw new Error('Failed to get payment URL from StreamPay')
+      }
+
       result = {
         paymentUrl,
         consumerId: consumer.id,
-        productId: existingProductId,
+        productId: existingProductId || undefined,
       }
     } else {
       // Create new product on-the-fly (one-time payment)
