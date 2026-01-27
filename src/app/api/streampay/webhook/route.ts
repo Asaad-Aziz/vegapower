@@ -376,6 +376,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, alreadyProcessed: true })
     }
 
+    // Also check by email if recently processed (within last 5 minutes)
+    // This prevents double emails when both verify-payment and webhook fire
+    const { data: recentByEmail } = await supabase
+      .from('app_subscriptions')
+      .select('id, firebase_uid, created_at')
+      .eq('email', email)
+      .eq('payment_source', 'streampay')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+    const wasRecentlyProcessed = recentByEmail && 
+      new Date(recentByEmail.created_at) > fiveMinutesAgo
+
+    if (wasRecentlyProcessed) {
+      console.log('StreamPay webhook: User was recently processed by verify-payment, skipping', email)
+      return NextResponse.json({ 
+        received: true, 
+        alreadyProcessed: true, 
+        reason: 'recently_created_by_verify_payment' 
+      })
+    }
+
+    // Check if user already exists in Firebase (created by verify-payment)
+    const existingFirebaseUid = await getFirebaseUidByEmail(email)
+    let userAlreadyExists = false
+    
+    if (existingFirebaseUid) {
+      // Check if user has subscription data (means verify-payment already handled it)
+      const existingUserData = await getUserDataFromFirestore(existingFirebaseUid)
+      if (existingUserData?.subscription && existingUserData?.onboardingCompleted) {
+        userAlreadyExists = true
+        console.log('StreamPay webhook: User already exists with subscription, skipping email', email)
+      }
+    }
+
     // Generate temporary password
     const tempPassword = generatePassword()
 
@@ -384,14 +421,14 @@ export async function POST(request: NextRequest) {
     const expirationDate = calculateExpirationDate(plan)
     const planConfig = plans[plan] || plans.monthly
 
-    // Create Firebase user
-    console.log('Creating Firebase user for:', email)
+    // Create Firebase user (or get existing)
+    console.log('Creating/getting Firebase user for:', email)
     const firebaseUid = await createFirebaseUser(email, tempPassword)
 
     if (!firebaseUid) {
       console.error('Failed to create Firebase user')
     } else {
-      console.log('Firebase user created:', firebaseUid)
+      console.log('Firebase user ready:', firebaseUid)
     }
 
     // Prepare Firebase user data
@@ -478,9 +515,9 @@ export async function POST(request: NextRequest) {
       console.error('Failed to store subscription:', insertError)
     }
 
-    // Send email with temporary password
+    // Send email with temporary password (only if user wasn't already created by verify-payment)
     const resendApiKey = process.env.RESEND_API_KEY
-    if (resendApiKey && firebaseUid) {
+    if (resendApiKey && firebaseUid && !userAlreadyExists) {
       try {
         const emailResponse = await fetch('https://api.resend.com/emails', {
           method: 'POST',
@@ -567,6 +604,8 @@ export async function POST(request: NextRequest) {
       } catch (emailErr) {
         console.error('Email error:', emailErr)
       }
+    } else if (userAlreadyExists) {
+      console.log('Email skipped - user was already created by verify-payment:', email)
     }
 
     console.log('StreamPay webhook processed successfully:', {
