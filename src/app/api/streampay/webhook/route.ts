@@ -125,6 +125,64 @@ export async function POST(request: NextRequest) {
     const productId = product_id || metadata?.productId
 
     // =========================================
+    // HANDLE SUBSCRIPTION CREATED (Capture subscription ID)
+    // =========================================
+    if (event_type === 'subscription.created' || event_type === 'subscription.activated') {
+      console.log('Processing subscription created:', { event_type, email, consumerId, subscription_id })
+      
+      // Find user by email or consumer ID
+      let firebaseUid: string | null = null
+      
+      if (email) {
+        firebaseUid = await getFirebaseUidByEmail(email)
+      }
+      
+      if (!firebaseUid && consumerId) {
+        const userByConsumer = await findUserByStreampayConsumerId(consumerId)
+        if (userByConsumer) {
+          firebaseUid = userByConsumer.uid
+        }
+      }
+
+      if (firebaseUid && subscription_id) {
+        // Update user's subscription with the subscription ID
+        const userData = await getUserDataFromFirestore(firebaseUid)
+        const currentSubscription = userData?.subscription as Record<string, unknown> | undefined
+
+        const subscriptionUpdate = {
+          ...(currentSubscription || {}),
+          streampaySubscriptionId: subscription_id,
+          subscriptionActivatedAt: new Date(),
+        }
+
+        await updateSubscriptionInFirestore(firebaseUid, subscriptionUpdate)
+        
+        // Also update Supabase
+        const supabase = createServerClient()
+        await supabase.from('app_subscriptions')
+          .update({ 
+            user_data: { 
+              ...(userData || {}), 
+              subscription: subscriptionUpdate 
+            } 
+          })
+          .eq('firebase_uid', firebaseUid)
+          .eq('status', 'active')
+
+        console.log('Subscription ID saved:', { firebaseUid, subscription_id })
+      } else {
+        console.log('Could not save subscription ID - user not found or no subscription_id:', { email, consumerId, subscription_id })
+      }
+
+      return NextResponse.json({
+        received: true,
+        processed: true,
+        event: 'subscription_created',
+        subscriptionId: subscription_id,
+      })
+    }
+
+    // =========================================
     // HANDLE SUBSCRIPTION RENEWALS
     // =========================================
     const renewalEvents = [
