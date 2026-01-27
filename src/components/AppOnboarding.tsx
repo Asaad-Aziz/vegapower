@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Script from 'next/script'
 import Image from 'next/image'
-import { initiateCheckout, addPaymentInfo } from '@/lib/meta-pixel'
+import { initiateCheckout } from '@/lib/meta-pixel'
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15
 
@@ -81,14 +80,13 @@ const accomplishmentOptions = [
 export default function AppOnboarding() {
   const [step, setStep] = useState<Step>(0)
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly')
-  const [showPayment, setShowPayment] = useState(false)
   const [processingProgress, setProcessingProgress] = useState(0)
   const [completedChecks, setCompletedChecks] = useState<number[]>([])
-  const [moyasarLoaded, setMoyasarLoaded] = useState(false)
-  const [moyasarInitialized, setMoyasarInitialized] = useState(false)
   const [discountCode, setDiscountCode] = useState('')
   const [appliedDiscount, setAppliedDiscount] = useState<{ percent: number; label: string } | null>(null)
   const [discountError, setDiscountError] = useState('')
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [paymentError, setPaymentError] = useState('')
 
   const [userData, setUserData] = useState<UserData>({
     gender: '',
@@ -227,92 +225,78 @@ export default function AppOnboarding() {
     }
   }, [step])
 
-  // Load Moyasar CSS
-  useEffect(() => {
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = 'https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.css'
-    document.head.appendChild(link)
-    return () => {
-      document.head.removeChild(link)
+  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+
+  // Handle StreamPay payment
+  const handlePayment = async () => {
+    if (!validateEmail(userData.email)) {
+      setPaymentError('يرجى إدخال بريد إلكتروني صحيح')
+      return
     }
-  }, [])
 
-  // Initialize Moyasar
-  useEffect(() => {
-    if (showPayment && moyasarLoaded && window.Moyasar && !moyasarInitialized) {
-      const appUrl = (process.env.NEXT_PUBLIC_APP_URL || window.location.origin).replace(/\/$/, '')
-      const publishableKey = process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || ''
-      const plan = plans[selectedPlan]
-      
-      // Calculate final price with any applied discount
-      const finalPrice = appliedDiscount 
-        ? Math.round(plan.price * (1 - appliedDiscount.percent / 100))
-        : plan.price
+    setIsProcessingPayment(true)
+    setPaymentError('')
 
-      // Track AddPaymentInfo when payment form is shown
-      addPaymentInfo({
-        content_ids: [plan.productId],
-        content_type: 'product',
-        value: finalPrice,
-        currency: 'SAR',
-      })
+    const finalPrice = getFinalPrice(plans[selectedPlan].price)
 
-      setTimeout(() => {
-        const el = document.querySelector('.moyasar-form')
-        if (el) el.innerHTML = ''
+    // Track InitiateCheckout event for Meta Pixel
+    initiateCheckout({
+      content_ids: [plans[selectedPlan].productId],
+      content_type: 'product',
+      value: finalPrice,
+      currency: 'SAR',
+      num_items: 1,
+    })
 
-        window.Moyasar.init({
-          element: '.moyasar-form',
-          amount: finalPrice * 100,
-          currency: 'SAR',
-          description: `Vega Power App - ${selectedPlan === 'yearly' ? 'اشتراك سنوي' : selectedPlan === 'quarterly' ? 'اشتراك 3 أشهر' : 'اشتراك شهري'}${appliedDiscount ? ` (خصم ${appliedDiscount.label})` : ''}`,
-          publishable_api_key: publishableKey,
-          callback_url: `${appUrl}/app/success`,
-          methods: ['creditcard', 'applepay'],
-          apple_pay: {
-            label: 'Vega Power App',
-            validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
-            country: 'SA',
-            supported_countries: ['SA', 'AE', 'KW', 'BH', 'OM', 'QA', 'US', 'GB'],
-          },
-          supported_networks: ['mada', 'visa', 'mastercard'],
-          metadata: {
-            type: 'app_subscription',
-            plan: selectedPlan,
-            productId: plan.productId,
-            discountCode: appliedDiscount ? discountCode : '',
-            discountPercent: appliedDiscount ? String(appliedDiscount.percent) : '0',
-            originalPrice: String(plan.price),
-            finalPrice: String(finalPrice),
+    try {
+      const response = await fetch('/api/streampay/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: selectedPlan,
+          email: userData.email,
+          discountCode: appliedDiscount ? discountCode : null,
+          discountPercent: appliedDiscount?.percent || 0,
+          finalPrice,
+          userData: {
             gender: userData.gender,
             activityLevel: userData.activityLevel,
-            height: String(userData.height),
-            weight: String(userData.weight),
-            birthYear: String(userData.birthYear),
-            age: String(userData.age),
+            height: userData.height,
+            weight: userData.weight,
+            birthYear: userData.birthYear,
+            age: userData.age,
             fitnessGoal: userData.fitnessGoal,
-            targetWeight: String(userData.targetWeight),
-            targetSpeed: String(userData.targetSpeed),
-            challenges: JSON.stringify(userData.challenges),
-            accomplishments: JSON.stringify(userData.accomplishments),
-            email: userData.email,
-            calculatedCalories: String(userData.calculatedCalories),
-            proteinGrams: String(userData.proteinGrams),
-            carbsGrams: String(userData.carbsGrams),
-            fatGrams: String(userData.fatGrams),
-            proteinPercentage: String(userData.proteinPercentage),
-            carbsPercentage: String(userData.carbsPercentage),
-            fatPercentage: String(userData.fatPercentage),
+            targetWeight: userData.targetWeight,
+            targetSpeed: userData.targetSpeed,
+            challenges: userData.challenges,
+            accomplishments: userData.accomplishments,
+            calculatedCalories: userData.calculatedCalories,
+            proteinGrams: userData.proteinGrams,
+            carbsGrams: userData.carbsGrams,
+            fatGrams: userData.fatGrams,
+            proteinPercentage: userData.proteinPercentage,
+            carbsPercentage: userData.carbsPercentage,
+            fatPercentage: userData.fatPercentage,
             programName: userData.programName,
           },
-        })
-        setMoyasarInitialized(true)
-      }, 100)
-    }
-  }, [showPayment, moyasarLoaded, moyasarInitialized, selectedPlan, userData, appliedDiscount, discountCode])
+        }),
+      })
 
-  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      const data = await response.json()
+
+      if (data.success && data.paymentUrl) {
+        // Redirect to StreamPay checkout
+        window.location.href = data.paymentUrl
+      } else {
+        setPaymentError(data.error || 'حدث خطأ في إنشاء رابط الدفع')
+        setIsProcessingPayment(false)
+      }
+    } catch (error) {
+      console.error('Payment error:', error)
+      setPaymentError('حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.')
+      setIsProcessingPayment(false)
+    }
+  }
 
   // Apply discount code
   const applyDiscountCode = () => {
@@ -357,7 +341,7 @@ export default function AppOnboarding() {
       )}
 
       {/* Back Button */}
-      {step > 0 && step < 14 && !showPayment && (
+      {step > 0 && step < 14 && (
         <button
           onClick={prevStep}
           className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center"
@@ -1277,80 +1261,50 @@ export default function AppOnboarding() {
               <span className="text-xs text-green-700 dark:text-green-400">بدون تجديد تلقائي - ادفع مرة واحدة فقط</span>
             </div>
 
-            {/* Payment Button or Form */}
-            {!showPayment ? (
-              <button
-                onClick={() => {
-                  const finalPrice = getFinalPrice(plans[selectedPlan].price)
-                  // Track InitiateCheckout event for Meta Pixel
-                  initiateCheckout({
-                    content_ids: [plans[selectedPlan].productId],
-                    content_type: 'product',
-                    value: finalPrice,
-                    currency: 'SAR',
-                    num_items: 1,
-                  })
-                  setShowPayment(true)
-                }}
-                disabled={!validateEmail(userData.email)}
-                className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-700 to-neutral-900 text-white font-semibold text-lg disabled:opacity-50 shadow-lg"
-              >
-                {appliedDiscount ? (
-                  <>🚀 ابدأ الآن - <span className="line-through opacity-60 mx-1">{plans[selectedPlan].price}</span> {getFinalPrice(plans[selectedPlan].price)} ريال</>
-                ) : (
-                  <>🚀 ابدأ الآن - {plans[selectedPlan].price} ريال</>
-                )}
-              </button>
-            ) : (
-              <div className="space-y-3">
-                {/* Order Summary */}
-                <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-neutral-500 dark:text-neutral-400">الخطة</span>
-                    <span>{selectedPlan === 'yearly' ? 'سنوية' : selectedPlan === 'quarterly' ? '3 أشهر' : 'شهرية'}</span>
-                  </div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-neutral-500 dark:text-neutral-400">البريد</span>
-                    <span dir="ltr" className="text-sm">{userData.email}</span>
-                  </div>
-                  {appliedDiscount && (
-                    <>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-neutral-500 dark:text-neutral-400">السعر الأصلي</span>
-                        <span className="line-through">{plans[selectedPlan].price} ريال</span>
-                      </div>
-                      <div className="flex justify-between text-sm mb-2 text-green-600">
-                        <span>الخصم ({appliedDiscount.label})</span>
-                        <span>- {plans[selectedPlan].price - getFinalPrice(plans[selectedPlan].price)} ريال</span>
-                      </div>
-                    </>
-                  )}
-                  <div className="flex justify-between font-semibold pt-2 border-t border-neutral-200 dark:border-neutral-700">
-                    <span>الإجمالي</span>
-                    <span className={appliedDiscount ? 'text-green-600' : ''}>{getFinalPrice(plans[selectedPlan].price)} ريال</span>
-                  </div>
-                </div>
-
-                {/* Moyasar Payment Form */}
-                <div className="moyasar-form"></div>
-
-                <Script
-                  src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.umd.min.js"
-                  onLoad={() => setMoyasarLoaded(true)}
-                />
-
-                <button
-                  onClick={() => { setShowPayment(false); setMoyasarInitialized(false) }}
-                  className="w-full py-2 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors text-sm"
-                >
-                  ← تغيير الخطة
-                </button>
+            {/* Payment Error Message */}
+            {paymentError && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-3">
+                <p className="text-sm text-red-600 dark:text-red-400 text-center">{paymentError}</p>
               </div>
             )}
 
+            {/* Payment Button */}
+            <button
+              onClick={handlePayment}
+              disabled={!validateEmail(userData.email) || isProcessingPayment}
+              className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-700 to-neutral-900 text-white font-semibold text-lg disabled:opacity-50 shadow-lg flex items-center justify-center gap-2"
+            >
+              {isProcessingPayment ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>جاري التحويل للدفع...</span>
+                </>
+              ) : appliedDiscount ? (
+                <>🚀 ابدأ الآن - <span className="line-through opacity-60 mx-1">{plans[selectedPlan].price}</span> {getFinalPrice(plans[selectedPlan].price)} ريال</>
+              ) : (
+                <>🚀 ابدأ الآن - {plans[selectedPlan].price} ريال</>
+              )}
+            </button>
+
+            {/* Payment Methods */}
+            <div className="mt-3 flex items-center justify-center gap-3">
+              <div className="flex items-center gap-1 text-[10px] text-neutral-400">
+                <span>💳</span> Visa
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-neutral-400">
+                <span>💳</span> Mastercard
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-neutral-400">
+                <span>💳</span> مدى
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-neutral-400">
+                <span>🏦</span> تحويل بنكي
+              </div>
+            </div>
+
             {/* Footer */}
             <div className="mt-3 text-center">
-              <p className="text-[10px] text-neutral-400">🔒 دفع آمن ومشفر عبر Moyasar</p>
+              <p className="text-[10px] text-neutral-400">🔒 دفع آمن ومشفر عبر StreamPay</p>
             </div>
           </div>
         )}

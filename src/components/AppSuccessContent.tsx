@@ -12,10 +12,47 @@ function AppSuccessInner() {
   const [hasTrackedPurchase, setHasTrackedPurchase] = useState(false)
 
   useEffect(() => {
-    const verifyAndCreateAccount = async () => {
+    const processPayment = async () => {
+      const source = searchParams.get('source')
+      
+      // StreamPay flow - webhook handles account creation
+      if (source === 'streampay') {
+        const emailParam = searchParams.get('email')
+        const plan = searchParams.get('plan') || 'monthly'
+        const amount = searchParams.get('amount')
+        
+        if (emailParam) {
+          setEmail(emailParam)
+          setStatus('success')
+          
+          // Track purchase with Meta Pixel
+          if (!hasTrackedPurchase) {
+            const productId = `streampay_${plan === 'yearly' ? 'yearly' : plan === 'quarterly' ? '3months' : 'monthly'}`
+            
+            purchase({
+              content_name: `Vega Power App - ${plan === 'yearly' ? 'سنوي' : plan === 'quarterly' ? '3 أشهر' : 'شهري'}`,
+              content_ids: [productId],
+              content_type: 'product',
+              value: amount ? parseFloat(amount) : 155,
+              currency: 'SAR',
+              num_items: 1,
+            })
+            setHasTrackedPurchase(true)
+            console.log('StreamPay purchase tracking:', { productId, amount, plan })
+          }
+        } else {
+          // If no email in URL, show success anyway (webhook will have processed)
+          setStatus('success')
+          setEmail('تحقق من بريدك الإلكتروني')
+        }
+        return
+      }
+      
+      // Legacy Moyasar flow
       const paymentId = searchParams.get('id')
 
       if (!paymentId) {
+        // No payment ID and not from StreamPay - might be direct success page visit
         setStatus('error')
         setError('معرف الدفع غير موجود')
         return
@@ -36,10 +73,8 @@ function AppSuccessInner() {
           
           // Track purchase with Meta Pixel (only once)
           if (!hasTrackedPurchase && !data.alreadyProcessed) {
-            // Use the actual plan product ID if available
             const productId = data.plan ? `moyasar_${data.plan === 'yearly' ? 'yearly' : data.plan === 'quarterly' ? '3months' : 'monthly'}` : 'vega_app_subscription'
             
-            // Fire purchase event - this now waits for fbq to be ready
             purchase({
               content_name: `Vega Power App - ${data.plan === 'yearly' ? 'سنوي' : data.plan === 'quarterly' ? '3 أشهر' : 'شهري'}`,
               content_ids: [productId],
@@ -49,7 +84,7 @@ function AppSuccessInner() {
               num_items: 1,
             })
             setHasTrackedPurchase(true)
-            console.log('Purchase tracking initiated:', { productId, amount: data.amount, plan: data.plan })
+            console.log('Moyasar purchase tracking:', { productId, amount: data.amount, plan: data.plan })
           }
         } else {
           setStatus('error')
@@ -61,7 +96,7 @@ function AppSuccessInner() {
       }
     }
 
-    verifyAndCreateAccount()
+    processPayment()
   }, [searchParams, hasTrackedPurchase])
 
   if (status === 'loading') {

@@ -1,0 +1,288 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@/lib/supabase'
+import { createFirebaseUser, saveUserDataToFirestore } from '@/lib/firebase-admin'
+
+// Generate a random password
+function generatePassword(length = 12): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
+  let password = ''
+  for (let i = 0; i < length; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return password
+}
+
+// Plan configurations
+const plans: Record<string, { days: number; productId: string }> = {
+  monthly: { days: 30, productId: 'streampay_monthly' },
+  quarterly: { days: 90, productId: 'streampay_3months' },
+  yearly: { days: 365, productId: 'streampay_yearly' },
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+
+    console.log('StreamPay webhook received:', JSON.stringify(body, null, 2))
+
+    const {
+      event_type,
+      payment_id,
+      status,
+      customer,
+      amount,
+      currency,
+      metadata,
+    } = body
+
+    // Handle successful payment events
+    const successEvents = [
+      'payment.successful',
+      'payment.completed',
+      'payment_link.payment_successful',
+    ]
+
+    if (!successEvents.includes(event_type)) {
+      console.log(`StreamPay webhook: Ignoring event type ${event_type}`)
+      return NextResponse.json({ received: true, processed: false })
+    }
+
+    const email = customer?.email || metadata?.email
+    const plan = metadata?.plan || 'monthly'
+    const userDataFromMeta = metadata?.userData ? JSON.parse(metadata.userData) : null
+
+    if (!email) {
+      console.error('StreamPay webhook: No email found in payment')
+      return NextResponse.json({ received: true, error: 'No email' }, { status: 400 })
+    }
+
+    // Check if already processed
+    const supabase = createServerClient()
+    const { data: existingSubscription } = await supabase
+      .from('app_subscriptions')
+      .select('id, firebase_uid')
+      .eq('payment_id', payment_id)
+      .single()
+
+    if (existingSubscription) {
+      console.log('StreamPay webhook: Payment already processed', payment_id)
+      return NextResponse.json({ received: true, alreadyProcessed: true })
+    }
+
+    // Generate temporary password
+    const tempPassword = generatePassword()
+
+    // Calculate subscription expiration
+    const now = new Date()
+    const expirationDate = new Date(now)
+    const planConfig = plans[plan] || plans.monthly
+    
+    if (plan === 'yearly') {
+      expirationDate.setFullYear(expirationDate.getFullYear() + 1)
+    } else if (plan === 'quarterly') {
+      expirationDate.setMonth(expirationDate.getMonth() + 3)
+    } else {
+      expirationDate.setMonth(expirationDate.getMonth() + 1)
+    }
+
+    // Create Firebase user
+    console.log('Creating Firebase user for:', email)
+    const firebaseUid = await createFirebaseUser(email, tempPassword)
+
+    if (!firebaseUid) {
+      console.error('Failed to create Firebase user')
+    } else {
+      console.log('Firebase user created:', firebaseUid)
+    }
+
+    // Prepare Firebase user data
+    const firebaseUserData = {
+      // Personal Info from metadata
+      age: userDataFromMeta?.age || 25,
+      birthYear: userDataFromMeta?.birthYear || 2000,
+      height: userDataFromMeta?.height || 170,
+      weight: userDataFromMeta?.weight || 70,
+      targetWeight: userDataFromMeta?.targetWeight || 65,
+      targetSpeed: userDataFromMeta?.targetSpeed || 0.5,
+
+      // Fitness Profile
+      gender: userDataFromMeta?.gender || 'male',
+      activityLevel: userDataFromMeta?.activityLevel || 'نشط إلى حد ما (تمرين معتدل 3-5 أيام في الأسبوع)',
+      fitnessGoal: userDataFromMeta?.fitnessGoal || 'Lose Fat (Cut)',
+      fitnessLevel: 'متوسط',
+      workoutLocation: 'Gym',
+
+      // User Selections
+      challenges: userDataFromMeta?.challenges || [],
+      accomplishments: userDataFromMeta?.accomplishments || [],
+
+      // Calculated Metrics
+      calculatedCalories: userDataFromMeta?.calculatedCalories || 1800,
+      proteinGrams: userDataFromMeta?.proteinGrams || 180,
+      carbsGrams: userDataFromMeta?.carbsGrams || 158,
+      fatGrams: userDataFromMeta?.fatGrams || 50,
+
+      // Macro Percentages
+      proteinPercentage: userDataFromMeta?.proteinPercentage || 40,
+      carbsPercentage: userDataFromMeta?.carbsPercentage || 35,
+      fatPercentage: userDataFromMeta?.fatPercentage || 25,
+
+      // Program Info
+      programName: userDataFromMeta?.programName || 'Vega Shred 🔥',
+
+      // Subscription
+      subscription: {
+        isActive: true,
+        productId: planConfig.productId,
+        expirationDate: expirationDate,
+        startDate: now,
+        planType: plan,
+        amount: amount / 100, // StreamPay might send in halalas
+        currency: currency || 'SAR',
+        source: 'streampay_web',
+        paymentId: payment_id,
+      },
+
+      // Metadata
+      onboardingCompleted: true,
+      hasEverSubscribed: true,
+      email: email,
+      createdAt: now,
+      lastUpdated: now,
+    }
+
+    // Save user data to Firestore
+    if (firebaseUid) {
+      await saveUserDataToFirestore(firebaseUid, firebaseUserData)
+    }
+
+    // Store subscription in Supabase
+    const { error: insertError } = await supabase.from('app_subscriptions').insert({
+      payment_id: payment_id,
+      email: email,
+      firebase_uid: firebaseUid,
+      plan: plan,
+      amount: typeof amount === 'number' ? amount / 100 : amount,
+      status: 'active',
+      user_data: firebaseUserData,
+      expires_at: expirationDate.toISOString(),
+      payment_source: 'streampay',
+    })
+
+    if (insertError) {
+      console.error('Failed to store subscription:', insertError)
+    }
+
+    // Send email with temporary password
+    const resendApiKey = process.env.RESEND_API_KEY
+    if (resendApiKey && firebaseUid) {
+      try {
+        const emailResponse = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${resendApiKey}`,
+          },
+          body: JSON.stringify({
+            from: 'Vega Power <noreply@vegapowerstore.com>',
+            to: email,
+            subject: 'مرحباً بك في Vega Power - بيانات تسجيل الدخول 🎉',
+            html: `
+              <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa;">
+                <div style="background: linear-gradient(135deg, #0D1A33, #1A2640); padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 20px;">
+                  <div style="font-size: 48px; margin-bottom: 10px;">👑</div>
+                  <h1 style="color: #fff; margin: 0; font-size: 24px;">مرحباً بك في Vega Power!</h1>
+                  <p style="color: rgba(255,255,255,0.7); margin: 10px 0 0 0;">تم تفعيل اشتراكك بنجاح</p>
+                </div>
+                
+                <div style="background: #fff; padding: 25px; border-radius: 12px; margin-bottom: 20px;">
+                  <h2 style="color: #333; margin: 0 0 20px 0; font-size: 18px;">بيانات تسجيل الدخول</h2>
+                  
+                  <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">البريد الإلكتروني</p>
+                    <p style="margin: 0; color: #10b981; font-size: 16px; font-weight: bold;" dir="ltr">${email}</p>
+                  </div>
+                  
+                  <div style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+                    <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">كلمة المرور المؤقتة</p>
+                    <p style="margin: 0; color: #10b981; font-size: 24px; font-weight: bold; font-family: monospace; letter-spacing: 2px;" dir="ltr">${tempPassword}</p>
+                  </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+                  <h3 style="margin: 0 0 15px 0; font-size: 16px;">خطتك الشخصية: ${firebaseUserData.programName}</h3>
+                  <div style="display: flex; justify-content: space-around;">
+                    <div>
+                      <div style="font-size: 24px; font-weight: bold;">${firebaseUserData.calculatedCalories}</div>
+                      <div style="font-size: 11px; opacity: 0.8;">سعرة/يوم</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 24px; font-weight: bold;">${firebaseUserData.proteinGrams}g</div>
+                      <div style="font-size: 11px; opacity: 0.8;">بروتين</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 24px; font-weight: bold;">${firebaseUserData.carbsGrams}g</div>
+                      <div style="font-size: 11px; opacity: 0.8;">كارب</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                  <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">خطوات تسجيل الدخول:</h3>
+                  <ol style="margin: 0; padding: 0 20px; color: #666; line-height: 2;">
+                    <li>حمّل تطبيق Vega Power من App Store أو Google Play</li>
+                    <li>افتح التطبيق واضغط "تسجيل الدخول"</li>
+                    <li>أدخل البريد وكلمة المرور المؤقتة أعلاه</li>
+                    <li>غيّر كلمة المرور من الإعدادات (اختياري)</li>
+                  </ol>
+                </div>
+
+                <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                  <p style="margin: 0; color: #92400e; font-size: 13px;">
+                    ⚠️ ننصحك بتغيير كلمة المرور بعد تسجيل الدخول الأول من إعدادات التطبيق للحفاظ على أمان حسابك.
+                  </p>
+                </div>
+                
+                <div style="text-align: center; padding: 20px 0;">
+                  <p style="color: #999; font-size: 12px; margin: 0;">
+                    لم تستلم الإيميل؟ تحقق من مجلد السبام أو تواصل معنا<br>
+                    © Vega Power - جميع الحقوق محفوظة
+                  </p>
+                </div>
+              </div>
+            `,
+          }),
+        })
+
+        if (!emailResponse.ok) {
+          console.error('Failed to send email:', await emailResponse.text())
+        } else {
+          console.log('Email sent successfully to:', email)
+        }
+      } catch (emailErr) {
+        console.error('Email error:', emailErr)
+      }
+    }
+
+    console.log('StreamPay webhook processed successfully:', {
+      payment_id,
+      email,
+      plan,
+      firebaseUid,
+    })
+
+    return NextResponse.json({
+      received: true,
+      processed: true,
+      email,
+      plan,
+    })
+
+  } catch (error) {
+    console.error('StreamPay webhook error:', error)
+    return NextResponse.json(
+      { received: true, error: 'Webhook processing failed' },
+      { status: 500 }
+    )
+  }
+}
