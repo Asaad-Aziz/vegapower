@@ -1,10 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import StreamSDK from '@streamsdk/typescript'
 
+// Plan configurations with optional pre-made product IDs from StreamPay dashboard
 const plans = {
-  monthly: { price: 45, period: 'شهر', productName: 'اشتراك شهري - Vega Power', days: 30 },
-  quarterly: { price: 112, period: '3 أشهر', productName: 'اشتراك 3 أشهر - Vega Power', days: 90 },
-  yearly: { price: 155, period: 'سنة', productName: 'اشتراك سنوي - Vega Power', days: 365 },
+  monthly: { 
+    price: 45, 
+    period: 'شهر', 
+    productName: 'اشتراك شهري - Vega Power', 
+    days: 30,
+    // Set via STREAMPAY_PRODUCT_MONTHLY env var
+  },
+  quarterly: { 
+    price: 112, 
+    period: '3 أشهر', 
+    productName: 'اشتراك 3 أشهر - Vega Power', 
+    days: 90,
+    // Set via STREAMPAY_PRODUCT_QUARTERLY env var
+  },
+  yearly: { 
+    price: 155, 
+    period: 'سنة', 
+    productName: 'اشتراك سنوي - Vega Power', 
+    days: 365,
+    // Set via STREAMPAY_PRODUCT_YEARLY env var
+  },
+}
+
+// Get product ID from environment variables
+function getProductId(plan: string): string | null {
+  const productIds: Record<string, string | undefined> = {
+    monthly: process.env.STREAMPAY_PRODUCT_MONTHLY,
+    quarterly: process.env.STREAMPAY_PRODUCT_QUARTERLY,
+    yearly: process.env.STREAMPAY_PRODUCT_YEARLY,
+  }
+  return productIds[plan] || null
 }
 
 export async function POST(request: NextRequest) {
@@ -37,6 +66,7 @@ export async function POST(request: NextRequest) {
 
     const selectedPlan = plans[plan as keyof typeof plans]
     const apiKey = process.env.STREAMPAY_API_KEY
+    const existingProductId = getProductId(plan)
 
     if (!apiKey) {
       console.error('STREAMPAY_API_KEY not configured')
@@ -52,6 +82,7 @@ export async function POST(request: NextRequest) {
       prefix: apiKey.substring(0, 8) + '...',
       suffix: '...' + apiKey.substring(apiKey.length - 4),
     })
+    console.log('Using existing product ID:', existingProductId || 'No (creating new product)')
 
     // Initialize StreamPay SDK
     const client = StreamSDK.init(apiKey)
@@ -83,21 +114,52 @@ export async function POST(request: NextRequest) {
       successUrlWithParams.searchParams.set('discountCode', discountCode)
     }
 
-    // Create payment link with StreamPay SDK
-    const result = await client.createSimplePaymentLink({
-      name: `Vega Power App - ${selectedPlan.productName}`,
-      amount: price,
-      consumer: {
+    let result: { paymentUrl: string; consumerId?: string; productId?: string }
+
+    // Check if we should use existing product from StreamPay dashboard
+    if (existingProductId) {
+      // Use existing recurring product - create consumer first, then payment link
+      console.log('Creating payment with existing product:', existingProductId)
+      
+      // Create or get consumer
+      const consumer = await client.createConsumer({
+        name: email.split('@')[0],
         email: email,
-        name: email.split('@')[0], // Use email prefix as name if not provided
-      },
-      product: {
-        name: selectedPlan.productName,
-        price: price,
-      },
-      successRedirectUrl: successUrlWithParams.toString(),
-      failureRedirectUrl: `${baseUrl}/app?payment=failed`,
-    })
+      })
+
+      // Create payment link with existing product
+      const paymentLink = await client.createPaymentLink({
+        name: `Vega Power App - ${selectedPlan.productName}`,
+        organization_consumer_id: consumer.id,
+        items: [{ product_id: existingProductId, quantity: 1 }],
+        success_redirect_url: successUrlWithParams.toString(),
+        failure_redirect_url: `${baseUrl}/app?payment=failed`,
+      })
+
+      const paymentUrl = client.getPaymentUrl(paymentLink)
+
+      result = {
+        paymentUrl,
+        consumerId: consumer.id,
+        productId: existingProductId,
+      }
+    } else {
+      // Create new product on-the-fly (one-time payment)
+      result = await client.createSimplePaymentLink({
+        name: `Vega Power App - ${selectedPlan.productName}`,
+        amount: price,
+        consumer: {
+          email: email,
+          name: email.split('@')[0],
+        },
+        product: {
+          name: selectedPlan.productName,
+          price: price,
+        },
+        successRedirectUrl: successUrlWithParams.toString(),
+        failureRedirectUrl: `${baseUrl}/app?payment=failed`,
+      })
+    }
 
     console.log('StreamPay payment link created:', {
       paymentUrl: result.paymentUrl,
