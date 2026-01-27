@@ -9,6 +9,27 @@ import {
   findUserByStreampayConsumerId,
 } from '@/lib/firebase-admin'
 
+// GET endpoint - Health check and webhook status
+export async function GET() {
+  return NextResponse.json({
+    status: 'ok',
+    message: 'StreamPay webhook endpoint is active',
+    timestamp: new Date().toISOString(),
+    supportedEvents: [
+      'payment.successful',
+      'payment.completed',
+      'payment_link.payment_successful',
+      'subscription.renewed',
+      'subscription.payment_successful',
+      'recurring_payment.successful',
+      'subscription.cancelled',
+      'subscription.ended',
+      'payment.failed',
+      'subscription.payment_failed',
+    ],
+  })
+}
+
 // Generate a random password
 function generatePassword(length = 12): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
@@ -66,6 +87,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     console.log('StreamPay webhook received:', JSON.stringify(body, null, 2))
+
+    // Log webhook event for debugging (optional - can be removed later)
+    const supabaseForLogging = createServerClient()
+    await supabaseForLogging.from('webhook_logs').insert({
+      source: 'streampay',
+      event_type: body.event_type || 'unknown',
+      payload: body,
+      processed_at: new Date().toISOString(),
+    }).then(() => {
+      console.log('Webhook logged to database')
+    }).catch((err) => {
+      // Don't fail if logging table doesn't exist
+      console.log('Webhook logging skipped (table may not exist):', err.message)
+    })
 
     const {
       event_type,
