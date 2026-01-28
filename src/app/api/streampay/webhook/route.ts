@@ -118,17 +118,31 @@ export async function POST(request: NextRequest) {
       amount,
       currency,
       metadata,
+      // StreamPay might send subscription data in different ways
+      id,
+      subscription,
+      data,
     } = body
 
-    const email = customer?.email || metadata?.email
-    const consumerId = consumer_id || customer?.id || metadata?.consumerId
-    const productId = product_id || metadata?.productId
+    const email = customer?.email || metadata?.email || data?.customer?.email
+    const consumerId = consumer_id || customer?.id || metadata?.consumerId || data?.consumer_id
+    const productId = product_id || metadata?.productId || data?.product_id
+    
+    // Try to extract subscription_id from various possible locations
+    const subscriptionId = subscription_id || id || subscription?.id || data?.subscription_id || data?.id
 
     // =========================================
     // HANDLE SUBSCRIPTION CREATED (Capture subscription ID)
     // =========================================
     if (event_type === 'subscription.created' || event_type === 'subscription.activated') {
-      console.log('Processing subscription created:', { event_type, email, consumerId, subscription_id })
+      console.log('Processing subscription created:', { 
+        event_type, 
+        email, 
+        consumerId, 
+        subscriptionId,
+        // Log full body to debug
+        bodyKeys: Object.keys(body),
+      })
       
       // Find user by email or consumer ID
       let firebaseUid: string | null = null
@@ -144,14 +158,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      if (firebaseUid && subscription_id) {
+      if (firebaseUid && subscriptionId) {
         // Update user's subscription with the subscription ID
         const userData = await getUserDataFromFirestore(firebaseUid)
         const currentSubscription = userData?.subscription as Record<string, unknown> | undefined
 
         const subscriptionUpdate = {
           ...(currentSubscription || {}),
-          streampaySubscriptionId: subscription_id,
+          streampaySubscriptionId: subscriptionId,
           subscriptionActivatedAt: new Date(),
         }
 
@@ -169,16 +183,16 @@ export async function POST(request: NextRequest) {
           .eq('firebase_uid', firebaseUid)
           .eq('status', 'active')
 
-        console.log('Subscription ID saved:', { firebaseUid, subscription_id })
+        console.log('Subscription ID saved:', { firebaseUid, subscriptionId })
       } else {
-        console.log('Could not save subscription ID - user not found or no subscription_id:', { email, consumerId, subscription_id })
+        console.log('Could not save subscription ID - user not found or no subscriptionId:', { email, consumerId, subscriptionId })
       }
 
       return NextResponse.json({
         received: true,
         processed: true,
         event: 'subscription_created',
-        subscriptionId: subscription_id,
+        subscriptionId: subscriptionId,
       })
     }
 
@@ -538,7 +552,7 @@ export async function POST(request: NextRequest) {
         // StreamPay IDs for subscription management
         streampayConsumerId: consumerId || null,
         streampayProductId: productId || null,
-        streampaySubscriptionId: subscription_id || null,
+        streampaySubscriptionId: subscriptionId || null,
         autoRenew: true,
         renewalCount: 0,
       },
