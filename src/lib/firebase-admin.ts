@@ -42,7 +42,7 @@ function getFirebaseAdmin() {
   }
 }
 
-export async function createFirebaseUser(email: string, password: string): Promise<string | null> {
+export async function createFirebaseUser(email: string, password: string, updatePasswordIfExists = false): Promise<string | null> {
   console.log('Creating Firebase user for:', email)
   
   const app = getFirebaseAdmin()
@@ -55,9 +55,16 @@ export async function createFirebaseUser(email: string, password: string): Promi
     // Check if user already exists
     try {
       const existingUser = await admin.auth().getUserByEmail(email)
-      console.log('User already exists, updating password for:', existingUser.uid)
-      await admin.auth().updateUser(existingUser.uid, { password })
-      console.log('Password updated successfully for:', existingUser.uid)
+      console.log('User already exists:', existingUser.uid)
+      
+      // Only update password if explicitly requested (e.g., from verify-payment, not webhook)
+      if (updatePasswordIfExists) {
+        await admin.auth().updateUser(existingUser.uid, { password })
+        console.log('Password updated for existing user:', existingUser.uid)
+      } else {
+        console.log('Skipping password update for existing user (preserving original password)')
+      }
+      
       return existingUser.uid
     } catch (lookupError: unknown) {
       // User doesn't exist, will create new one

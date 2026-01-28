@@ -99,7 +99,8 @@ export async function POST(request: NextRequest) {
 
     // Create Firebase user
     console.log('Creating Firebase user for:', email)
-    const firebaseUid = await createFirebaseUser(email, tempPassword)
+    // Pass true to update password if user exists (since we're sending them the email with this password)
+    const firebaseUid = await createFirebaseUser(email, tempPassword, true)
 
     if (!firebaseUid) {
       console.error('Failed to create Firebase user')
