@@ -16,16 +16,15 @@ export async function GET() {
     message: 'StreamPay webhook endpoint is active',
     timestamp: new Date().toISOString(),
     supportedEvents: [
-      'payment.successful',
-      'payment.completed',
-      'payment_link.payment_successful',
-      'subscription.renewed',
-      'subscription.payment_successful',
-      'recurring_payment.successful',
-      'subscription.cancelled',
-      'subscription.ended',
-      'payment.failed',
-      'subscription.payment_failed',
+      // StreamPay actual event names
+      'PAYMENT_SUCCEEDED',
+      'SUBSCRIPTION_ACTIVATED',
+      'PAYMENT_FAILED',
+      'PAYMENT_CANCELED',
+      'SUBSCRIPTION_INACTIVATED',
+      'SUBSCRIPTION_CANCELED',
+      'INVOICE_ACCEPTED',
+      'INVOICE_COMPLETE',
     ],
   })
 }
@@ -122,27 +121,75 @@ export async function POST(request: NextRequest) {
       id,
       subscription,
       data,
+      // Additional possible fields
+      resource,
+      object,
+      payload,
+      organization_consumer_id,
     } = body
 
-    const email = customer?.email || metadata?.email || data?.customer?.email
-    const consumerId = consumer_id || customer?.id || metadata?.consumerId || data?.consumer_id
-    const productId = product_id || metadata?.productId || data?.product_id
+    // Log the FULL webhook payload for SUBSCRIPTION events to debug structure
+    if (event_type === 'SUBSCRIPTION_ACTIVATED' || event_type === 'PAYMENT_SUCCEEDED') {
+      console.log('=== FULL WEBHOOK PAYLOAD ===')
+      console.log(JSON.stringify(body, null, 2))
+      console.log('=== END PAYLOAD ===')
+    }
+
+    const email = customer?.email || metadata?.email || data?.customer?.email || 
+                  resource?.customer?.email || object?.customer?.email || payload?.customer?.email ||
+                  body?.organization_consumer?.email
     
-    // Try to extract subscription_id from various possible locations
-    const subscriptionId = subscription_id || id || subscription?.id || data?.subscription_id || data?.id
+    const consumerId = consumer_id || customer?.id || metadata?.consumerId || data?.consumer_id ||
+                       organization_consumer_id || body?.organization_consumer_id ||
+                       resource?.consumer_id || object?.consumer_id
+    
+    const productId = product_id || metadata?.productId || data?.product_id ||
+                      resource?.product_id || object?.product_id
+    
+    // Try to extract subscription_id from ALL possible locations
+    // StreamPay might use different field names or nested structures
+    const subscriptionId = 
+      subscription_id ||                          // Direct field
+      id ||                                       // Root id
+      subscription?.id ||                         // Nested subscription.id
+      data?.subscription_id ||                    // data.subscription_id
+      data?.id ||                                 // data.id
+      resource?.id ||                             // resource.id (common webhook pattern)
+      resource?.subscription_id ||                // resource.subscription_id
+      object?.id ||                               // object.id
+      object?.subscription_id ||                  // object.subscription_id
+      payload?.id ||                              // payload.id
+      payload?.subscription_id ||                 // payload.subscription_id
+      body?.subscription?.id ||                   // body.subscription.id
+      metadata?.subscription_id                   // metadata.subscription_id
 
     // =========================================
-    // HANDLE SUBSCRIPTION CREATED (Capture subscription ID)
+    // HANDLE SUBSCRIPTION ACTIVATED (Capture subscription ID)
     // =========================================
-    if (event_type === 'subscription.created' || event_type === 'subscription.activated') {
-      console.log('Processing subscription created:', { 
+    if (event_type === 'SUBSCRIPTION_ACTIVATED') {
+      console.log('=== SUBSCRIPTION_ACTIVATED EVENT ===')
+      console.log('Extracted values:', { 
         event_type, 
         email, 
         consumerId, 
         subscriptionId,
-        // Log full body to debug
         bodyKeys: Object.keys(body),
       })
+      
+      // If subscriptionId is null, log all possible ID fields for debugging
+      if (!subscriptionId) {
+        console.log('WARNING: subscriptionId is NULL! Checking all possible fields:')
+        console.log({
+          'body.subscription_id': body.subscription_id,
+          'body.id': body.id,
+          'body.subscription?.id': body.subscription?.id,
+          'body.data?.subscription_id': body.data?.subscription_id,
+          'body.data?.id': body.data?.id,
+          'body.resource?.id': body.resource?.id,
+          'body.object?.id': body.object?.id,
+          'body.payload?.id': body.payload?.id,
+        })
+      }
       
       // Find user by email or consumer ID
       let firebaseUid: string | null = null
@@ -185,24 +232,35 @@ export async function POST(request: NextRequest) {
 
         console.log('Subscription ID saved:', { firebaseUid, subscriptionId })
       } else {
-        console.log('Could not save subscription ID - user not found or no subscriptionId:', { email, consumerId, subscriptionId })
+        console.log('WARNING: Could not save subscription ID:', { 
+          reason: !firebaseUid ? 'User not found in Firebase' : 'No subscriptionId extracted',
+          email, 
+          consumerId, 
+          subscriptionId,
+          firebaseUid,
+        })
       }
 
       return NextResponse.json({
         received: true,
-        processed: true,
-        event: 'subscription_created',
-        subscriptionId: subscriptionId,
+        processed: !!subscriptionId && !!firebaseUid,
+        event: 'subscription_activated',
+        subscriptionId: subscriptionId || null,
+        userFound: !!firebaseUid,
+        debug: {
+          emailFound: !!email,
+          consumerIdFound: !!consumerId,
+          subscriptionIdFound: !!subscriptionId,
+        }
       })
     }
 
     // =========================================
-    // HANDLE SUBSCRIPTION RENEWALS
+    // HANDLE SUBSCRIPTION RENEWALS (Invoice complete = recurring payment)
     // =========================================
     const renewalEvents = [
-      'subscription.renewed',
-      'subscription.payment_successful',
-      'recurring_payment.successful',
+      'INVOICE_COMPLETE',  // Recurring payment completed
+      'INVOICE_ACCEPTED',  // Invoice accepted (might indicate renewal)
     ]
 
     if (renewalEvents.includes(event_type)) {
@@ -289,10 +347,8 @@ export async function POST(request: NextRequest) {
     // HANDLE SUBSCRIPTION CANCELLATIONS
     // =========================================
     const cancellationEvents = [
-      'subscription.cancelled',
-      'subscription.canceled',
-      'subscription.ended',
-      'subscription.expired',
+      'SUBSCRIPTION_CANCELED',
+      'SUBSCRIPTION_INACTIVATED',
     ]
 
     if (cancellationEvents.includes(event_type)) {
@@ -352,9 +408,8 @@ export async function POST(request: NextRequest) {
     // HANDLE FAILED PAYMENTS
     // =========================================
     const failedEvents = [
-      'payment.failed',
-      'subscription.payment_failed',
-      'recurring_payment.failed',
+      'PAYMENT_FAILED',
+      'PAYMENT_CANCELED',
     ]
 
     if (failedEvents.includes(event_type)) {
@@ -417,9 +472,7 @@ export async function POST(request: NextRequest) {
     // HANDLE NEW PAYMENTS (Initial subscription)
     // =========================================
     const successEvents = [
-      'payment.successful',
-      'payment.completed',
-      'payment_link.payment_successful',
+      'PAYMENT_SUCCEEDED',
     ]
 
     if (!successEvents.includes(event_type)) {
