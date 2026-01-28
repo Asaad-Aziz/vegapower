@@ -157,6 +157,10 @@ export async function POST(request: NextRequest) {
         // StreamPay specific IDs for subscription management/cancellation
         streampayConsumerId: streampayConsumerId || null,
         streampayProductId: streampayProductId || null,
+        // NOTE: subscription_id is created by StreamPay AFTER payment succeeds
+        // It will be updated via webhook when subscription.created event is received
+        streampaySubscriptionId: null,
+        autoRenew: true,
       },
 
       // Metadata
