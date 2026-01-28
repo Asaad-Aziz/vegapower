@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, Suspense, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { purchase } from '@/lib/meta-pixel'
 
@@ -10,9 +10,17 @@ function AppSuccessInner() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [hasTrackedPurchase, setHasTrackedPurchase] = useState(false)
+  const hasCalledApi = useRef(false) // Prevent double API calls
 
   useEffect(() => {
     const processPayment = async () => {
+      // Prevent double calls (React Strict Mode or re-renders)
+      if (hasCalledApi.current) {
+        console.log('API already called, skipping duplicate')
+        return
+      }
+      hasCalledApi.current = true
+
       const source = searchParams.get('source')
       
       // StreamPay flow - call verification endpoint to create account
