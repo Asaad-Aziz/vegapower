@@ -136,15 +136,20 @@ export default function AppOnboarding() {
 
     let tdee = bmr * multiplier
 
-    // Adjust based on goal and speed (1 kg/week ≈ 1100 kcal/day)
-    const adjustment = targetSpeed * 1100
-
     const goalData = fitnessGoals.find(g => g.value === fitnessGoal)
+    
     if (goalData?.id === 'loseWeight') {
-      tdee -= adjustment
+      // For cutting: 1 kg/week ≈ 1100 kcal/day deficit (more aggressive is OK)
+      const cuttingAdjustment = targetSpeed * 1100
+      tdee -= cuttingAdjustment
     } else if (goalData?.id === 'gainMuscle') {
-      tdee += adjustment
+      // For bulking: Use moderate surplus (300-500 kcal) to minimize fat gain
+      // Realistic muscle gain is 0.25-0.5 kg/week, so we use smaller multiplier
+      // targetSpeed 0.5 = ~250 kcal surplus, targetSpeed 1.0 = ~500 kcal surplus
+      const bulkingAdjustment = targetSpeed * 500
+      tdee += bulkingAdjustment
     }
+    // Maintain weight: no adjustment (tdee stays as is)
 
     // Safety minimum: never below 1200
     return Math.max(Math.round(tdee), 1200)
