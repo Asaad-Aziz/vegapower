@@ -135,6 +135,11 @@ export async function POST(request: NextRequest) {
       successUrlWithParams.searchParams.set('streampayConsumerId', consumer.id)
 
       // Create payment link with existing product
+      console.log('Creating payment link with redirect URLs:', {
+        success_redirect_url: successUrlWithParams.toString(),
+        failure_redirect_url: `${baseUrl}/app?payment=failed`,
+      })
+      
       const paymentLink = await client.createPaymentLink({
         name: `Vega Power App - ${selectedPlan.productName}`,
         organization_consumer_id: consumer.id,
@@ -142,6 +147,8 @@ export async function POST(request: NextRequest) {
         success_redirect_url: successUrlWithParams.toString(),
         failure_redirect_url: `${baseUrl}/app?payment=failed`,
       })
+      
+      console.log('Payment link response:', JSON.stringify(paymentLink, null, 2))
 
       const paymentUrl = client.getPaymentUrl(paymentLink)
 

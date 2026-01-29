@@ -163,13 +163,31 @@ function AppSuccessInner() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold mb-2">حدث خطأ</h2>
-          <p className="text-neutral-400 mb-6">{error}</p>
-          <a
-            href="/app"
-            className="inline-block px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
-          >
-            المحاولة مرة أخرى
-          </a>
+          <p className="text-neutral-400 mb-4">{error}</p>
+          
+          {/* Help message for users who completed payment */}
+          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-6 text-right">
+            <p className="text-amber-400 text-sm mb-2 font-medium">💡 هل أتممت الدفع؟</p>
+            <p className="text-neutral-400 text-xs leading-relaxed">
+              إذا أتممت عملية الدفع بنجاح، سيتم إرسال بيانات تسجيل الدخول إلى بريدك الإلكتروني خلال دقائق. 
+              تحقق من صندوق الوارد ومجلد البريد المزعج (Spam).
+            </p>
+          </div>
+          
+          <div className="flex flex-col gap-3">
+            <a
+              href="/app"
+              className="inline-block px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              المحاولة مرة أخرى
+            </a>
+            <a
+              href="mailto:support@vegapowerstore.com"
+              className="inline-block px-6 py-3 rounded-xl bg-green-500/20 hover:bg-green-500/30 text-green-400 transition-colors text-sm"
+            >
+              تواصل مع الدعم
+            </a>
+          </div>
         </div>
       </div>
     )

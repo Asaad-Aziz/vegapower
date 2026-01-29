@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { initiateCheckout } from '@/lib/meta-pixel'
 
@@ -78,6 +79,9 @@ const accomplishmentOptions = [
 ]
 
 export default function AppOnboarding() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  
   const [step, setStep] = useState<Step>(0)
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly')
   const [processingProgress, setProcessingProgress] = useState(0)
@@ -87,6 +91,58 @@ export default function AppOnboarding() {
   const [discountError, setDiscountError] = useState('')
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [paymentError, setPaymentError] = useState('')
+  const [paymentRecoveryStatus, setPaymentRecoveryStatus] = useState<'idle' | 'checking' | 'success' | 'failed'>('idle')
+  const [recoveryEmail, setRecoveryEmail] = useState('')
+
+  // Handle StreamPay false-negative: payment succeeded but redirected to failure URL
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment')
+    const paymentId = searchParams.get('id')
+    const paymentLinkId = searchParams.get('payment_link_id')
+    
+    // If we got redirected with payment=failed but have a payment ID, verify actual status
+    if (paymentStatus === 'failed' && (paymentId || paymentLinkId)) {
+      console.log('StreamPay reported failure, checking actual payment status...', { paymentId, paymentLinkId })
+      setPaymentRecoveryStatus('checking')
+      
+      // Check with our backend if this payment actually succeeded
+      fetch('/api/streampay/check-payment-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId, paymentLinkId }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.paymentSucceeded) {
+            console.log('Payment actually succeeded! Redirecting to success page...')
+            setPaymentRecoveryStatus('success')
+            setRecoveryEmail(data.email || '')
+            
+            // Build success URL and redirect
+            const successUrl = new URL('/app/success', window.location.origin)
+            successUrl.searchParams.set('source', 'streampay')
+            successUrl.searchParams.set('email', data.email || '')
+            successUrl.searchParams.set('plan', data.plan || 'yearly')
+            successUrl.searchParams.set('amount', data.amount || '155')
+            if (data.sessionId) successUrl.searchParams.set('session', data.sessionId)
+            
+            // Redirect to success page after a short delay
+            setTimeout(() => {
+              router.push(successUrl.toString())
+            }, 2000)
+          } else {
+            // Payment actually failed
+            setPaymentRecoveryStatus('failed')
+            setPaymentError('فشلت عملية الدفع. يرجى المحاولة مرة أخرى.')
+          }
+        })
+        .catch(err => {
+          console.error('Error checking payment status:', err)
+          setPaymentRecoveryStatus('failed')
+          setPaymentError('حدث خطأ في التحقق من حالة الدفع. إذا تم خصم المبلغ، يرجى التواصل مع الدعم.')
+        })
+    }
+  }, [searchParams, router])
 
   const [userData, setUserData] = useState<UserData>({
     gender: '',
@@ -331,8 +387,48 @@ export default function AppOnboarding() {
   const weightDiff = Math.abs(userData.weight - userData.targetWeight)
   const isLosingWeight = userData.targetWeight < userData.weight
 
+  // Show recovery UI when checking payment status
+  if (paymentRecoveryStatus === 'checking') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-neutral-900 via-neutral-900 to-black text-white flex items-center justify-center px-6" dir="rtl">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-full border-4 border-green-500 border-t-transparent animate-spin" />
+          <h2 className="text-xl font-semibold mb-2">جاري التحقق من حالة الدفع...</h2>
+          <p className="text-neutral-400">يرجى الانتظار بينما نتحقق من عملية الدفع</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (paymentRecoveryStatus === 'success') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-neutral-900 via-neutral-900 to-black text-white flex items-center justify-center px-6" dir="rtl">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center">
+            <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold mb-2">تم الدفع بنجاح! 🎉</h2>
+          <p className="text-neutral-400 mb-4">جاري تحويلك لصفحة النجاح...</p>
+          {recoveryEmail && (
+            <p className="text-sm text-green-400">سيتم إرسال بيانات الدخول إلى: {recoveryEmail}</p>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white" dir="rtl">
+      {/* Payment Error Banner - shows when StreamPay incorrectly reported failure */}
+      {paymentRecoveryStatus === 'failed' && paymentError && (
+        <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-red-500/90 text-white text-center">
+          <p className="text-sm">{paymentError}</p>
+          <p className="text-xs mt-1 opacity-80">إذا تم خصم المبلغ، يرجى التواصل معنا على support@vegapowerstore.com</p>
+        </div>
+      )}
+      
       {/* Progress Bar */}
       {step > 0 && step < 15 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">

@@ -547,8 +547,9 @@ export async function POST(request: NextRequest) {
     const planConfig = plans[plan] || plans.monthly
 
     // Create Firebase user (or get existing)
+    // Pass true to update password if user exists (since we're sending them the email with this password)
     console.log('Creating/getting Firebase user for:', email)
-    const firebaseUid = await createFirebaseUser(email, tempPassword)
+    const firebaseUid = await createFirebaseUser(email, tempPassword, true)
 
     if (!firebaseUid) {
       console.error('Failed to create Firebase user')
@@ -640,10 +641,104 @@ export async function POST(request: NextRequest) {
       console.error('Failed to store subscription:', insertError)
     }
 
-    // NOTE: Email is ONLY sent by verify-payment endpoint (not webhook)
-    // This prevents duplicate emails when both endpoints fire
-    // The webhook is just a backup for data integrity
-    console.log('Webhook: Email NOT sent here (handled by verify-payment):', email)
+    // Send email as FALLBACK if user wasn't already processed by verify-payment
+    // This ensures user gets their credentials even if the redirect fails
+    if (!userAlreadyExists && firebaseUid) {
+      const resendApiKey = process.env.RESEND_API_KEY
+      if (resendApiKey) {
+        try {
+          console.log('Webhook: Sending welcome email as fallback to:', email)
+          const emailResponse = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${resendApiKey}`,
+            },
+            body: JSON.stringify({
+              from: 'Vega Power <noreply@vegapowerstore.com>',
+              to: email,
+              subject: 'مرحباً بك في Vega Power - بيانات تسجيل الدخول 🎉',
+              html: `
+                <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa;">
+                  <div style="background: linear-gradient(135deg, #0D1A33, #1A2640); padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 48px; margin-bottom: 10px;">👑</div>
+                    <h1 style="color: #fff; margin: 0; font-size: 24px;">مرحباً بك في Vega Power!</h1>
+                    <p style="color: rgba(255,255,255,0.7); margin: 10px 0 0 0;">تم تفعيل اشتراكك بنجاح</p>
+                  </div>
+                  
+                  <div style="background: #fff; padding: 25px; border-radius: 12px; margin-bottom: 20px;">
+                    <h2 style="color: #333; margin: 0 0 20px 0; font-size: 18px;">بيانات تسجيل الدخول</h2>
+                    
+                    <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                      <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">البريد الإلكتروني</p>
+                      <p style="margin: 0; color: #10b981; font-size: 16px; font-weight: bold;" dir="ltr">${email}</p>
+                    </div>
+                    
+                    <div style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+                      <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">كلمة المرور المؤقتة</p>
+                      <p style="margin: 0; color: #10b981; font-size: 24px; font-weight: bold; font-family: monospace; letter-spacing: 2px;" dir="ltr">${tempPassword}</p>
+                    </div>
+                  </div>
+
+                  <div style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 16px;">خطتك الشخصية: ${firebaseUserData.programName}</h3>
+                    <div style="display: flex; justify-content: space-around;">
+                      <div>
+                        <div style="font-size: 24px; font-weight: bold;">${firebaseUserData.calculatedCalories}</div>
+                        <div style="font-size: 11px; opacity: 0.8;">سعرة/يوم</div>
+                      </div>
+                      <div>
+                        <div style="font-size: 24px; font-weight: bold;">${firebaseUserData.proteinGrams}g</div>
+                        <div style="font-size: 11px; opacity: 0.8;">بروتين</div>
+                      </div>
+                      <div>
+                        <div style="font-size: 24px; font-weight: bold;">${firebaseUserData.carbsGrams}g</div>
+                        <div style="font-size: 11px; opacity: 0.8;">كارب</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">خطوات تسجيل الدخول:</h3>
+                    <ol style="margin: 0; padding: 0 20px; color: #666; line-height: 2;">
+                      <li>حمّل تطبيق Vega Power من App Store أو Google Play</li>
+                      <li>افتح التطبيق واضغط "تسجيل الدخول"</li>
+                      <li>أدخل البريد وكلمة المرور المؤقتة أعلاه</li>
+                      <li>غيّر كلمة المرور من الإعدادات (اختياري)</li>
+                    </ol>
+                  </div>
+
+                  <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <p style="margin: 0; color: #92400e; font-size: 13px;">
+                      ⚠️ ننصحك بتغيير كلمة المرور بعد تسجيل الدخول الأول من إعدادات التطبيق للحفاظ على أمان حسابك.
+                    </p>
+                  </div>
+                  
+                  <div style="text-align: center; padding: 20px 0;">
+                    <p style="color: #999; font-size: 12px; margin: 0;">
+                      لم تستلم الإيميل؟ تحقق من مجلد السبام أو تواصل معنا<br>
+                      © Vega Power - جميع الحقوق محفوظة
+                    </p>
+                  </div>
+                </div>
+              `,
+            }),
+          })
+
+          if (!emailResponse.ok) {
+            console.error('Webhook: Failed to send email:', await emailResponse.text())
+          } else {
+            console.log('Webhook: Email sent successfully to:', email)
+          }
+        } catch (emailErr) {
+          console.error('Webhook: Email error:', emailErr)
+        }
+      } else {
+        console.log('Webhook: RESEND_API_KEY not configured, cannot send email')
+      }
+    } else {
+      console.log('Webhook: User already exists or no firebaseUid, skipping email:', { userAlreadyExists, hasFirebaseUid: !!firebaseUid })
+    }
 
     console.log('StreamPay webhook processed successfully:', {
       payment_id,
