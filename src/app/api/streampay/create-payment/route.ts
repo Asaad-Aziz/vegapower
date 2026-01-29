@@ -146,6 +146,7 @@ export async function POST(request: NextRequest) {
         items: [{ product_id: existingProductId, quantity: 1 }],
         success_redirect_url: successUrlWithParams.toString(),
         failure_redirect_url: `${baseUrl}/app?payment=failed`,
+        contact_information_type: 'EMAIL', // Required for proper redirect handling
       })
       
       console.log('Payment link response:', JSON.stringify(paymentLink, null, 2))
