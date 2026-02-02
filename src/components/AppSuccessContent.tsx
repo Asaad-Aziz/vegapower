@@ -34,7 +34,7 @@ function AppSuccessInner() {
         // StreamPay IDs for subscription management
         const streampayConsumerId = searchParams.get('streampayConsumerId')
         const streampayProductId = searchParams.get('streampayProductId')
-        const streampaySubscriptionId = searchParams.get('streampaySubscriptionId')
+        // Note: subscriptionId is created automatically by StreamPay and received via webhook
         
         if (!emailParam) {
           setStatus('error')
@@ -56,7 +56,7 @@ function AppSuccessInner() {
               discountCode,
               streampayConsumerId,
               streampayProductId,
-              streampaySubscriptionId,
+              // subscriptionId will be updated via webhook when StreamPay sends subscription_activated
             }),
           })
 

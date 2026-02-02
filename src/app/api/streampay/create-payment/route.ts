@@ -122,44 +122,47 @@ export async function POST(request: NextRequest) {
 
     // Check if we should use existing product from StreamPay dashboard
     if (existingProductId) {
-      // Use existing recurring product - create consumer first, then subscription, then payment link
+      // Use existing recurring product - create consumer first, then payment link
+      // NOTE: Do NOT create subscription manually - StreamPay creates it automatically
+      // when payment succeeds with a recurring product. The subscription ID will be
+      // received via webhook (subscription_activated event).
       console.log('Creating payment with existing product:', existingProductId)
       
       // Create or get consumer with EMAIL as contact type
-      const consumer = await client.createConsumer({
-        name: email.split('@')[0],
-        email: email,
-        contact_information_type: 'EMAIL',
-      } as Parameters<typeof client.createConsumer>[0])
-
-      console.log('Consumer created:', consumer.id)
+      let consumer: { id: string }
+      
+      try {
+        consumer = await client.createConsumer({
+          name: email.split('@')[0],
+          email: email,
+          contact_information_type: 'EMAIL',
+        } as Parameters<typeof client.createConsumer>[0])
+        console.log('Consumer created:', consumer.id)
+      } catch (consumerError: unknown) {
+        // Check if consumer already exists
+        const errorBody = (consumerError as { body?: { error?: { code?: string } } })?.body
+        if (errorBody?.error?.code === 'DUPLICATE_CONSUMER') {
+          console.log('Consumer already exists, fetching existing consumer...')
+          // List consumers and find by email
+          const consumers = await client.listConsumers({ page: 1, size: 100 })
+          const existingConsumer = consumers.data?.find(
+            (c: { email?: string | null }) => c.email?.toLowerCase() === email.toLowerCase()
+          )
+          if (!existingConsumer) {
+            throw new Error('Consumer exists but could not be found')
+          }
+          consumer = existingConsumer
+          console.log('Found existing consumer:', consumer.id)
+        } else {
+          throw consumerError
+        }
+      }
 
       // Add consumer ID to success URL for tracking/cancellation
       successUrlWithParams.searchParams.set('streampayConsumerId', consumer.id)
 
-      // Create subscription to get the subscription ID
-      // Note: StreamPay API requires 'items' array and 'period_start' (not the simplified docs format)
-      console.log('Creating subscription with:', {
-        organization_consumer_id: consumer.id,
-        product_id: existingProductId,
-      })
-
-      const subscription = await client.createSubscription({
-        organization_consumer_id: consumer.id,
-        items: [{ product_id: existingProductId, quantity: 1, coupons: null }],
-        notify_consumer: true,
-        description: `Vega Power App - ${selectedPlan.productName}`,
-        coupons: null,
-        period_start: new Date().toISOString(),
-        exclude_coupons_if_installments: false,
-      })
-
-      console.log('Subscription created:', subscription.id)
-
-      // Add subscription ID to success URL so it can be stored in database
-      successUrlWithParams.searchParams.set('streampaySubscriptionId', subscription.id)
-
-      // Create payment link with existing product
+      // Create payment link with existing recurring product
+      // StreamPay will automatically create the subscription when payment succeeds
       console.log('Creating payment link with redirect URLs:', {
         success_redirect_url: successUrlWithParams.toString(),
         failure_redirect_url: `${baseUrl}/app?payment=failed`,
@@ -186,7 +189,7 @@ export async function POST(request: NextRequest) {
         paymentUrl,
         consumerId: consumer.id,
         productId: existingProductId || undefined,
-        subscriptionId: subscription.id,
+        // subscriptionId will be received via webhook after payment succeeds
       }
     } else {
       // Create new product on-the-fly (one-time payment)
