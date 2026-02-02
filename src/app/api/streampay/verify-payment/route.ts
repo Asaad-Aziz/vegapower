@@ -29,8 +29,9 @@ export async function POST(request: NextRequest) {
       amount, 
       userData, 
       discountCode,
-      streampayConsumerId,  // StreamPay consumer ID for subscription management
-      streampayProductId,   // StreamPay product ID from dashboard
+      streampayConsumerId,    // StreamPay consumer ID for subscription management
+      streampayProductId,     // StreamPay product ID from dashboard
+      streampaySubscriptionId, // StreamPay subscription ID for tracking
     } = body
 
     console.log('StreamPay verify-payment called:', { 
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
       amount,
       streampayConsumerId,
       streampayProductId,
+      streampaySubscriptionId,
     })
 
     // Validate required fields
@@ -157,9 +159,8 @@ export async function POST(request: NextRequest) {
         // StreamPay specific IDs for subscription management/cancellation
         streampayConsumerId: streampayConsumerId || null,
         streampayProductId: streampayProductId || null,
-        // NOTE: subscription_id is created by StreamPay AFTER payment succeeds
-        // It will be updated via webhook when subscription.created event is received
-        streampaySubscriptionId: null,
+        // Subscription ID is created when we call createSubscription in create-payment
+        streampaySubscriptionId: streampaySubscriptionId || null,
         autoRenew: true,
       },
 
@@ -189,6 +190,7 @@ export async function POST(request: NextRequest) {
         // Ensure StreamPay IDs are stored in user_data as well
         streampayConsumerId: streampayConsumerId || null,
         streampayProductId: streampayProductId || null,
+        streampaySubscriptionId: streampaySubscriptionId || null,
       },
       expires_at: expirationDate.toISOString(),
       payment_source: 'streampay',

@@ -118,21 +118,53 @@ export async function POST(request: NextRequest) {
       successUrlWithParams.searchParams.set('streampayProductId', existingProductId)
     }
 
-    let result: { paymentUrl: string; consumerId?: string; productId?: string }
+    let result: { paymentUrl: string; consumerId?: string; productId?: string; subscriptionId?: string }
 
     // Check if we should use existing product from StreamPay dashboard
     if (existingProductId) {
-      // Use existing recurring product - create consumer first, then payment link
+      // Use existing recurring product - create consumer first, then subscription, then payment link
       console.log('Creating payment with existing product:', existingProductId)
       
-      // Create or get consumer
+      // Create or get consumer with EMAIL as contact type
       const consumer = await client.createConsumer({
         name: email.split('@')[0],
         email: email,
-      })
+        contact_information_type: 'EMAIL',
+      } as Parameters<typeof client.createConsumer>[0])
+
+      console.log('Consumer created:', consumer.id)
 
       // Add consumer ID to success URL for tracking/cancellation
       successUrlWithParams.searchParams.set('streampayConsumerId', consumer.id)
+
+      // Create subscription to get the subscription ID
+      // Map plan to billing cycle for StreamPay
+      const billingCycleMap: Record<string, 'MONTHLY' | 'WEEKLY' | 'YEARLY'> = {
+        monthly: 'MONTHLY',
+        quarterly: 'MONTHLY', // StreamPay doesn't support quarterly, use monthly billing
+        yearly: 'YEARLY',
+      }
+      const billingCycle = billingCycleMap[plan] || 'MONTHLY'
+
+      console.log('Creating subscription with:', {
+        organization_consumer_id: consumer.id,
+        organization_product_id: existingProductId,
+        billing_cycle: billingCycle,
+      })
+
+      // Using the simplified format from StreamPay docs
+      // Type assertion needed as SDK TypeScript types differ from actual API
+      const subscription = await client.createSubscription({
+        organization_consumer_id: consumer.id,
+        organization_product_id: existingProductId,
+        billing_cycle: billingCycle,
+        start_date: new Date().toISOString(),
+      } as unknown as Parameters<typeof client.createSubscription>[0])
+
+      console.log('Subscription created:', subscription.id)
+
+      // Add subscription ID to success URL so it can be stored in database
+      successUrlWithParams.searchParams.set('streampaySubscriptionId', subscription.id)
 
       // Create payment link with existing product
       console.log('Creating payment link with redirect URLs:', {
@@ -161,6 +193,7 @@ export async function POST(request: NextRequest) {
         paymentUrl,
         consumerId: consumer.id,
         productId: existingProductId || undefined,
+        subscriptionId: subscription.id,
       }
     } else {
       // Create new product on-the-fly (one-time payment)
@@ -193,6 +226,7 @@ export async function POST(request: NextRequest) {
       paymentUrl: result.paymentUrl,
       consumerId: result.consumerId,
       productId: result.productId,
+      subscriptionId: result.subscriptionId,
       amount: price,
       plan,
       email,
@@ -204,6 +238,7 @@ export async function POST(request: NextRequest) {
       sessionId,
       consumerId: result.consumerId,
       productId: result.productId,
+      subscriptionId: result.subscriptionId,
     })
 
   } catch (error: unknown) {

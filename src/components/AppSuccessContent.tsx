@@ -34,6 +34,7 @@ function AppSuccessInner() {
         // StreamPay IDs for subscription management
         const streampayConsumerId = searchParams.get('streampayConsumerId')
         const streampayProductId = searchParams.get('streampayProductId')
+        const streampaySubscriptionId = searchParams.get('streampaySubscriptionId')
         
         if (!emailParam) {
           setStatus('error')
@@ -55,6 +56,7 @@ function AppSuccessInner() {
               discountCode,
               streampayConsumerId,
               streampayProductId,
+              streampaySubscriptionId,
             }),
           })
 
