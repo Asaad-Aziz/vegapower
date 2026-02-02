@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
       activityLevel: userDataParsed?.activityLevel || 'نشط إلى حد ما (تمرين معتدل 3-5 أيام في الأسبوع)',
       fitnessGoal: userDataParsed?.fitnessGoal || 'Lose Fat (Cut)',
       fitnessLevel: userDataParsed?.fitnessLevel || 'Intermediate',
-      workoutLocation: 'Gym',
+      workoutLocation: userDataParsed?.workoutLocation || 'Gym',
 
       // User Selections
       challenges: userDataParsed?.challenges || [],

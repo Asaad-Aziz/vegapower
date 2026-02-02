@@ -5,12 +5,13 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { initiateCheckout } from '@/lib/meta-pixel'
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17
 
 interface UserData {
   gender: 'male' | 'female' | ''
   activityLevel: string
   fitnessLevel: string
+  workoutLocation: string
   height: number
   weight: number
   birthYear: number
@@ -86,6 +87,12 @@ const fitnessLevelOptions = [
   { id: 'Advanced', emoji: '🏆', title: 'متقدم', subtitle: 'خبرة طويلة ومستوى لياقة عالي' },
 ]
 
+// Workout locations
+const workoutLocationOptions = [
+  { id: 'Gym', emoji: '🏋️', title: 'النادي الرياضي', subtitle: 'أتمرن في الجيم مع المعدات الكاملة' },
+  { id: 'Home', emoji: '🏠', title: 'المنزل', subtitle: 'أتمرن في البيت بأدوات بسيطة أو بدون أدوات' },
+]
+
 export default function AppOnboarding() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -156,6 +163,7 @@ export default function AppOnboarding() {
     gender: '',
     activityLevel: '',
     fitnessLevel: '',
+    workoutLocation: '',
     height: 170,
     weight: 70,
     birthYear: 2000,
@@ -176,11 +184,11 @@ export default function AppOnboarding() {
     programName: '',
   })
 
-  const totalSteps = 18
+  const totalSteps = 19
   const progress = (step / (totalSteps - 1)) * 100
 
   const nextStep = () => {
-    if (step < 17) setStep((step + 1) as Step)
+    if (step < 18) setStep((step + 1) as Step)
   }
 
   const prevStep = () => {
@@ -243,9 +251,9 @@ export default function AppOnboarding() {
     }
   }
 
-  // Calculate all values when reaching step 15 (Processing)
+  // Calculate all values when reaching step 16 (Processing)
   useEffect(() => {
-    if (step === 15) {
+    if (step === 16) {
       const calories = calculateCalories()
       const macros = getMacroPercentages()
       const programName = getProgramName()
@@ -332,6 +340,7 @@ export default function AppOnboarding() {
             gender: userData.gender,
             activityLevel: userData.activityLevel,
             fitnessLevel: userData.fitnessLevel,
+            workoutLocation: userData.workoutLocation,
             height: userData.height,
             weight: userData.weight,
             birthYear: userData.birthYear,
@@ -440,7 +449,7 @@ export default function AppOnboarding() {
       )}
       
       {/* Progress Bar */}
-      {step > 0 && step < 16 && (
+      {step > 0 && step < 17 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
           <div className="w-[200px] h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
             <div 
@@ -452,7 +461,7 @@ export default function AppOnboarding() {
       )}
 
       {/* Back Button */}
-      {step > 0 && step < 15 && (
+      {step > 0 && step < 16 && (
         <button
           onClick={prevStep}
           className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center"
@@ -587,8 +596,42 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 4: Height & Weight */}
+        {/* Step 4: Workout Location */}
         {step === 4 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">أين تفضل التمرين؟</h2>
+              <p className="text-neutral-500 dark:text-neutral-400">سنخصص التمارين حسب المكان والأدوات المتاحة لديك.</p>
+            </div>
+            <div className="flex-1 flex flex-col gap-4 justify-center">
+              {workoutLocationOptions.map((location) => (
+                <button
+                  key={location.id}
+                  onClick={() => {
+                    setUserData({ ...userData, workoutLocation: location.id })
+                    nextStep()
+                  }}
+                  className={`w-full p-5 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                    userData.workoutLocation === location.id
+                      ? 'bg-neutral-500/20 border-2 border-neutral-500'
+                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
+                >
+                  <div className="w-16 h-16 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-3xl">
+                    {location.emoji}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">{location.title}</h3>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">{location.subtitle}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Height & Weight */}
+        {step === 5 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">الطول والوزن</h2>
@@ -630,8 +673,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 5: Birth Year */}
-        {step === 5 && (
+        {/* Step 6: Birth Year */}
+        {step === 6 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">متى ولدت؟</h2>
@@ -660,8 +703,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 6: Fitness Goal */}
-        {step === 6 && (
+        {/* Step 7: Fitness Goal */}
+        {step === 7 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما هو هدفك؟</h2>
@@ -691,8 +734,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 7: Target Weight */}
-        {step === 7 && (
+        {/* Step 8: Target Weight */}
+        {step === 8 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما هو وزنك المثالي؟</h2>
@@ -718,8 +761,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 8: Speed */}
-        {step === 8 && (
+        {/* Step 9: Speed */}
+        {step === 9 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما مدى سرعة تحقيق هدفك؟</h2>
@@ -757,8 +800,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 9: Challenges */}
-        {step === 9 && (
+        {/* Step 10: Challenges */}
+        {step === 10 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما الذي يمنعك من الوصول لهدفك؟</h2>
@@ -798,8 +841,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 10: Accomplishments */}
-        {step === 10 && (
+        {/* Step 11: Accomplishments */}
+        {step === 11 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما الذي تود تحقيقه؟</h2>
@@ -839,8 +882,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 11: Nutrition Tracking Question */}
-        {step === 11 && (
+        {/* Step 12: Nutrition Tracking Question */}
+        {step === 12 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
             <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-400/20 to-emerald-500/20 flex items-center justify-center">
               <span className="text-5xl">📸</span>
@@ -878,8 +921,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 12: Investment Commitment Question */}
-        {step === 12 && (
+        {/* Step 13: Investment Commitment Question */}
+        {step === 13 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
             <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-amber-400/20 to-orange-500/20 flex items-center justify-center">
               <span className="text-5xl">💎</span>
@@ -921,8 +964,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 13: Our Story - Why We Built This */}
-        {step === 13 && (
+        {/* Step 14: Our Story - Why We Built This */}
+        {step === 14 && (
           <div className="flex-1 flex flex-col animate-fade-in overflow-auto -my-4 py-4">
             {/* Header */}
             <div className="text-center mb-6">
@@ -1015,8 +1058,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 14: Motivation */}
-        {step === 14 && (
+        {/* Step 15: Motivation */}
+        {step === 15 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-neutral-500/20 flex items-center justify-center">
               <span className="text-4xl">💪</span>
@@ -1038,8 +1081,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 15: Processing */}
-        {step === 15 && (
+        {/* Step 16: Processing */}
+        {step === 16 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
             <div className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
               {processingProgress}%
@@ -1077,8 +1120,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 16: Payment - Full Featured */}
-        {step === 16 && (
+        {/* Step 17: Payment - Full Featured */}
+        {step === 17 && (
           <div className="flex-1 flex flex-col animate-fade-in overflow-auto -my-8 py-8">
             {/* Header */}
             <div className="text-center mb-4">
