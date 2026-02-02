@@ -135,21 +135,29 @@ export async function POST(request: NextRequest) {
       console.log('=== END PAYLOAD ===')
     }
 
+    // Extract email - StreamPay puts it in various places
     const email = customer?.email || metadata?.email || data?.customer?.email || 
                   resource?.customer?.email || object?.customer?.email || payload?.customer?.email ||
-                  body?.organization_consumer?.email
+                  body?.organization_consumer?.email ||
+                  data?.organization_consumer?.email  // StreamPay nested consumer email
     
+    // Extract consumer ID - StreamPay uses data.customer_id.id structure
     const consumerId = consumer_id || customer?.id || metadata?.consumerId || data?.consumer_id ||
                        organization_consumer_id || body?.organization_consumer_id ||
-                       resource?.consumer_id || object?.consumer_id
+                       resource?.consumer_id || object?.consumer_id ||
+                       data?.customer_id?.id ||       // StreamPay: data.customer_id.id
+                       body?.data?.customer_id?.id    // StreamPay nested
     
     const productId = product_id || metadata?.productId || data?.product_id ||
                       resource?.product_id || object?.product_id
     
     // Try to extract subscription_id from ALL possible locations
-    // StreamPay might use different field names or nested structures
+    // StreamPay uses: data.subscription.id and entity_id
     const subscriptionId = 
       subscription_id ||                          // Direct field
+      body?.entity_id ||                          // StreamPay: entity_id (for SUBSCRIPTION events)
+      data?.subscription?.id ||                   // StreamPay: data.subscription.id
+      body?.data?.subscription?.id ||             // StreamPay nested: body.data.subscription.id
       id ||                                       // Root id
       subscription?.id ||                         // Nested subscription.id
       data?.subscription_id ||                    // data.subscription_id
@@ -180,14 +188,24 @@ export async function POST(request: NextRequest) {
       if (!subscriptionId) {
         console.log('WARNING: subscriptionId is NULL! Checking all possible fields:')
         console.log({
+          'body.entity_id': body.entity_id,
+          'body.data?.subscription?.id': body.data?.subscription?.id,
           'body.subscription_id': body.subscription_id,
           'body.id': body.id,
           'body.subscription?.id': body.subscription?.id,
           'body.data?.subscription_id': body.data?.subscription_id,
           'body.data?.id': body.data?.id,
-          'body.resource?.id': body.resource?.id,
-          'body.object?.id': body.object?.id,
-          'body.payload?.id': body.payload?.id,
+        })
+      }
+      
+      // If consumerId is null, log for debugging
+      if (!consumerId) {
+        console.log('WARNING: consumerId is NULL! Checking all possible fields:')
+        console.log({
+          'body.data?.customer_id?.id': body.data?.customer_id?.id,
+          'body.consumer_id': body.consumer_id,
+          'body.customer?.id': body.customer?.id,
+          'body.organization_consumer_id': body.organization_consumer_id,
         })
       }
       
@@ -604,9 +622,10 @@ export async function POST(request: NextRequest) {
         source: 'streampay_web',
         paymentId: payment_id,
         // StreamPay IDs for subscription management
-        streampayConsumerId: consumerId || null,
-        streampayProductId: productId || null,
-        streampaySubscriptionId: subscriptionId || null,
+        // Only set if we have actual values (avoid null -> "null" string conversion)
+        ...(consumerId ? { streampayConsumerId: consumerId } : {}),
+        ...(productId ? { streampayProductId: productId } : {}),
+        ...(subscriptionId ? { streampaySubscriptionId: subscriptionId } : {}),
         autoRenew: true,
         renewalCount: 0,
       },

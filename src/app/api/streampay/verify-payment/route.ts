@@ -157,11 +157,11 @@ export async function POST(request: NextRequest) {
         source: 'streampay_web',
         paymentId: sessionId,
         // StreamPay specific IDs for subscription management/cancellation
-        streampayConsumerId: streampayConsumerId || null,
-        streampayProductId: streampayProductId || null,
+        streampayConsumerId: streampayConsumerId || undefined,
+        streampayProductId: streampayProductId || undefined,
         // Subscription ID is created automatically by StreamPay when payment succeeds
         // and will be updated via webhook (subscription_activated event)
-        streampaySubscriptionId: null,
+        // Don't set it here - let the webhook set it when it has the actual value
         autoRenew: true,
       },
 
@@ -189,10 +189,10 @@ export async function POST(request: NextRequest) {
       user_data: {
         ...firebaseUserData,
         // Ensure StreamPay IDs are stored in user_data as well
-        streampayConsumerId: streampayConsumerId || null,
-        streampayProductId: streampayProductId || null,
-        // subscriptionId will be updated via webhook
-        streampaySubscriptionId: null,
+        // Don't set null values - Firestore might convert them to "null" strings
+        ...(streampayConsumerId ? { streampayConsumerId } : {}),
+        ...(streampayProductId ? { streampayProductId } : {}),
+        // subscriptionId will be set via webhook when available
       },
       expires_at: expirationDate.toISOString(),
       payment_source: 'streampay',
