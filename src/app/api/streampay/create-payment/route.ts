@@ -138,28 +138,21 @@ export async function POST(request: NextRequest) {
       successUrlWithParams.searchParams.set('streampayConsumerId', consumer.id)
 
       // Create subscription to get the subscription ID
-      // Map plan to billing cycle for StreamPay
-      const billingCycleMap: Record<string, 'MONTHLY' | 'WEEKLY' | 'YEARLY'> = {
-        monthly: 'MONTHLY',
-        quarterly: 'MONTHLY', // StreamPay doesn't support quarterly, use monthly billing
-        yearly: 'YEARLY',
-      }
-      const billingCycle = billingCycleMap[plan] || 'MONTHLY'
-
+      // Note: StreamPay API requires 'items' array and 'period_start' (not the simplified docs format)
       console.log('Creating subscription with:', {
         organization_consumer_id: consumer.id,
-        organization_product_id: existingProductId,
-        billing_cycle: billingCycle,
+        product_id: existingProductId,
       })
 
-      // Using the simplified format from StreamPay docs
-      // Type assertion needed as SDK TypeScript types differ from actual API
       const subscription = await client.createSubscription({
         organization_consumer_id: consumer.id,
-        organization_product_id: existingProductId,
-        billing_cycle: billingCycle,
-        start_date: new Date().toISOString(),
-      } as unknown as Parameters<typeof client.createSubscription>[0])
+        items: [{ product_id: existingProductId, quantity: 1, coupons: null }],
+        notify_consumer: true,
+        description: `Vega Power App - ${selectedPlan.productName}`,
+        coupons: null,
+        period_start: new Date().toISOString(),
+        exclude_coupons_if_installments: false,
+      })
 
       console.log('Subscription created:', subscription.id)
 
