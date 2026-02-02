@@ -965,25 +965,6 @@ export default function AppOnboarding() {
               </div>
             </div>
 
-            {/* Community Stats */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-neutral-800 to-neutral-900 text-white mb-6">
-              <p className="text-center text-sm mb-3 opacity-80">انضم لعائلة Vega Power</p>
-              <div className="flex justify-around">
-                <div className="text-center">
-                  <p className="text-2xl font-bold">+50,000</p>
-                  <p className="text-xs opacity-70">مستخدم سعودي</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold">+2M</p>
-                  <p className="text-xs opacity-70">وجبة تم تتبعها</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold">+100K</p>
-                  <p className="text-xs opacity-70">كيلو تم خسارته</p>
-                </div>
-              </div>
-            </div>
-
             <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-lg shadow-lg">
               أريد أن أكون جزءاً من هذا! 🌟
             </button>
@@ -1359,7 +1340,7 @@ export default function AppOnboarding() {
               <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
               </svg>
-              <span className="text-xs text-green-700 dark:text-green-400">بدون تجديد تلقائي - ادفع مرة واحدة فقط</span>
+              <span className="text-xs text-green-700 dark:text-green-400">يمكنك إيقاف وإالغاء الإشتراك متى ما تشاء  بسهولة</span>
             </div>
 
             {/* Payment Error Message */}
