@@ -202,6 +202,8 @@ export async function updateSubscriptionInFirestore(
 
 // Find Firebase user by StreamPay consumer ID (searches Firestore)
 export async function findUserByStreampayConsumerId(consumerId: string): Promise<{ uid: string; data: Record<string, unknown> } | null> {
+  console.log('findUserByStreampayConsumerId called with:', consumerId)
+  
   const app = getFirebaseAdmin()
   if (!app) {
     console.error('Firebase Admin app not available for Firestore')
@@ -210,10 +212,18 @@ export async function findUserByStreampayConsumerId(consumerId: string): Promise
 
   try {
     const db = admin.firestore()
+    console.log('Querying Firestore: users where subscription.streampayConsumerId ==', consumerId)
+    
     const snapshot = await db.collection('users')
       .where('subscription.streampayConsumerId', '==', consumerId)
       .limit(1)
       .get()
+    
+    console.log('Firestore query result:', { 
+      empty: snapshot.empty, 
+      size: snapshot.size,
+      consumerId 
+    })
     
     if (snapshot.empty) {
       console.log('No user found with StreamPay consumer ID:', consumerId)
@@ -221,12 +231,20 @@ export async function findUserByStreampayConsumerId(consumerId: string): Promise
     }
 
     const doc = snapshot.docs[0]
+    console.log('Found user document:', doc.id)
     return {
       uid: doc.id,
       data: doc.data() as Record<string, unknown>,
     }
   } catch (error: unknown) {
-    console.error('Error finding user by StreamPay consumer ID:', error)
+    // Check if it's an index error
+    const errorMessage = (error as { message?: string })?.message || ''
+    if (errorMessage.includes('index')) {
+      console.error('FIRESTORE INDEX REQUIRED! Create index for subscription.streampayConsumerId')
+      console.error('Full error:', error)
+    } else {
+      console.error('Error finding user by StreamPay consumer ID:', error)
+    }
     return null
   }
 }

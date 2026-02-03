@@ -142,11 +142,17 @@ export async function POST(request: NextRequest) {
                   data?.organization_consumer?.email  // StreamPay nested consumer email
     
     // Extract consumer ID - StreamPay uses data.customer_id.id structure
-    const consumerId = consumer_id || customer?.id || metadata?.consumerId || data?.consumer_id ||
+    // IMPORTANT: Check data.customer_id.id FIRST since that's what StreamPay actually sends
+    const consumerId = data?.customer_id?.id ||       // StreamPay: data.customer_id.id (PRIORITY!)
+                       body?.data?.customer_id?.id || // StreamPay nested
+                       consumer_id || customer?.id || metadata?.consumerId || data?.consumer_id ||
                        organization_consumer_id || body?.organization_consumer_id ||
-                       resource?.consumer_id || object?.consumer_id ||
-                       data?.customer_id?.id ||       // StreamPay: data.customer_id.id
-                       body?.data?.customer_id?.id    // StreamPay nested
+                       resource?.consumer_id || object?.consumer_id
+    
+    console.log('Consumer ID extraction:', {
+      'data?.customer_id?.id': data?.customer_id?.id,
+      'extracted_consumerId': consumerId,
+    })
     
     const productId = product_id || metadata?.productId || data?.product_id ||
                       resource?.product_id || object?.product_id
@@ -221,10 +227,15 @@ export async function POST(request: NextRequest) {
           if (apiKey) {
             const StreamSDK = (await import('@streamsdk/typescript')).default
             const client = StreamSDK.init(apiKey)
+            console.log('Fetching consumer from StreamPay:', consumerId)
             const consumer = await client.getConsumer(consumerId)
-            if (consumer?.email) {
-              userEmail = consumer.email
+            console.log('StreamPay consumer response:', JSON.stringify(consumer, null, 2))
+            // Email might be in different places
+            userEmail = consumer?.email || consumer?.data?.email || (consumer as Record<string, unknown>)?.email
+            if (userEmail) {
               console.log('Got email from StreamPay consumer:', userEmail)
+            } else {
+              console.log('No email found in consumer response')
             }
           }
         } catch (err) {
@@ -232,57 +243,49 @@ export async function POST(request: NextRequest) {
         }
       }
       
+      console.log('User lookup - email:', userEmail, 'consumerId:', consumerId)
+      
       if (userEmail) {
         firebaseUid = await getFirebaseUidByEmail(userEmail)
         console.log('Found user by email:', { userEmail, firebaseUid })
       }
       
-      if (!firebaseUid && consumerId) {
-        // Try Firebase search by consumer ID
-        const userByConsumer = await findUserByStreampayConsumerId(consumerId)
-        if (userByConsumer) {
-          firebaseUid = userByConsumer.uid
-          console.log('Found user in Firebase by consumer ID:', firebaseUid)
-        }
-        
-        // Fallback: Search in Supabase app_subscriptions
-        if (!firebaseUid) {
-          console.log('Searching Supabase for user with consumer ID:', consumerId)
-          const { data: recentSubs } = await supabase
-            .from('app_subscriptions')
-            .select('firebase_uid, email, user_data')
-            .eq('status', 'active')
-            .order('created_at', { ascending: false })
-            .limit(20)
+      // Helper function to search for user with retries
+      // (webhook often arrives BEFORE verify-payment creates the user)
+      const findUserWithRetry = async (maxRetries = 3, delayMs = 2000): Promise<string | null> => {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          console.log(`Attempt ${attempt}/${maxRetries} to find user...`)
           
-          // Find one where user_data contains this consumer ID
-          for (const sub of recentSubs || []) {
-            const userData = sub.user_data as Record<string, unknown> | null
-            const subData = userData?.subscription as Record<string, unknown> | undefined
-            if (subData?.streampayConsumerId === consumerId && sub.firebase_uid) {
-              firebaseUid = sub.firebase_uid
-              console.log('Found user in Supabase by consumer ID:', firebaseUid)
-              break
+          // Try by email first
+          if (userEmail) {
+            const uidByEmail = await getFirebaseUidByEmail(userEmail)
+            if (uidByEmail) {
+              console.log(`Found user by email on attempt ${attempt}:`, uidByEmail)
+              return uidByEmail
             }
           }
           
-          // If still not found, try by email from consumer
-          if (!firebaseUid && userEmail) {
-            const { data: subByEmail } = await supabase
-              .from('app_subscriptions')
-              .select('firebase_uid')
-              .eq('email', userEmail)
-              .eq('status', 'active')
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .single()
-            
-            if (subByEmail?.firebase_uid) {
-              firebaseUid = subByEmail.firebase_uid
-              console.log('Found user in Supabase by email:', firebaseUid)
+          // Try by consumer ID
+          if (consumerId) {
+            const userByConsumer = await findUserByStreampayConsumerId(consumerId)
+            if (userByConsumer) {
+              console.log(`Found user by consumer ID on attempt ${attempt}:`, userByConsumer.uid)
+              return userByConsumer.uid
             }
           }
+          
+          // If not found and not last attempt, wait and retry
+          if (attempt < maxRetries) {
+            console.log(`User not found, waiting ${delayMs}ms before retry...`)
+            await new Promise(resolve => setTimeout(resolve, delayMs))
+          }
         }
+        return null
+      }
+      
+      // Search with retries (gives verify-payment time to create the user)
+      if (!firebaseUid) {
+        firebaseUid = await findUserWithRetry(3, 2000) // 3 attempts, 2 seconds apart
       }
 
       if (firebaseUid && subscriptionId) {
