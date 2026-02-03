@@ -230,8 +230,8 @@ export async function POST(request: NextRequest) {
             console.log('Fetching consumer from StreamPay:', consumerId)
             const consumer = await client.getConsumer(consumerId)
             console.log('StreamPay consumer response:', JSON.stringify(consumer, null, 2))
-            // Email might be in different places
-            userEmail = consumer?.email || consumer?.data?.email || (consumer as Record<string, unknown>)?.email
+            // Email is directly on the consumer object
+            userEmail = consumer?.email || undefined
             if (userEmail) {
               console.log('Got email from StreamPay consumer:', userEmail)
             } else {
