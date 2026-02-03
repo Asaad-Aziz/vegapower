@@ -211,15 +211,77 @@ export async function POST(request: NextRequest) {
       
       // Find user by email or consumer ID
       let firebaseUid: string | null = null
+      let userEmail = email
+      const supabase = createServerClient()
       
-      if (email) {
-        firebaseUid = await getFirebaseUidByEmail(email)
+      // If no email but we have consumer ID, try to get email from StreamPay API
+      if (!userEmail && consumerId) {
+        try {
+          const apiKey = process.env.STREAMPAY_API_KEY
+          if (apiKey) {
+            const StreamSDK = (await import('@streamsdk/typescript')).default
+            const client = StreamSDK.init(apiKey)
+            const consumer = await client.getConsumer(consumerId)
+            if (consumer?.email) {
+              userEmail = consumer.email
+              console.log('Got email from StreamPay consumer:', userEmail)
+            }
+          }
+        } catch (err) {
+          console.log('Could not fetch consumer from StreamPay:', err)
+        }
+      }
+      
+      if (userEmail) {
+        firebaseUid = await getFirebaseUidByEmail(userEmail)
+        console.log('Found user by email:', { userEmail, firebaseUid })
       }
       
       if (!firebaseUid && consumerId) {
+        // Try Firebase search by consumer ID
         const userByConsumer = await findUserByStreampayConsumerId(consumerId)
         if (userByConsumer) {
           firebaseUid = userByConsumer.uid
+          console.log('Found user in Firebase by consumer ID:', firebaseUid)
+        }
+        
+        // Fallback: Search in Supabase app_subscriptions
+        if (!firebaseUid) {
+          console.log('Searching Supabase for user with consumer ID:', consumerId)
+          const { data: recentSubs } = await supabase
+            .from('app_subscriptions')
+            .select('firebase_uid, email, user_data')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(20)
+          
+          // Find one where user_data contains this consumer ID
+          for (const sub of recentSubs || []) {
+            const userData = sub.user_data as Record<string, unknown> | null
+            const subData = userData?.subscription as Record<string, unknown> | undefined
+            if (subData?.streampayConsumerId === consumerId && sub.firebase_uid) {
+              firebaseUid = sub.firebase_uid
+              console.log('Found user in Supabase by consumer ID:', firebaseUid)
+              break
+            }
+          }
+          
+          // If still not found, try by email from consumer
+          if (!firebaseUid && userEmail) {
+            const { data: subByEmail } = await supabase
+              .from('app_subscriptions')
+              .select('firebase_uid')
+              .eq('email', userEmail)
+              .eq('status', 'active')
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single()
+            
+            if (subByEmail?.firebase_uid) {
+              firebaseUid = subByEmail.firebase_uid
+              console.log('Found user in Supabase by email:', firebaseUid)
+            }
+          }
         }
       }
 
