@@ -35,7 +35,7 @@ interface UserData {
 
 const plans = {
   monthly: { price: 45, period: 'شهر', productId: 'moyasar_monthly', savings: null, days: 30 },
-  quarterly: { price: 112, period: '3 أشهر', productId: 'moyasar_3months', savings: 'وفر 23 ريال', days: 90 },
+  quarterly: { price: 92, period: '3 أشهر', productId: 'moyasar_3months', savings: 'وفر 23 ريال', days: 90 },
   yearly: { price: 155, period: 'سنة', productId: 'moyasar_yearly', savings: 'وفر 293 ريال', days: 365 }, // Special New Year offer - was 448
 }
 
