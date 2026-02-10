@@ -1,13 +1,18 @@
 @import "tailwindcss";
 
+/* Vega Power branding */
 :root {
-  --background: #fafafa;
-  --foreground: #1a1a1a;
+  --vp-cream: #F1EFEC;
+  --vp-beige: #D4C9BE;
+  --vp-navy: #123458;
+  --vp-dark: #030303;
+  --background: #F1EFEC;
+  --foreground: #030303;
   --card: #ffffff;
-  --card-border: rgba(0, 0, 0, 0.06);
-  --muted: #737373;
-  --accent: #262626;
-  --accent-hover: #404040;
+  --card-border: rgba(18, 52, 88, 0.08);
+  --muted: #5a5a5a;
+  --accent: #123458;
+  --accent-hover: #1a4570;
 }
 
 @theme inline {
@@ -18,6 +23,10 @@
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-vp-cream: var(--vp-cream);
+  --color-vp-beige: var(--vp-beige);
+  --color-vp-navy: var(--vp-navy);
+  --color-vp-dark: var(--vp-dark);
   --font-sans: var(--font-arabic);
   --font-mono: var(--font-arabic);
 }

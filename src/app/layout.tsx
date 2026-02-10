@@ -10,8 +10,8 @@ const tajawal = Tajawal({
 });
 
 export const metadata: Metadata = {
-  title: "المتجر الرقمي",
-  description: "احصل على منتجك الرقمي المميز",
+  title: "Vega Power | رياضتك أسهل بين يدك",
+  description: "علامة لياقة بسيطة وواضحة — برامج جاهزة للتحميل وتطبيق مع مجتمع ودعم.",
 };
 
 export default function RootLayout({
