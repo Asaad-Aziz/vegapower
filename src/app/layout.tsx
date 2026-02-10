@@ -1,18 +1,12 @@
 import type { Metadata } from "next";
-import { Tajawal, Instrument_Serif } from "next/font/google";
+import { Tajawal } from "next/font/google";
 import "./globals.css";
 import MetaPixel from "@/components/MetaPixel";
 
 const tajawal = Tajawal({
-  variable: "--font-sans",
+  variable: "--font-arabic",
   subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "700"],
-});
-
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-serif",
-  weight: "400",
-  subsets: ["latin"],
+  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {
@@ -26,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className="scroll-smooth">
-      <body className={`${tajawal.variable} ${instrumentSerif.variable} font-sans antialiased`}>
+    <html lang="ar" dir="rtl">
+      <body className={`${tajawal.variable} antialiased`}>
         <MetaPixel />
         {children}
       </body>
