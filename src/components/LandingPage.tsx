@@ -1,7 +1,14 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
+import { ChevronLeft, Download, Calculator, Users, ArrowLeft } from 'lucide-react'
 import type { Product, StoreSettings } from '@/types/database'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 
 const APP_PATH = '/app'
 
@@ -20,332 +27,276 @@ export default function LandingPage({
   const profileImageUrl = storeSettings?.profile_image_url || products[0]?.profile_image_url || null
 
   return (
-    <div className="min-h-screen bg-white text-vp-dark">
-      {/* Site Header */}
-      <header className="sticky top-0 z-50 border-b border-vp-navy/10 bg-white/95 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
+        <div className="container mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+          <div className="flex items-center gap-2">
             {profileImageUrl ? (
               <Image
                 src={profileImageUrl}
                 alt={brandName}
-                width={36}
-                height={36}
-                className="rounded-full object-cover"
+                width={32}
+                height={32}
+                className="size-8 rounded-full object-cover"
               />
             ) : (
-              <div className="w-9 h-9 rounded-full bg-vp-navy flex items-center justify-center text-white text-sm font-bold">
+              <div className="flex size-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                 {brandName.charAt(0)}
               </div>
             )}
-            <span className="font-bold text-vp-navy text-lg">{brandName}</span>
+            <span className="font-semibold text-foreground">{brandName}</span>
           </div>
-          <nav className="flex items-center gap-6 text-sm font-medium">
-            <a href="#programs" className="text-vp-dark/80 hover:text-vp-navy transition-colors">
-              البرامج
-            </a>
-            <a href="#app" className="text-vp-dark/80 hover:text-vp-navy transition-colors">
-              التطبيق
-            </a>
-            <a href="#shop" className="text-vp-dark/80 hover:text-vp-navy transition-colors">
-              المتجر
-            </a>
-            <a
-              href={APP_PATH}
-              className="bg-vp-navy text-white px-4 py-2 rounded-lg hover:bg-vp-navy/90 transition-colors"
-            >
-              انضم من التطبيق
-            </a>
+          <nav className="flex items-center gap-1 sm:gap-4">
+            <Button variant="ghost" size="sm" asChild>
+              <a href="#programs">البرامج</a>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <a href="#app">التطبيق</a>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <a href="#shop">المتجر</a>
+            </Button>
+            <Button size="sm" asChild>
+              <Link href={APP_PATH}>انضم من التطبيق</Link>
+            </Button>
           </nav>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-vp-cream to-white overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <div>
-              <p className="text-vp-navy font-semibold text-sm uppercase tracking-wider mb-4">
-                علامة لياقة بسيطة وواضحة
-              </p>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-vp-dark leading-tight mb-6">
-                رياضتك أسهل
-                <br />
-                <span className="text-vp-navy">بين يدك</span>
-              </h1>
-              <p className="text-lg text-muted max-w-md mb-8 leading-relaxed">
-                برامج تمارين وغذاء جاهزة يستخدمها آلاف الأشخاص، وتطبيق واحد يجمع بين التخطيط الذكي ومجتمع الدعم.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <a
-                  href="#shop"
-                  className="inline-flex items-center justify-center gap-2 bg-vp-navy text-white font-semibold px-6 py-4 rounded-xl hover:bg-vp-navy/90 transition-colors shadow-lg shadow-vp-navy/20"
-                >
+      {/* Hero */}
+      <section className="border-b bg-card/30">
+        <div className="container mx-auto grid max-w-5xl gap-10 px-4 py-16 sm:py-24 lg:grid-cols-2 lg:gap-16 lg:py-28">
+          <div className="flex flex-col justify-center">
+            <Badge variant="secondary" className="mb-4 w-fit">
+              علامة لياقة بسيطة وواضحة
+            </Badge>
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              رياضتك أسهل{' '}
+              <span className="text-primary">بين يدك</span>
+            </h1>
+            <p className="mt-4 max-w-md text-lg text-muted-foreground">
+              برامج تمارين وغذاء جاهزة يستخدمها آلاف الأشخاص، وتطبيق واحد يجمع بين التخطيط الذكي ومجتمع الدعم.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button size="lg" asChild>
+                <a href="#shop" className="gap-2">
                   تصفح البرامج
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
+                  <ChevronLeft className="size-4" />
                 </a>
-                <a
-                  href={APP_PATH}
-                  className="inline-flex items-center justify-center gap-2 border-2 border-vp-navy text-vp-navy font-semibold px-6 py-4 rounded-xl hover:bg-vp-navy/5 transition-colors"
-                >
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link href={APP_PATH} className="gap-2">
                   التطبيق والمجتمع
-                </a>
-              </div>
+                </Link>
+              </Button>
             </div>
-            <div className="relative flex justify-center lg:justify-end">
-              {/* Hero image placeholder */}
-              <div className="w-full max-w-md aspect-square rounded-2xl bg-gradient-to-br from-vp-beige to-vp-navy/10 flex items-center justify-center overflow-hidden border border-vp-navy/10">
-                <div className="text-center p-8">
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-white/80 flex items-center justify-center">
-                    <svg className="w-12 h-12 text-vp-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                  </div>
-                  <p className="text-vp-navy/70 text-sm font-medium">صورة الهيرو</p>
-                  <p className="text-vp-navy/50 text-xs mt-1">استبدلها بصورة علامتك</p>
+          </div>
+          <div className="flex items-center justify-center">
+            <div className="flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl border bg-muted/50">
+              <div className="text-center">
+                <div className="mx-auto mb-3 flex size-16 items-center justify-center rounded-full bg-primary/10">
+                  <Download className="size-8 text-primary" />
                 </div>
+                <p className="text-sm text-muted-foreground">صورة الهيرو</p>
+                <p className="text-xs text-muted-foreground/80">استبدلها بصورة علامتك</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats bar */}
-      <section className="border-y border-vp-navy/10 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-2xl sm:text-3xl font-bold text-vp-navy">+28,900</div>
-              <p className="text-sm text-muted mt-1">شخص بدأ رياضته معنا</p>
-            </div>
-            <div>
-              <div className="text-2xl sm:text-3xl font-bold text-vp-navy">98%</div>
-              <p className="text-sm text-muted mt-1">نسبة الرضا</p>
-            </div>
-            <div>
-              <div className="text-2xl sm:text-3xl font-bold text-vp-navy">4.9</div>
-              <p className="text-sm text-muted mt-1">تقييم العملاء</p>
-            </div>
-            <div>
-              <div className="text-2xl sm:text-3xl font-bold text-vp-navy">1000+</div>
-              <p className="text-sm text-muted mt-1">تقييم إيجابي</p>
-            </div>
+      {/* Stats */}
+      <section className="border-b bg-card">
+        <div className="container mx-auto max-w-5xl px-4 py-8">
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+            {[
+              { value: '+28,900', label: 'شخص بدأ رياضته معنا' },
+              { value: '98%', label: 'نسبة الرضا' },
+              { value: '4.9', label: 'تقييم العملاء' },
+              { value: '1000+', label: 'تقييم إيجابي' },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div className="text-2xl font-bold text-primary sm:text-3xl">{stat.value}</div>
+                <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Programs Section */}
-      <section id="programs" className="py-20 sm:py-28 bg-vp-cream/50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <header className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-vp-dark mb-4">
-              برامج جاهزة للتحميل
-            </h2>
-            <p className="text-lg text-muted leading-relaxed">
+      {/* Programs */}
+      <section id="programs" className="py-16 sm:py-24">
+        <div className="container mx-auto max-w-5xl px-4">
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">برامج جاهزة للتحميل</h2>
+            <p className="mt-3 max-w-2xl mx-auto text-muted-foreground">
               برامج تمارين ونظام غذائي مفصّلة. حمّلها مرة واحدة واستخدمها للأبد، مع دعم مستمر ونتائج مضمونة.
             </p>
-          </header>
-          <div className="rounded-2xl overflow-hidden border border-vp-navy/10 bg-white shadow-sm">
-            <div className="grid md:grid-cols-2">
-              <div className="aspect-[4/3] bg-gradient-to-br from-vp-beige/50 to-vp-cream flex items-center justify-center min-h-[280px]">
-                <div className="text-center p-6">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-vp-navy/10 flex items-center justify-center">
-                    <svg className="w-10 h-10 text-vp-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <p className="text-vp-navy font-medium">صورة البرامج الجاهزة</p>
-                  <p className="text-vp-navy/60 text-sm mt-1">أضف صورتك هنا</p>
-                </div>
-              </div>
-              <div className="p-8 sm:p-10 flex flex-col justify-center">
-                <ul className="space-y-4 text-muted">
-                  <li className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-vp-navy/10 flex items-center justify-center mt-0.5">
-                      <svg className="w-3.5 h-3.5 text-vp-navy" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </span>
-                    جدول تمارين مفصّل لكل يوم
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-vp-navy/10 flex items-center justify-center mt-0.5">
-                      <svg className="w-3.5 h-3.5 text-vp-navy" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </span>
-                    نظام غذائي وسعرات محسوبة
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-vp-navy/10 flex items-center justify-center mt-0.5">
-                      <svg className="w-3.5 h-3.5 text-vp-navy" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </span>
-                    فيديوهات شرح لكل تمرين
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-vp-navy/10 flex items-center justify-center mt-0.5">
-                      <svg className="w-3.5 h-3.5 text-vp-navy" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </span>
-                    دعم مستمر ورد على استفساراتك
-                  </li>
-                </ul>
-                <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-vp-navy/10">
-                  <span className="text-xs font-medium text-vp-navy bg-vp-navy/10 px-3 py-1.5 rounded-lg">توصيل فوري</span>
-                  <span className="text-xs font-medium text-vp-navy bg-vp-navy/10 px-3 py-1.5 rounded-lg">دعم متواصل</span>
-                  <span className="text-xs font-medium text-vp-navy bg-vp-navy/10 px-3 py-1.5 rounded-lg">نتائج مضمونة</span>
-                </div>
-              </div>
-            </div>
           </div>
+          <Card className="overflow-hidden border-0 shadow-sm">
+            <div className="grid md:grid-cols-2">
+              <div className="flex min-h-[260px] items-center justify-center bg-muted/30 p-8">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-xl bg-primary/10">
+                    <Download className="size-8 text-primary" />
+                  </div>
+                  <p className="text-sm font-medium text-muted-foreground">صورة البرامج الجاهزة</p>
+                  <p className="text-xs text-muted-foreground/80">أضف صورتك هنا</p>
+                </div>
+              </div>
+              <CardContent className="flex flex-col justify-center gap-4 p-8 sm:p-10">
+                {[
+                  'جدول تمارين مفصّل لكل يوم',
+                  'نظام غذائي وسعرات محسوبة',
+                  'فيديوهات شرح لكل تمرين',
+                  'دعم مستمر ورد على استفساراتك',
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-3 text-muted-foreground">
+                    <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <span className="size-2 rounded-full bg-primary" />
+                    </div>
+                    {item}
+                  </div>
+                ))}
+                <Separator className="my-2" />
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary">توصيل فوري</Badge>
+                  <Badge variant="secondary">دعم متواصل</Badge>
+                  <Badge variant="secondary">نتائج مضمونة</Badge>
+                </div>
+              </CardContent>
+            </div>
+          </Card>
         </div>
       </section>
 
-      {/* App Section */}
-      <section id="app" className="py-20 sm:py-28 bg-vp-navy text-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <header className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              تطبيق فيجا باور
-            </h2>
-            <p className="text-white/80 text-lg leading-relaxed">
+      {/* App */}
+      <section id="app" className="border-y bg-primary py-16 text-primary-foreground sm:py-24">
+        <div className="container mx-auto max-w-5xl px-4">
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">تطبيق فيجا باور</h2>
+            <p className="mt-3 text-primary-foreground/85">
               صمّم برنامجك، احسب سعراتك، وانضم لمجتمع يتابع معك.
             </p>
-          </header>
-          <div className="grid md:grid-cols-3 gap-8 mb-14">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/15 transition-colors">
-              <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center mb-5">
-                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold mb-2">برنامجك الخاص</h3>
-              <p className="text-white/75 leading-relaxed">
-                صمّم برنامج تمارينك بنفسك داخل التطبيق حسب هدفك ومستواك.
-              </p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/15 transition-colors">
-              <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center mb-5">
-                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold mb-2">سعراتك اليومية</h3>
-              <p className="text-white/75 leading-relaxed">
-                احسب احتياجك اليومي من السعرات باستخدام الذكاء الاصطناعي.
-              </p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/15 transition-colors">
-              <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center mb-5">
-                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold mb-2">مجتمع التطبيق</h3>
-              <p className="text-white/75 leading-relaxed">
-                انضم لمجتمع الأعضاء، تابع التحديات واحصل على الدعم المستمر.
-              </p>
-            </div>
           </div>
-          <div className="text-center">
-            <a
-              href={APP_PATH}
-              className="inline-flex items-center justify-center gap-2 bg-white text-vp-navy font-bold px-8 py-4 rounded-xl hover:bg-vp-cream transition-colors shadow-xl"
-            >
-              انضم من التطبيق
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </a>
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                icon: Download,
+                title: 'برنامجك الخاص',
+                desc: 'صمّم برنامج تمارينك بنفسك داخل التطبيق حسب هدفك ومستواك.',
+              },
+              {
+                icon: Calculator,
+                title: 'سعراتك اليومية',
+                desc: 'احسب احتياجك اليومي من السعرات باستخدام الذكاء الاصطناعي.',
+              },
+              {
+                icon: Users,
+                title: 'مجتمع التطبيق',
+                desc: 'انضم لمجتمع الأعضاء، تابع التحديات واحصل على الدعم المستمر.',
+              },
+            ].map((item) => (
+              <Card
+                key={item.title}
+                className={cn(
+                  'border-primary-foreground/15 bg-primary-foreground/10 backdrop-blur-sm',
+                  'transition-colors hover:bg-primary-foreground/15'
+                )}
+              >
+                <CardHeader>
+                  <div className="flex size-12 items-center justify-center rounded-xl bg-primary-foreground/20">
+                    <item.icon className="size-6" />
+                  </div>
+                  <CardTitle className="text-primary-foreground">{item.title}</CardTitle>
+                  <CardDescription className="text-primary-foreground/80">{item.desc}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+          <div className="mt-10 flex justify-center">
+            <Button size="lg" variant="secondary" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" asChild>
+              <Link href={APP_PATH} className="gap-2">
+                انضم من التطبيق
+                <ArrowLeft className="size-4" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* Shop / Digital Products Section */}
-      <section id="shop" className="py-20 sm:py-28 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <header className="text-center max-w-2xl mx-auto mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold text-vp-dark mb-4">
-              برامج رقمية جاهزة
-            </h2>
-            <p className="text-lg text-muted leading-relaxed">
-              اختر برنامجاً، حمّله فوراً وابدأ رحلتك.
-            </p>
-          </header>
+      {/* Shop */}
+      <section id="shop" className="py-16 sm:py-24">
+        <div className="container mx-auto max-w-5xl px-4">
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">برامج رقمية جاهزة</h2>
+            <p className="mt-3 text-muted-foreground">اختر برنامجاً، حمّله فوراً وابدأ رحلتك.</p>
+          </div>
 
           {products.length === 0 ? (
-            <div className="text-center py-16 rounded-2xl border border-vp-navy/10 bg-vp-cream/30">
-              <p className="text-muted">لا توجد برامج متاحة حالياً.</p>
-            </div>
+            <Card className="py-16">
+              <p className="text-center text-muted-foreground">لا توجد برامج متاحة حالياً.</p>
+            </Card>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {products.map((product) => (
-                <button
+                <Card
                   key={product.id}
-                  type="button"
+                  className="group overflow-hidden transition-shadow hover:shadow-md cursor-pointer"
                   onClick={() => onSelectProduct(product)}
-                  className="group text-right rounded-2xl border border-vp-navy/10 bg-white overflow-hidden hover:shadow-xl hover:border-vp-navy/20 transition-all duration-300"
                 >
-                  <div className="relative aspect-[4/3] bg-vp-beige/30 overflow-hidden">
+                  <div className="relative aspect-[4/3] bg-muted">
                     {product.product_image_url ? (
                       <Image
                         src={product.product_image_url}
                         alt={product.title}
                         width={400}
                         height={300}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-vp-navy/40">
-                        <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
-                        </svg>
+                      <div className="flex size-full items-center justify-center text-muted-foreground/50">
+                        <Download className="size-12" />
                       </div>
                     )}
                     {product.before_price_sar != null && product.before_price_sar > product.price_sar && (
-                      <span className="absolute top-3 right-3 bg-vp-navy text-white text-xs font-bold px-2.5 py-1 rounded-lg">
+                      <Badge className="absolute right-2 top-2">
                         -{Math.round(((product.before_price_sar - product.price_sar) / product.before_price_sar) * 100)}%
-                      </span>
+                      </Badge>
                     )}
                   </div>
-                  <div className="p-5">
-                    <h3 className="font-bold text-vp-dark text-lg mb-2 group-hover:text-vp-navy transition-colors line-clamp-2">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="line-clamp-2 text-lg group-hover:text-primary">
                       {product.title}
-                    </h3>
-                    <p className="text-muted text-sm line-clamp-2 mb-4">
+                    </CardTitle>
+                    <CardDescription className="line-clamp-2">
                       {product.description.replace(/^#+\s*/m, '').substring(0, 90)}
                       {product.description.length > 90 ? '...' : ''}
-                    </p>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-bold text-vp-navy">
+                        <span className="text-xl font-bold text-primary">
                           {product.price_sar.toFixed(0)} ر.س
                         </span>
                         {product.before_price_sar != null && product.before_price_sar > product.price_sar && (
-                          <span className="text-sm text-muted line-through">
+                          <span className="text-sm text-muted-foreground line-through">
                             {product.before_price_sar.toFixed(0)} ر.س
                           </span>
                         )}
                       </div>
-                      <span className="text-sm font-medium text-vp-navy flex items-center gap-1">
+                      <Button variant="ghost" size="sm" className="gap-1 text-primary">
                         عرض التفاصيل
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                      </span>
+                        <ChevronLeft className="size-4" />
+                      </Button>
                     </div>
                     {product.times_bought > 0 && (
-                      <p className="text-xs text-muted mt-2">
-                        {product.times_bought}+ عملية شراء
-                      </p>
+                      <p className="mt-2 text-xs text-muted-foreground">{product.times_bought}+ عملية شراء</p>
                     )}
-                  </div>
-                </button>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
@@ -353,23 +304,21 @@ export default function LandingPage({
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-vp-navy/10 bg-vp-cream/50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              {profileImageUrl ? (
-                <Image src={profileImageUrl} alt="" width={28} height={28} className="rounded-full object-cover" />
-              ) : (
-                <div className="w-7 h-7 rounded-full bg-vp-navy flex items-center justify-center text-white text-xs font-bold">
-                  {brandName.charAt(0)}
-                </div>
-              )}
-              <span className="font-semibold text-vp-dark">{brandName}</span>
-            </div>
-            <p className="text-sm text-muted">
-              © {new Date().getFullYear()} {brandName}. جميع الحقوق محفوظة.
-            </p>
+      <footer className="border-t bg-card/50 py-8">
+        <div className="container mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-4 sm:flex-row">
+          <div className="flex items-center gap-2">
+            {profileImageUrl ? (
+              <Image src={profileImageUrl} alt="" width={24} height={24} className="size-6 rounded-full object-cover" />
+            ) : (
+              <div className="flex size-6 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                {brandName.charAt(0)}
+              </div>
+            )}
+            <span className="font-medium text-foreground">{brandName}</span>
           </div>
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} {brandName}. جميع الحقوق محفوظة.
+          </p>
         </div>
       </footer>
     </div>
