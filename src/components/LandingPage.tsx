@@ -9,59 +9,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+import SiteHeader from '@/components/SiteHeader'
 
 const APP_PATH = '/app'
 
 interface LandingPageProps {
   products: Product[]
   storeSettings?: StoreSettings | null
-  onSelectProduct: (product: Product) => void
 }
 
 export default function LandingPage({
   products,
   storeSettings,
-  onSelectProduct,
 }: LandingPageProps) {
   const brandName = storeSettings?.brand_name || products[0]?.brand_name || 'Vega Power'
   const profileImageUrl = storeSettings?.profile_image_url || products[0]?.profile_image_url || null
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            {profileImageUrl ? (
-              <Image
-                src={profileImageUrl}
-                alt=""
-                width={32}
-                height={32}
-                className="size-8 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex size-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                {brandName.charAt(0)}
-              </div>
-            )}
-          </div>
-          <nav className="flex items-center gap-1 sm:gap-4">
-            <Button variant="ghost" size="sm" asChild>
-              <a href="#programs">البرامج</a>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <a href="#app">التطبيق</a>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <a href="#shop">المتجر</a>
-            </Button>
-            <Button size="sm" asChild>
-              <Link href={APP_PATH}>انضم من التطبيق</Link>
-            </Button>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader brandName={brandName} profileImageUrl={profileImageUrl} />
 
       {/* Hero */}
       <section className="border-b bg-card/30">
@@ -240,11 +206,8 @@ export default function LandingPage({
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {products.map((product) => (
-                <Card
-                  key={product.id}
-                  className="group overflow-hidden transition-shadow hover:shadow-md cursor-pointer"
-                  onClick={() => onSelectProduct(product)}
-                >
+                <Link key={product.id} href={`/product/${product.id}`}>
+                  <Card className="group overflow-hidden transition-shadow hover:shadow-md cursor-pointer h-full">
                   <div className="relative aspect-[4/3] bg-muted">
                     {product.product_image_url ? (
                       <Image
@@ -296,6 +259,7 @@ export default function LandingPage({
                     )}
                   </CardContent>
                 </Card>
+                </Link>
               ))}
             </div>
           )}
