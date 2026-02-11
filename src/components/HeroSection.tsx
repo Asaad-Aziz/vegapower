@@ -60,7 +60,7 @@ export function HeroSection({ heroImageUrl }: HeroSectionProps) {
   const heightVh = 100 - easeOutQuad(scrollProgress) * 37.5
 
   return (
-    <section className="pt-32 pb-12 px-4 sm:px-6 min-h-screen flex items-center relative overflow-hidden">
+    <section className="pt-32 pb-12 px-4 sm:px-6 min-h-screen flex items-end justify-center relative overflow-hidden">
       {/* Scroll-reactive visual layer */}
       <div className="absolute inset-0 top-0">
         <div
@@ -104,9 +104,9 @@ export function HeroSection({ heroImageUrl }: HeroSectionProps) {
         </span>
       </div>
 
-      {/* Content */}
-      <div className="max-w-5xl mx-auto w-full relative z-10">
-        <div className="text-center mb-12">
+      {/* Content - positioned lower in hero */}
+      <div className="max-w-5xl mx-auto w-full relative z-10 pb-16 sm:pb-20 md:pb-24">
+        <div className="text-center mb-10">
           <div
             className={`transition-all duration-1000 delay-[800ms] ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}
           >

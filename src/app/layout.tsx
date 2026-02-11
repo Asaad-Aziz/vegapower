@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
-import { Tajawal } from "next/font/google";
 import "./globals.css";
 import MetaPixel from "@/components/MetaPixel";
-
-const tajawal = Tajawal({
-  variable: "--font-arabic",
-  subsets: ["arabic", "latin"],
-  weight: ["400", "500", "700"],
-});
 
 export const metadata: Metadata = {
   title: "Vega Power | رياضتك أسهل بين يدك",
@@ -21,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl">
-      <body className={`${tajawal.variable} antialiased`}>
+      <body className="antialiased">
         <MetaPixel />
         {children}
       </body>

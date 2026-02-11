@@ -31,7 +31,7 @@ export default function LandingPage({
     <div className="min-h-screen bg-background text-foreground pt-20">
       <SiteHeader brandName={brandName} profileImageUrl={profileImageUrl} />
 
-      <HeroSection heroImageUrl="/hero1.png" />
+      <HeroSection heroImageUrl="/app%20(1).png" />
 
       {/* Stats */}
       <section className="border-b bg-card">
