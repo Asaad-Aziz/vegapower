@@ -1306,8 +1306,11 @@ export default function AppOnboarding() {
               </div>
             </div>
 
-            {/* Email Input */}
+            {/* Email Input - Required before purchase */}
             <div className="mb-3">
+              <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                أدخل بريدك الإلكتروني أولاً قبل المتابعة للدفع
+              </p>
               <input
                 type="email"
                 value={userData.email}
@@ -1316,6 +1319,16 @@ export default function AppOnboarding() {
                 dir="ltr"
                 className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-neutral-400 outline-none text-sm"
               />
+              {!userData.email.trim() && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1.5">
+                  يجب تعبئة البريد الإلكتروني لتفعيل زر الدفع
+                </p>
+              )}
+              {userData.email.trim() && !validateEmail(userData.email) && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1.5">
+                  أدخل بريداً إلكترونياً صحيحاً
+                </p>
+              )}
             </div>
 
             {/* New Year Special Offer Banner */}
