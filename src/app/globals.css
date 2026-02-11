@@ -14,12 +14,12 @@
 /* Vega Power branding + shadcn theme */
 :root {
   --font-arabic: 'Ara Hamah Alislam', sans-serif;
-  --vp-cream: #F1EFEC;
-  --vp-beige: #D4C9BE;
+  --vp-cream: #FAFAFA;
+  --vp-beige: #E5E7EB;
   --vp-navy: #123458;
   --vp-dark: #030303;
   --radius: 0.75rem;
-  --background: #F1EFEC;
+  --background: #FAFAFA;
   --foreground: #030303;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
