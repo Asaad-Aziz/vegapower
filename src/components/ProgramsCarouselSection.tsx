@@ -43,7 +43,6 @@ export function ProgramsCarouselSection({ products }: ProgramsCarouselSectionPro
         style={{
           WebkitOverflowScrolling: 'touch',
           scrollbarWidth: 'thin',
-          touchAction: 'pan-x',
         }}
       >
         {products.map((product) => (

@@ -49,42 +49,42 @@ export default function LandingPage({
       </section>
 
       {/* App */}
-      <section id="app" className="border-y bg-primary py-16 text-primary-foreground sm:py-24">
+      <section id="app" className="border-y bg-primary py-10 text-primary-foreground sm:py-14">
         <div className="container mx-auto max-w-5xl px-4">
-          <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">تطبيقنا الجديد </h2>
-            <p className="mt-3 text-primary-foreground/85">
+          <div className="mb-6 text-center">
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">تطبيقنا الجديد</h2>
+            <p className="mt-2 text-sm text-primary-foreground/85">
               صمّم برنامجك، احسب سعراتك، وانضم لمجتمع يتابع معك.
             </p>
           </div>
-          {/* Swipeable app screens - one card per image on mobile, all three on desktop */}
+          {/* Swipeable app screens */}
           <div
             role="region"
             aria-label="لقطات التطبيق"
-            className="flex gap-6 overflow-x-auto overflow-y-hidden pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 snap-x snap-proximity overscroll-x-contain"
-            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
+            className="flex gap-4 overflow-x-auto overflow-y-hidden pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 snap-x snap-proximity overscroll-x-contain"
+            style={{ WebkitOverflowScrolling: 'touch' }}
           >
             {['/4.png', '/6.png', '/5.png'].map((src) => (
               <div
                 key={src}
-                className="flex-shrink-0 w-[85vw] sm:w-[70vw] md:w-[calc(33.333%-1rem)] md:max-w-[280px] snap-start"
+                className="flex-shrink-0 w-[65vw] sm:w-[50vw] md:w-[calc(33.333%-0.75rem)] md:max-w-[240px] snap-start"
               >
-                <div className="rounded-2xl overflow-hidden border border-primary-foreground/20 bg-primary-foreground/5 shadow-lg w-full h-[60vh] min-h-[320px] md:h-auto md:min-h-0 flex items-center justify-center">
+                <div className="rounded-xl overflow-hidden border border-primary-foreground/20 bg-primary-foreground/5 shadow-md">
                   <Image
                     src={src}
                     alt=""
-                    width={280}
-                    height={560}
-                    sizes="(max-width: 768px) 85vw, 280px"
+                    width={240}
+                    height={480}
+                    sizes="(max-width: 768px) 65vw, 240px"
                     loading="lazy"
-                    className="w-full h-full md:h-auto object-contain"
+                    className="w-full h-auto object-contain"
                   />
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-10 flex justify-center">
-            <Button size="lg" variant="secondary" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 text-lg py-6 px-8 h-auto min-h-[52px]" asChild>
+          <div className="mt-6 flex justify-center">
+            <Button size="lg" variant="secondary" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 text-base py-4 px-6 h-auto" asChild>
               <Link href={APP_PATH} className="gap-2">
                 انشئ حسابك الآن
                 <ArrowLeft className="size-5" />
