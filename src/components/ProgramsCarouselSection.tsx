@@ -13,7 +13,7 @@ export function ProgramsCarouselSection({ products }: ProgramsCarouselSectionPro
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isHovered, setIsHovered] = useState(false)
   const positionRef = useRef(0)
-  const animationRef = useRef<number>()
+  const animationRef = useRef<number | undefined>(undefined)
 
   const duplicatedProducts =
     products.length > 0 ? [...products, ...products, ...products] : []
