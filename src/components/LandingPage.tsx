@@ -35,7 +35,7 @@ export default function LandingPage({
             {profileImageUrl ? (
               <Image
                 src={profileImageUrl}
-                alt={brandName}
+                alt=""
                 width={32}
                 height={32}
                 className="size-8 rounded-full object-cover"
@@ -45,7 +45,6 @@ export default function LandingPage({
                 {brandName.charAt(0)}
               </div>
             )}
-            <span className="font-semibold text-foreground">{brandName}</span>
           </div>
           <nav className="flex items-center gap-1 sm:gap-4">
             <Button variant="ghost" size="sm" asChild>
@@ -126,7 +125,7 @@ export default function LandingPage({
       </section>
 
       {/* Programs */}
-      <section id="programs" className="py-16 sm:py-24">
+      <section id="programs" className="border-b bg-card/30 py-16 sm:py-24">
         <div className="container mx-auto max-w-5xl px-4">
           <div className="mb-12 text-center">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">برامج جاهزة للتحميل</h2>
@@ -134,7 +133,7 @@ export default function LandingPage({
               برامج تمارين ونظام غذائي مفصّلة. حمّلها مرة واحدة واستخدمها للأبد، مع دعم مستمر ونتائج مضمونة.
             </p>
           </div>
-          <Card className="overflow-hidden border-0 shadow-sm">
+          <Card className="overflow-hidden shadow-sm">
             <div className="grid md:grid-cols-2">
               <div className="flex min-h-[260px] items-center justify-center bg-muted/30 p-8">
                 <div className="text-center">
