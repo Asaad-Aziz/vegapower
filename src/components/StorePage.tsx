@@ -229,48 +229,12 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
 
   return (
     <main className="min-h-screen pb-16">
-      {/* Hero Section */}
-      <section className="pt-12 pb-8 px-4 animate-fade-in">
-        <div className="max-w-lg mx-auto text-center">
-          {/* Profile Image */}
-          {profileImageUrl ? (
-            <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-2 border-white shadow-lg">
-              <Image
-                src={profileImageUrl}
-                alt={brandName}
-                width={96}
-                height={96}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ) : (
-            <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-3xl font-semibold text-muted-foreground">
-                {brandName.charAt(0)}
-              </span>
-            </div>
-          )}
-          
-          {/* Brand Name */}
-          <h1 className="text-xl font-semibold text-foreground mb-2">{brandName}</h1>
-          
-          {/* Bio */}
-          <p className="text-muted-foreground text-sm leading-relaxed">{bio}</p>
-        </div>
-      </section>
-
       {/* Product Card */}
-      <section className="px-4 mb-8 animate-fade-in animate-delay-100">
+      <section className="px-4 mb-8 animate-fade-in">
         <div className="max-w-lg mx-auto glass-card overflow-hidden relative">
-          {/* Live Viewers Badge */}
-          <div className="absolute top-3 right-3 z-10 bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-2">
-            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            <span>{viewersCount} يشاهدون الآن</span>
-          </div>
-
           {/* Discount Badge */}
           {product.before_price_sar && product.before_price_sar > product.price_sar && (
-            <div className="absolute top-3 left-3 z-10 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full animate-bounce">
+            <div className="absolute top-3 left-3 z-10 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full">
               -{Math.round(((product.before_price_sar - product.price_sar) / product.before_price_sar) * 100)}%
             </div>
           )}
@@ -292,13 +256,9 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
           )}
           
           <div className="p-6">
-            {/* Recent Buyers FOMO */}
-            <div className="flex items-center gap-2 mb-3 text-sm text-primary">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-              </svg>
-              <span>{product.times_bought > 0 ? product.times_bought : recentBuyers}+ اشتروا هذا المنتج</span>
-            </div>
+            {product.times_bought > 0 && (
+              <p className="text-sm text-muted-foreground mb-3">{product.times_bought}+ عملية شراء</p>
+            )}
 
             <h2 className="text-2xl font-semibold text-foreground mb-4">{product.title}</h2>
             
@@ -335,32 +295,26 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
               )}
             </div>
             
-            {/* Price with FOMO */}
+            {/* Price */}
             <div className="mb-4">
               <div className="flex items-baseline gap-3 flex-wrap">
                 <span className="text-3xl font-bold text-primary">
                   {product.price_sar.toFixed(0)} ر.س
                 </span>
                 {product.before_price_sar && product.before_price_sar > product.price_sar && (
-                  <>
-                    <span className="text-xl text-muted-foreground line-through">
-                      {product.before_price_sar.toFixed(0)} ر.س
-                    </span>
-                    <span className="text-sm font-medium text-white bg-red-500 px-2 py-1 rounded-full">
-                      وفّر {(product.before_price_sar - product.price_sar).toFixed(0)} ر.س
-                    </span>
-                  </>
+                  <span className="text-xl text-muted-foreground line-through">
+                    {product.before_price_sar.toFixed(0)} ر.س
+                  </span>
                 )}
               </div>
             </div>
             
-            {/* CTA Button with FOMO */}
+            {/* CTA Button */}
             <button
               onClick={handleBuyClick}
-              className="btn-primary w-full text-center text-lg py-4 relative overflow-hidden group"
+              className="btn-primary w-full text-center text-lg py-4"
             >
-              <span className="relative z-10">احصل عليه الآن</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-green-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+              احصل عليه الآن
             </button>
             
             {/* Payment Methods */}

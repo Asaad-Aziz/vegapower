@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { initiateCheckout } from '@/lib/meta-pixel'
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14
 
 interface UserData {
   gender: 'male' | 'female' | ''
@@ -184,11 +184,11 @@ export default function AppOnboarding() {
     programName: '',
   })
 
-  const totalSteps = 19
+  const totalSteps = 15
   const progress = (step / (totalSteps - 1)) * 100
 
   const nextStep = () => {
-    if (step < 18) setStep((step + 1) as Step)
+    if (step < 14) setStep((step + 1) as Step)
   }
 
   const prevStep = () => {
@@ -251,9 +251,9 @@ export default function AppOnboarding() {
     }
   }
 
-  // Calculate all values when reaching step 16 (Processing)
+  // Calculate all values when reaching step 13 (Processing)
   useEffect(() => {
-    if (step === 16) {
+    if (step === 13) {
       const calories = calculateCalories()
       const macros = getMacroPercentages()
       const programName = getProgramName()
@@ -409,11 +409,11 @@ export default function AppOnboarding() {
   // Show recovery UI when checking payment status
   if (paymentRecoveryStatus === 'checking') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-neutral-900 via-neutral-900 to-black text-white flex items-center justify-center px-6" dir="rtl">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-6" dir="rtl">
         <div className="text-center max-w-md">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-full border-4 border-green-500 border-t-transparent animate-spin" />
+          <div className="w-16 h-16 mx-auto mb-6 rounded-full border-4 border-vp-navy border-t-transparent animate-spin" />
           <h2 className="text-xl font-semibold mb-2">جاري التحقق من حالة الدفع...</h2>
-          <p className="text-neutral-300">يرجى الانتظار بينما نتحقق من عملية الدفع</p>
+          <p className="text-muted-foreground">يرجى الانتظار بينما نتحقق من عملية الدفع</p>
         </div>
       </div>
     )
@@ -421,17 +421,17 @@ export default function AppOnboarding() {
 
   if (paymentRecoveryStatus === 'success') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-neutral-900 via-neutral-900 to-black text-white flex items-center justify-center px-6" dir="rtl">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-6" dir="rtl">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-vp-navy flex items-center justify-center text-white">
             <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold mb-2">تم الدفع بنجاح! 🎉</h2>
-          <p className="text-neutral-300 mb-4">جاري تحويلك لصفحة النجاح...</p>
+          <h2 className="text-2xl font-bold mb-2">تم الدفع بنجاح!</h2>
+          <p className="text-muted-foreground mb-4">جاري تحويلك لصفحة النجاح...</p>
           {recoveryEmail && (
-            <p className="text-sm text-green-400">سيتم إرسال بيانات الدخول إلى: {recoveryEmail}</p>
+            <p className="text-sm text-vp-navy">سيتم إرسال بيانات الدخول إلى: {recoveryEmail}</p>
           )}
         </div>
       </div>
@@ -449,11 +449,11 @@ export default function AppOnboarding() {
       )}
       
       {/* Progress Bar */}
-      {step > 0 && step < 17 && (
+      {step > 0 && step < 14 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
-          <div className="w-[200px] h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+          <div className="w-[200px] h-1.5 bg-vp-beige/50 dark:bg-neutral-700 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-neutral-500 to-neutral-700 transition-all duration-500 rounded-full"
+              className="h-full bg-vp-navy transition-all duration-500 rounded-full"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -461,7 +461,7 @@ export default function AppOnboarding() {
       )}
 
       {/* Back Button */}
-      {step > 0 && step < 16 && (
+      {step > 0 && step < 13 && (
         <button
           onClick={prevStep}
           className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center"
@@ -490,7 +490,7 @@ export default function AppOnboarding() {
             <p className="text-muted-foreground mb-12 leading-relaxed">
               دعنا نخصص لك خطة تدريبية وغذائية تناسب احتياجات جسمك 100%
             </p>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg shadow-lg">
+            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg shadow-lg">
               ابدأ الآن
             </button>
           </div>
@@ -516,7 +516,7 @@ export default function AppOnboarding() {
                   }}
                   className={`p-6 rounded-2xl text-center transition-all ${
                     userData.gender === g.id
-                      ? 'bg-neutral-500/20 border-2 border-neutral-500'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
@@ -545,7 +545,7 @@ export default function AppOnboarding() {
                   }}
                   className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
                     userData.activityLevel === level.value
-                      ? 'bg-neutral-500/20 border-2 border-neutral-500'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
@@ -579,7 +579,7 @@ export default function AppOnboarding() {
                   }}
                   className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
                     userData.fitnessLevel === level.id
-                      ? 'bg-neutral-500/20 border-2 border-neutral-500'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
@@ -613,7 +613,7 @@ export default function AppOnboarding() {
                   }}
                   className={`w-full p-5 rounded-2xl text-right flex items-center gap-4 transition-all ${
                     userData.workoutLocation === location.id
-                      ? 'bg-neutral-500/20 border-2 border-neutral-500'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
@@ -647,7 +647,7 @@ export default function AppOnboarding() {
                     max="250"
                     value={userData.height}
                     onChange={(e) => setUserData({ ...userData, height: Number(e.target.value) })}
-                    className="flex-1 accent-neutral-500"
+                    className="flex-1 accent-vp-navy"
                   />
                   <span className="text-2xl font-bold w-16 text-center">{userData.height}</span>
                 </div>
@@ -661,13 +661,13 @@ export default function AppOnboarding() {
                     max="200"
                     value={userData.weight}
                     onChange={(e) => setUserData({ ...userData, weight: Number(e.target.value) })}
-                    className="flex-1 accent-neutral-500"
+                    className="flex-1 accent-vp-navy"
                   />
                   <span className="text-2xl font-bold w-16 text-center">{userData.weight}</span>
                 </div>
               </div>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
               التالي
             </button>
           </div>
@@ -692,12 +692,12 @@ export default function AppOnboarding() {
                     const year = Number(e.target.value)
                     setUserData({ ...userData, birthYear: year, age: new Date().getFullYear() - year })
                   }}
-                  className="w-full accent-neutral-500"
+                  className="w-full accent-vp-navy"
                 />
                 <p className="text-muted-foreground mt-4">العمر: {userData.age} سنة</p>
               </div>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
               التالي
             </button>
           </div>
@@ -720,7 +720,7 @@ export default function AppOnboarding() {
                   }}
                   className={`w-full p-5 rounded-2xl text-right flex items-center gap-4 transition-all ${
                     userData.fitnessGoal === goal.value
-                      ? 'bg-neutral-500/20 border-2 border-neutral-500'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
@@ -751,11 +751,11 @@ export default function AppOnboarding() {
                   max="200"
                   value={userData.targetWeight}
                   onChange={(e) => setUserData({ ...userData, targetWeight: Number(e.target.value) })}
-                  className="w-full accent-neutral-500 mt-6"
+                  className="w-full accent-vp-navy mt-6"
                 />
               </div>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
               التالي
             </button>
           </div>
@@ -784,17 +784,17 @@ export default function AppOnboarding() {
                   step="0.1"
                   value={userData.targetSpeed}
                   onChange={(e) => setUserData({ ...userData, targetSpeed: Number(e.target.value) })}
-                  className="w-full accent-neutral-500 mt-6"
+                  className="w-full accent-vp-navy mt-6"
                 />
                 <button
                   onClick={() => setUserData({ ...userData, targetSpeed: 0.5 })}
-                  className="mt-4 px-4 py-2 rounded-full bg-neutral-500/20 text-muted-foreground text-sm"
+                  className="mt-4 px-4 py-2 rounded-full bg-vp-navy/10 text-vp-navy font-medium text-sm"
                 >
                   السرعة المستحسنة (0.5 كجم)
                 </button>
               </div>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
               التالي
             </button>
           </div>
@@ -819,7 +819,7 @@ export default function AppOnboarding() {
                   }}
                   className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
                     userData.challenges.includes(ch.id)
-                      ? 'bg-neutral-500/20 border-2 border-neutral-500'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
@@ -828,14 +828,14 @@ export default function AppOnboarding() {
                   </div>
                   <span className="font-medium">{ch.title}</span>
                   {userData.challenges.includes(ch.id) && (
-                    <svg className="w-5 h-5 text-muted-foreground mr-auto" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-vp-navy mr-auto" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                     </svg>
                   )}
                 </button>
               ))}
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
               التالي
             </button>
           </div>
@@ -860,7 +860,7 @@ export default function AppOnboarding() {
                   }}
                   className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
                     userData.accomplishments.includes(acc.id)
-                      ? 'bg-neutral-500/20 border-2 border-neutral-500'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
@@ -869,199 +869,23 @@ export default function AppOnboarding() {
                   </div>
                   <span className="font-medium">{acc.title}</span>
                   {userData.accomplishments.includes(acc.id) && (
-                    <svg className="w-5 h-5 text-muted-foreground mr-auto" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-vp-navy mr-auto" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                     </svg>
                   )}
                 </button>
               ))}
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
               التالي
             </button>
           </div>
         )}
 
-        {/* Step 12: Nutrition Tracking Question */}
+        {/* Step 12: Motivation */}
         {step === 12 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
-            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-400/20 to-emerald-500/20 flex items-center justify-center">
-              <span className="text-5xl">📸</span>
-            </div>
-            <h2 className="text-2xl font-bold mb-4">هل تتمنى أن يكون تتبع الغذاء أسهل؟</h2>
-            <p className="text-muted-foreground mb-8 leading-relaxed">
-              كثير من الناس يتركون الدايت لأن حساب السعرات صعب ومُتعب...
-            </p>
-            
-            <div className="space-y-4 mb-8">
-              <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-right">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">😫</span>
-                  <div>
-                    <p className="font-medium text-red-600 dark:text-red-400">الطريقة القديمة</p>
-                    <p className="text-sm text-muted-foreground">البحث عن كل صنف وإدخاله يدوياً</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-4 rounded-2xl bg-green-500/10 border border-green-500/20 text-right">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🤩</span>
-                  <div>
-                    <p className="font-medium text-green-600 dark:text-green-400">مع Vega Power</p>
-                    <p className="text-sm text-muted-foreground">صوّر أكلك والذكاء الاصطناعي يحسب كل شيء!</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold text-lg shadow-lg">
-              أريد هذه الميزة! ✨
-            </button>
-          </div>
-        )}
-
-        {/* Step 13: Investment Commitment Question */}
-        {step === 13 && (
-          <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
-            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-amber-400/20 to-orange-500/20 flex items-center justify-center">
-              <span className="text-5xl">💎</span>
-            </div>
-            <h2 className="text-2xl font-bold mb-4">هل أنت مستعد للاستثمار في صحتك؟</h2>
-            <p className="text-muted-foreground mb-6 leading-relaxed">
-              صحتك هي أغلى ما تملك. الاستثمار فيها اليوم يعني حياة أفضل غداً.
-            </p>
-            
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 mb-6">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="text-3xl">☕</span>
-                <span className="text-xl">=</span>
-                <span className="text-3xl">💪</span>
-              </div>
-              <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                بسعر كوب قهوة يومياً، تحصل على مدرب شخصي وأخصائي تغذية في جيبك!
-              </p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 mb-8">
-              <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-center">
-                <p className="text-2xl font-bold text-green-500">94%</p>
-                <p className="text-[10px] text-muted-foreground">شافوا نتائج</p>
-              </div>
-              <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-center">
-                <p className="text-2xl font-bold text-blue-500">+50K</p>
-                <p className="text-[10px] text-muted-foreground">مستخدم</p>
-              </div>
-              <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-center">
-                <p className="text-2xl font-bold text-purple-500">4.9⭐</p>
-                <p className="text-[10px] text-muted-foreground">تقييم</p>
-              </div>
-            </div>
-
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold text-lg shadow-lg">
-              نعم، أنا مستعد! 🚀
-            </button>
-          </div>
-        )}
-
-        {/* Step 14: Our Story - Why We Built This */}
-        {step === 14 && (
-          <div className="flex-1 flex flex-col animate-fade-in overflow-auto -my-4 py-4">
-            {/* Header */}
-            <div className="text-center mb-6">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-                <span className="text-4xl">💜</span>
-              </div>
-              <h2 className="text-2xl font-bold mb-2">قصتنا معك</h2>
-              <p className="text-muted-foreground text-sm">لماذا بنينا Vega Power</p>
-            </div>
-
-            {/* Story Content */}
-            <div className="space-y-4 mb-6 text-right">
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xl">😤</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">المشكلة اللي واجهناها</p>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                      جربنا تطبيقات كثيرة، لكن كلها كانت معقدة أو بالإنجليزي أو ما تفهم أكلنا العربي. حسينا إن محتاج يكون في حل أفضل.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xl">💡</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-purple-600 dark:text-purple-400 mb-1">الحل اللي صنعناه</p>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                      تطبيق عربي 100%، يفهم أكلك ويحسب سعراتك بصورة وحدة! مع برامج تمارين مصممة لك شخصياً.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-600/10 border border-green-500/20">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xl">🎯</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-green-600 dark:text-green-400 mb-1">هدفنا</p>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                      نبي نساعدك تشوف نتائج حقيقية وتستمر عليها. مش مجرد تطبيق، إحنا شركاء في رحلتك.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Features Highlight */}
-            <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 mb-6">
-              <p className="font-semibold mb-3 text-center">كيف نساعدك تنجح؟</p>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
-                    <span>📸</span>
-                  </div>
-                  <p className="text-sm">صوّر وجبتك والذكاء الاصطناعي يحسب السعرات فوراً</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                    <span>🏋️</span>
-                  </div>
-                  <p className="text-sm">برامج تمارين مخصصة حسب هدفك ومستواك</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                    <span>📊</span>
-                  </div>
-                  <p className="text-sm">تتبع تقدمك يومياً وشوف نتائجك تتحسن</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                    <span>👥</span>
-                  </div>
-                  <p className="text-sm">انضم لمجتمع من الناس اللي مثلك يسعون للأفضل</p>
-                </div>
-              </div>
-            </div>
-
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-lg shadow-lg">
-              أريد أن أكون جزءاً من هذا! 🌟
-            </button>
-          </div>
-        )}
-
-        {/* Step 15: Motivation */}
-        {step === 15 && (
-          <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-neutral-500/20 flex items-center justify-center">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-vp-navy/10 flex items-center justify-center">
               <span className="text-4xl">💪</span>
             </div>
             <h2 className="text-2xl font-bold mb-2">
@@ -1071,28 +895,28 @@ export default function AppOnboarding() {
             <p className="text-neutral-600 dark:text-neutral-300 mb-8 leading-relaxed">
               90% من المستخدمين يقولون أن التغيير واضح جداً بعد استخدام Vega Power...
             </p>
-            <div className="p-4 rounded-2xl bg-neutral-500/10 border border-neutral-500/20">
+            <div className="p-4 rounded-2xl bg-vp-navy/5 border border-vp-navy/15">
               <p className="text-sm">📈 يعزز الثقة: أنا أستطيع فعلها</p>
               <p className="text-xs text-muted-foreground mt-1">يقلل من خطر الاستسلام</p>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
+            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
               التالي
             </button>
           </div>
         )}
 
-        {/* Step 16: Processing */}
-        {step === 16 && (
+        {/* Step 13: Processing */}
+        {step === 13 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
-            <div className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+            <div className="text-6xl font-bold mb-4 text-vp-navy">
               {processingProgress}%
             </div>
             <h2 className="text-xl font-semibold mb-8">نقوم بتجهيز كل شيء لك</h2>
             
             {/* Progress Bar */}
-            <div className="w-full h-3 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden mb-8">
+            <div className="w-full h-3 bg-vp-beige/50 dark:bg-neutral-700 rounded-full overflow-hidden mb-8">
               <div 
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 rounded-full"
+                className="h-full bg-vp-navy transition-all duration-300 rounded-full"
                 style={{ width: `${processingProgress}%` }}
               />
             </div>
@@ -1106,7 +930,7 @@ export default function AppOnboarding() {
                 'تحليل درجة الصحة',
               ].map((item, i) => (
                 <div key={i} className={`flex items-center gap-3 transition-opacity ${completedChecks.includes(i) ? 'opacity-100' : 'opacity-30'}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${completedChecks.includes(i) ? 'bg-neutral-600' : 'bg-neutral-300 dark:bg-neutral-600'}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${completedChecks.includes(i) ? 'bg-vp-navy' : 'bg-vp-beige dark:bg-neutral-600'}`}>
                     {completedChecks.includes(i) && (
                       <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
@@ -1120,8 +944,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 17: Payment - Full Featured */}
-        {step === 17 && (
+        {/* Step 14: Payment - Full Featured */}
+        {step === 14 && (
           <div className="flex-1 flex flex-col animate-fade-in overflow-auto -my-8 py-8">
             {/* Header */}
             <div className="text-center mb-4">
@@ -1139,8 +963,8 @@ export default function AppOnboarding() {
             </div>
 
             {/* Encouraging Message */}
-            <div className="p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 mb-4 text-center">
-              <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+            <div className="p-3 rounded-xl bg-vp-navy/5 border border-vp-navy/15 mb-4 text-center">
+              <p className="text-sm font-medium text-vp-navy dark:text-vp-beige">
                 🏆 انضم لآلاف المستخدمين اللي شافوا نتائج حقيقية
               </p>
             </div>
@@ -1182,11 +1006,11 @@ export default function AppOnboarding() {
             </div>
 
             {/* Personalized Program Summary */}
-            <div className="rounded-2xl bg-gradient-to-br from-neutral-800 via-neutral-900 to-black text-white mb-4 overflow-hidden">
+            <div className="rounded-2xl bg-vp-navy text-white mb-4 overflow-hidden">
               {/* Header with program name and stats */}
               <div className="p-4 border-b border-white/10">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center">
                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -1293,9 +1117,9 @@ export default function AppOnboarding() {
               )}
 
               {/* Call to action */}
-              <div className="p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20">
+              <div className="p-4 bg-white/10">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-500/30 flex items-center justify-center animate-pulse">
+                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
                     <span className="text-xl">🚀</span>
                   </div>
                   <div>
@@ -1317,7 +1141,7 @@ export default function AppOnboarding() {
                 onChange={(e) => setUserData({ ...userData, email: e.target.value })}
                 placeholder="البريد الإلكتروني"
                 dir="ltr"
-                className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-neutral-400 outline-none text-sm"
+                className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-vp-navy/40 outline-none text-sm"
               />
               {!userData.email.trim() && (
                 <p className="text-xs text-amber-600 dark:text-amber-400 mt-1.5">
@@ -1332,7 +1156,7 @@ export default function AppOnboarding() {
             </div>
 
             {/* New Year Special Offer Banner */}
-            <div className="p-3 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 text-white mb-3 text-center relative overflow-hidden">
+            <div className="p-3 rounded-xl bg-vp-navy text-white mb-3 text-center relative overflow-hidden">
               <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvc3ZnPg==')] opacity-50"></div>
               <div className="relative">
                 <p className="text-xs font-bold mb-1">🎊 عرض السنة الجديدة 2026 🎊</p>
@@ -1344,9 +1168,9 @@ export default function AppOnboarding() {
             {/* Plan Selection - Colorful Cards with Daily Cost */}
             <div className="flex gap-2 mb-3">
               {[
-                { key: 'monthly' as PlanType, label: 'شهر', price: plans.monthly.price, days: plans.monthly.days, savings: null, gradient: 'from-slate-500 to-slate-600' },
-                { key: 'quarterly' as PlanType, label: '3 أشهر', price: plans.quarterly.price, days: plans.quarterly.days, savings: plans.quarterly.savings, gradient: 'from-blue-500 to-blue-600' },
-                { key: 'yearly' as PlanType, label: 'سنة', price: plans.yearly.price, days: plans.yearly.days, savings: plans.yearly.savings, gradient: 'from-red-500 to-pink-500' },
+                { key: 'monthly' as PlanType, label: 'شهر', price: plans.monthly.price, days: plans.monthly.days, savings: null },
+                { key: 'quarterly' as PlanType, label: '3 أشهر', price: plans.quarterly.price, days: plans.quarterly.days, savings: plans.quarterly.savings },
+                { key: 'yearly' as PlanType, label: 'سنة', price: plans.yearly.price, days: plans.yearly.days, savings: plans.yearly.savings },
               ].map((plan) => {
                 const finalPrice = getFinalPrice(plan.price)
                 const dailyCost = getDailyCost(finalPrice, plan.days)
@@ -1356,13 +1180,13 @@ export default function AppOnboarding() {
                     onClick={() => setSelectedPlan(plan.key)}
                     className={`flex-1 p-3 rounded-xl text-center transition-all relative overflow-hidden ${
                       selectedPlan === plan.key
-                        ? `bg-gradient-to-br ${plan.gradient} text-white scale-[1.02] shadow-lg`
+                        ? 'bg-vp-navy text-white scale-[1.02] shadow-lg'
                         : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                     }`}
                   >
                     {plan.savings && (
                       <div className={`absolute -top-0.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap ${
-                        selectedPlan === plan.key ? 'bg-white/30 text-white' : 'bg-red-500 text-white'
+                        selectedPlan === plan.key ? 'bg-white/30 text-white' : 'bg-vp-navy text-white'
                       }`}>
                         {plan.savings}
                       </div>
@@ -1398,13 +1222,13 @@ export default function AppOnboarding() {
                     setDiscountError('')
                   }}
                   placeholder="كود الخصم (اختياري)"
-                  className="flex-1 p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-neutral-400 outline-none text-sm text-center"
+                  className="flex-1 p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-vp-navy/40 outline-none text-sm text-center"
                   dir="ltr"
                 />
                 <button
                   onClick={applyDiscountCode}
                   disabled={!discountCode.trim()}
-                  className="px-4 py-2.5 rounded-xl bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 disabled:opacity-50 text-sm font-medium transition-colors"
+                  className="px-4 py-2.5 rounded-xl bg-vp-navy/10 text-vp-navy hover:bg-vp-navy/20 disabled:opacity-50 text-sm font-medium transition-colors"
                 >
                   تطبيق
                 </button>
@@ -1454,7 +1278,7 @@ export default function AppOnboarding() {
             <button
               onClick={handlePayment}
               disabled={!validateEmail(userData.email) || isProcessingPayment}
-              className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-700 to-neutral-900 text-white font-semibold text-lg disabled:opacity-50 shadow-lg flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg disabled:opacity-50 shadow-lg flex items-center justify-center gap-2"
             >
               {isProcessingPayment ? (
                 <>
