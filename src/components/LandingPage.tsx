@@ -2,13 +2,9 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronLeft, Download, Calculator, Users, ArrowLeft } from 'lucide-react'
+import { ChevronLeft, ArrowLeft } from 'lucide-react'
 import type { Product, StoreSettings } from '@/types/database'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { cn } from '@/lib/utils'
 import SiteHeader from '@/components/SiteHeader'
 import { HeroSection } from '@/components/HeroSection'
 import { ProgramsCarouselSection } from '@/components/ProgramsCarouselSection'
@@ -52,52 +48,6 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* Programs */}
-      <section id="programs" className="border-b bg-card/30 py-16 sm:py-24">
-        <div className="container mx-auto max-w-5xl px-4">
-          <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">برامج جاهزة للتحميل</h2>
-            <p className="mt-3 max-w-2xl mx-auto text-muted-foreground">
-              برامج تمارين ونظام غذائي مفصّلة. حمّلها مرة واحدة واستخدمها للأبد، مع دعم مستمر ونتائج مضمونة.
-            </p>
-          </div>
-          <Card className="overflow-hidden shadow-sm">
-            <div className="grid md:grid-cols-2">
-              <div className="flex min-h-[260px] items-center justify-center bg-muted/30 p-8">
-                <div className="text-center">
-                  <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-xl bg-primary/10">
-                    <Download className="size-8 text-primary" />
-                  </div>
-                  <p className="text-sm font-medium text-muted-foreground">صورة البرامج الجاهزة</p>
-                  <p className="text-xs text-muted-foreground/80">أضف صورتك هنا</p>
-                </div>
-              </div>
-              <CardContent className="flex flex-col justify-center gap-4 p-8 sm:p-10">
-                {[
-                  'جدول تمارين مفصّل لكل يوم',
-                  'نظام غذائي وسعرات محسوبة',
-                  'فيديوهات شرح لكل تمرين',
-                  'دعم مستمر ورد على استفساراتك',
-                ].map((item) => (
-                  <div key={item} className="flex items-center gap-3 text-muted-foreground">
-                    <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <span className="size-2 rounded-full bg-primary" />
-                    </div>
-                    {item}
-                  </div>
-                ))}
-                <Separator className="my-2" />
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">توصيل فوري</Badge>
-                  <Badge variant="secondary">دعم متواصل</Badge>
-                  <Badge variant="secondary">نتائج مضمونة</Badge>
-                </div>
-              </CardContent>
-            </div>
-          </Card>
-        </div>
-      </section>
-
       {/* App */}
       <section id="app" className="border-y bg-primary py-16 text-primary-foreground sm:py-24">
         <div className="container mx-auto max-w-5xl px-4">
@@ -109,8 +59,8 @@ export default function LandingPage({
           </div>
           {/* Swipeable app screens - one card per image on mobile, all three on desktop */}
           <div
-            className="flex gap-6 overflow-x-auto overflow-y-hidden pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 snap-x snap-mandatory scroll-smooth touch-pan-x"
-            style={{ WebkitOverflowScrolling: 'touch' }}
+            className="flex gap-6 overflow-x-auto overflow-y-hidden pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 snap-x snap-mandatory touch-pan-x [scroll-behavior:auto]"
+            style={{ WebkitOverflowScrolling: 'touch', contain: 'layout paint' }}
           >
             {['/4.png', '/6.png', '/5.png'].map((src) => (
               <div

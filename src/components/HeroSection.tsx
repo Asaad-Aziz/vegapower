@@ -23,32 +23,34 @@ export function HeroSection({ heroImageUrl }: HeroSectionProps) {
   }, [])
 
   useEffect(() => {
-    let rafId: number
+    let rafId: number | undefined
     let currentProgress = 0
+    let ticking = false
 
-    const handleScroll = () => {
+    const updateProgress = () => {
       const scrollY = window.scrollY
       const maxScroll = 400
       const targetProgress = Math.min(scrollY / maxScroll, 1)
-
-      const smoothUpdate = () => {
-        currentProgress += (targetProgress - currentProgress) * 0.1
-        if (Math.abs(targetProgress - currentProgress) > 0.001) {
-          setScrollProgress(currentProgress)
-          rafId = requestAnimationFrame(smoothUpdate)
-        } else {
-          setScrollProgress(targetProgress)
-        }
+      currentProgress += (targetProgress - currentProgress) * 0.12
+      setScrollProgress(currentProgress)
+      ticking = false
+      if (Math.abs(targetProgress - currentProgress) > 0.002) {
+        rafId = requestAnimationFrame(updateProgress)
       }
-
-      cancelAnimationFrame(rafId)
-      smoothUpdate()
     }
 
+    const handleScroll = () => {
+      if (!ticking) {
+        ticking = true
+        rafId = requestAnimationFrame(updateProgress)
+      }
+    }
+
+    handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => {
       window.removeEventListener('scroll', handleScroll)
-      cancelAnimationFrame(rafId)
+      if (rafId !== undefined) cancelAnimationFrame(rafId)
     }
   }, [])
 
@@ -104,34 +106,32 @@ export function HeroSection({ heroImageUrl }: HeroSectionProps) {
         </span>
       </div>
 
-      {/* Content - positioned lower in hero */}
-      <div className="max-w-5xl mx-auto w-full relative z-10 pb-16 sm:pb-20 md:pb-24">
-        <div className="text-center mb-10">
+      {/* Content - positioned lower in hero, with background layer for readability */}
+      <div className="max-w-5xl mx-auto w-full relative z-10 pb-16 sm:pb-20 md:pb-24 px-2">
+        <div className="rounded-2xl bg-black/50 backdrop-blur-md px-6 py-8 sm:px-8 sm:py-10 text-center">
           <div
             className={`transition-all duration-1000 delay-[800ms] ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}
           >
-            <h1 className="font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight mb-6 w-full px-4 max-w-4xl mx-auto text-balance">
+            <h1 className="font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight mb-6 w-full max-w-4xl mx-auto text-balance text-white">
               <AnimatedText text="رياضتك أسهل بين يدك" delay={0.3} />
             </h1>
           </div>
           <p
-            className={`max-w-xl mx-auto text-lg text-muted-foreground transition-all duration-1000 delay-[1000ms] ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            className={`max-w-xl mx-auto text-lg text-white/90 transition-all duration-1000 delay-[1000ms] ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
           >
             برامج تمارين وغذاء جاهزة يستخدمها آلاف الأشخاص، وتطبيق واحد يجمع بين التخطيط الذكي ومجتمع الدعم.
           </p>
-        </div>
 
-        <div className="flex flex-col items-center justify-center gap-8">
           <div
-            className={`flex flex-wrap justify-center gap-3 transition-all duration-[1500ms] ease-out delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[400px]'}`}
+            className={`flex flex-wrap justify-center gap-3 mt-8 transition-all duration-[1500ms] ease-out delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[400px]'}`}
           >
-            <Button size="lg" asChild>
+            <Button size="lg" asChild className="bg-white text-primary hover:bg-white/90">
               <a href="#shop" className="gap-2">
                 تصفح البرامج
                 <ChevronLeft className="size-4" />
               </a>
             </Button>
-            <Button size="lg" variant="outline" asChild>
+            <Button size="lg" variant="outline" asChild className="border-white text-white hover:bg-white/10">
               <Link href={APP_PATH} className="gap-2">
                 التطبيق والمجتمع
               </Link>

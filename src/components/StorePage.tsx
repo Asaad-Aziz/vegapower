@@ -244,18 +244,18 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
               />
             </div>
           ) : (
-            <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-neutral-200 flex items-center justify-center">
-              <span className="text-3xl font-semibold text-neutral-500">
+            <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+              <span className="text-3xl font-semibold text-muted-foreground">
                 {brandName.charAt(0)}
               </span>
             </div>
           )}
           
           {/* Brand Name */}
-          <h1 className="text-xl font-semibold mb-2">{brandName}</h1>
+          <h1 className="text-xl font-semibold text-foreground mb-2">{brandName}</h1>
           
           {/* Bio */}
-          <p className="text-muted text-sm leading-relaxed">{bio}</p>
+          <p className="text-muted-foreground text-sm leading-relaxed">{bio}</p>
         </div>
       </section>
 
@@ -293,14 +293,14 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
           
           <div className="p-6">
             {/* Recent Buyers FOMO */}
-            <div className="flex items-center gap-2 mb-3 text-sm text-green-600">
+            <div className="flex items-center gap-2 mb-3 text-sm text-primary">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
               </svg>
               <span>{product.times_bought > 0 ? product.times_bought : recentBuyers}+ اشتروا هذا المنتج</span>
             </div>
 
-            <h2 className="text-2xl font-semibold mb-4">{product.title}</h2>
+            <h2 className="text-2xl font-semibold text-foreground mb-4">{product.title}</h2>
             
             {/* Collapsible Description with Markdown */}
             <div className="mb-6">
@@ -314,7 +314,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
               {product.description.length > 150 && (
                 <button
                   onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                  className="mt-2 text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  className="mt-2 text-sm font-medium text-primary hover:text-primary/90 flex items-center gap-1"
                 >
                   {descriptionExpanded ? (
                     <>
@@ -338,12 +338,12 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
             {/* Price with FOMO */}
             <div className="mb-4">
               <div className="flex items-baseline gap-3 flex-wrap">
-                <span className="text-3xl font-bold text-green-600">
+                <span className="text-3xl font-bold text-primary">
                   {product.price_sar.toFixed(0)} ر.س
                 </span>
                 {product.before_price_sar && product.before_price_sar > product.price_sar && (
                   <>
-                    <span className="text-xl text-muted line-through">
+                    <span className="text-xl text-muted-foreground line-through">
                       {product.before_price_sar.toFixed(0)} ر.س
                     </span>
                     <span className="text-sm font-medium text-white bg-red-500 px-2 py-1 rounded-full">
@@ -398,7 +398,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
             </div>
             
             {/* Scarcity Text */}
-            <p className="text-center text-xs text-neutral-500 mt-3">
+            <p className="text-center text-xs text-muted-foreground mt-3">
               ⚡ التوصيل الفوري متاح الآن
             </p>
           </div>
@@ -410,8 +410,8 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
         <section className="mb-8 animate-fade-in animate-delay-200">
           <div className="max-w-lg mx-auto px-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">آراء العملاء</h3>
-              <span className="text-sm text-muted">
+              <h3 className="text-lg font-semibold text-foreground">آراء العملاء</h3>
+              <span className="text-sm text-muted-foreground">
                 {testimonials.length} تقييم
               </span>
             </div>
@@ -447,7 +447,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                     ))}
                   </div>
                   
-                  <p className="text-muted mb-4 leading-relaxed text-sm">"{testimonial.text}"</p>
+                  <p className="text-muted-foreground mb-4 leading-relaxed text-sm">"{testimonial.text}"</p>
                   <div className="flex items-center gap-3">
                     {testimonial.avatar ? (
                       <Image
@@ -459,7 +459,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                       />
                     ) : (
                       <div className="w-9 h-9 rounded-full bg-neutral-200 flex items-center justify-center">
-                        <span className="text-sm font-medium text-neutral-500">
+                        <span className="text-sm font-medium text-muted-foreground">
                           {testimonial.name.charAt(0)}
                         </span>
                       </div>
@@ -480,14 +480,14 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
       {faqs && faqs.length > 0 && (
         <section className="px-4 mb-8 animate-fade-in animate-delay-300">
           <div className="max-w-lg mx-auto">
-            <h3 className="text-lg font-semibold mb-4">FAQ</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">FAQ</h3>
             <div className="space-y-3">
               {faqs.map((faq) => (
                 <details key={faq.id} className="glass-card group">
                   <summary className="p-4 cursor-pointer font-medium flex items-center justify-between">
                     {faq.question}
                     <svg
-                      className="w-5 h-5 text-muted transition-transform group-open:rotate-180"
+                      className="w-5 h-5 text-muted-foreground transition-transform group-open:rotate-180"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -495,7 +495,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </summary>
-                  <div className="px-4 pb-4 text-muted text-sm leading-relaxed">
+                  <div className="px-4 pb-4 text-muted-foreground text-sm leading-relaxed">
                     {faq.answer}
                   </div>
                 </details>
@@ -538,7 +538,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
       )}
 
       {/* Footer */}
-      <footer className="text-center text-muted text-xs">
+      <footer className="text-center text-muted-foreground text-xs">
         <p>© {new Date().getFullYear()} {brandName}</p>
       </footer>
 
@@ -574,26 +574,26 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                 {/* Order Summary */}
                 <div className="bg-neutral-50 rounded-xl p-4 mb-4">
                   <div className="flex justify-between items-center py-2 border-b border-neutral-200">
-                    <span className="text-muted text-sm">{product.title}</span>
-                    <span className={`font-medium ${discountApplied ? 'line-through text-muted' : ''}`}>
+                    <span className="text-muted-foreground text-sm">{product.title}</span>
+                    <span className={`font-medium ${discountApplied ? 'line-through text-muted-foreground' : ''}`}>
                       {product.price_sar.toFixed(0)} ر.س
                     </span>
                   </div>
                   {product.before_price_sar && product.before_price_sar > product.price_sar && (
-                    <div className="flex justify-between items-center py-2 border-b border-neutral-200 text-green-600">
+                    <div className="flex justify-between items-center py-2 border-b border-border text-primary">
                       <span className="text-sm">💰 التوفير</span>
                       <span className="font-medium">-{(product.before_price_sar - product.price_sar).toFixed(0)} ر.س</span>
                     </div>
                   )}
                   {discountApplied && (
-                    <div className="flex justify-between items-center py-2 border-b border-neutral-200 text-green-600">
+                    <div className="flex justify-between items-center py-2 border-b border-border text-primary">
                       <span className="text-sm">🎁 كود الخصم ({discountPercent}%)</span>
                       <span className="font-medium">-{discountAmount.toFixed(0)} ر.س</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center pt-2">
                     <span className="font-semibold">الإجمالي</span>
-                    <span className="text-xl font-bold text-green-600">{finalPrice.toFixed(0)} ر.س</span>
+                    <span className="text-xl font-bold text-primary">{finalPrice.toFixed(0)} ر.س</span>
                   </div>
                 </div>
 
@@ -619,7 +619,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                       disabled={discountApplied || !discountCode}
                       className={`px-4 py-2 rounded-xl font-medium transition-all ${
                         discountApplied 
-                          ? 'bg-green-100 text-green-700' 
+                          ? 'bg-primary/10 text-primary' 
                           : 'bg-neutral-900 text-white hover:bg-neutral-800'
                       }`}
                     >
@@ -627,7 +627,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                     </button>
                   </div>
                   {discountApplied && (
-                    <p className="text-xs text-green-600 mt-1">🎉 تم تطبيق الخصم بنجاح!</p>
+                    <p className="text-xs text-primary mt-1">🎉 تم تطبيق الخصم بنجاح!</p>
                   )}
                 </div>
 
@@ -635,7 +635,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                 {!showPayment && (
                   <div className="animate-fade-in">
                     <h3 className="text-base font-semibold mb-2">البريد الإلكتروني</h3>
-                    <p className="text-muted text-sm mb-4">
+                    <p className="text-muted-foreground text-sm mb-4">
                       سنرسل رابط تحميل الملف إلى هذا البريد الإلكتروني.
                     </p>
                     <form onSubmit={handleEmailSubmit}>
@@ -657,7 +657,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                           🔒 متابعة للدفع الآمن
                         </span>
                       </button>
-                      <p className="text-center text-[10px] text-neutral-400 mt-2">
+                      <p className="text-center text-[10px] text-muted-foreground mt-2">
                         ✓ معلوماتك محمية بتشفير SSL
                       </p>
                     </form>
@@ -674,12 +674,12 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                           setShowPayment(false)
                           setMoyasarInitialized(false)
                         }}
-                        className="text-sm text-muted hover:text-foreground transition-colors"
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
                         تغيير الإيميل
                       </button>
                     </div>
-                    <p className="text-sm text-muted mb-4" dir="ltr">
+                    <p className="text-sm text-muted-foreground mb-4" dir="ltr">
                       Paying as <span className="font-medium text-foreground">{email}</span>
                     </p>
                     
@@ -698,7 +698,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                         <div className="w-full border-t border-neutral-200"></div>
                       </div>
                       <div className="relative flex justify-center text-sm">
-                        <span className="px-3 bg-white text-neutral-500">أو</span>
+                        <span className="px-3 bg-white text-muted-foreground">أو</span>
                       </div>
                     </div>
 
@@ -719,10 +719,10 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-neutral-800">
+                          <p className="text-sm text-foreground">
                             ادفع <span className="font-semibold bg-gradient-to-r from-[#F97316] via-[#EC4899] to-[#8B5CF6] bg-clip-text text-transparent">{Math.round(finalPrice / 4)} ر.س</span>/شهريًا أو على 4 دفعات
                           </p>
-                          <p className="text-xs text-neutral-500 mt-0.5">متوافقة مع الشريعة الإسلامية</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">متوافقة مع الشريعة الإسلامية</p>
                         </div>
                         <svg className="w-5 h-5 text-[#DE6FA1] group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -739,12 +739,12 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                       <h3 className="text-base font-semibold">الدفع عبر تمارا</h3>
                       <button
                         onClick={() => setPaymentMethod(null)}
-                        className="text-sm text-muted hover:text-foreground transition-colors"
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
                         ← العودة
                       </button>
                     </div>
-                    <p className="text-sm text-muted mb-4" dir="ltr">
+                    <p className="text-sm text-muted-foreground mb-4" dir="ltr">
                       Paying as <span className="font-medium text-foreground">{email}</span>
                     </p>
 
@@ -765,8 +765,8 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                       {/* Hero Message */}
                       <div className="text-center mb-4">
                         <p className="text-lg font-medium bg-gradient-to-r from-[#F97316] via-[#EC4899] to-[#8B5CF6] bg-clip-text text-transparent">دفعاتك، على راحتك</p>
-                        <p className="text-sm text-neutral-500 mt-1">
-                          ادفع <span className="font-semibold text-neutral-800">{Math.round(finalPrice / 4)} ر.س</span> أو على 4 دفعات
+                        <p className="text-sm text-muted-foreground mt-1">
+                          ادفع <span className="font-semibold text-foreground">{Math.round(finalPrice / 4)} ر.س</span> أو على 4 دفعات
                         </p>
                       </div>
 
@@ -777,9 +777,9 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                             <div className="w-8 h-8 bg-gradient-to-r from-[#F97316] via-[#EC4899] to-[#8B5CF6] rounded-full flex items-center justify-center">
                               <span className="text-white text-xs font-bold">4x</span>
                             </div>
-                            <span className="text-sm text-neutral-600">4 دفعات شهرية</span>
+                            <span className="text-sm text-muted-foreground">4 دفعات شهرية</span>
                           </div>
-                          <span className="font-bold text-neutral-800">{(finalPrice / 4).toFixed(0)} ر.س</span>
+                          <span className="font-bold text-foreground">{(finalPrice / 4).toFixed(0)} ر.س</span>
                         </div>
                       </div>
 
@@ -789,30 +789,30 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                           <div className="w-8 h-8 mx-auto bg-gradient-to-br from-[#FFB88C]/20 to-[#F97316]/20 rounded-full flex items-center justify-center mb-1">
                             <span className="text-[#F97316] text-xs font-bold">1</span>
                           </div>
-                          <p className="text-[10px] text-neutral-500">اختر الخطة</p>
+                          <p className="text-[10px] text-muted-foreground">اختر الخطة</p>
                         </div>
                         <div>
                           <div className="w-8 h-8 mx-auto bg-gradient-to-br from-[#F9DC5C]/20 to-[#EC4899]/20 rounded-full flex items-center justify-center mb-1">
                             <span className="text-[#EC4899] text-xs font-bold">2</span>
                           </div>
-                          <p className="text-[10px] text-neutral-500">أدخل البطاقة</p>
+                          <p className="text-[10px] text-muted-foreground">أدخل البطاقة</p>
                         </div>
                         <div>
                           <div className="w-8 h-8 mx-auto bg-gradient-to-br from-[#EC4899]/20 to-[#8B5CF6]/20 rounded-full flex items-center justify-center mb-1">
                             <span className="text-[#8B5CF6] text-xs font-bold">3</span>
                           </div>
-                          <p className="text-[10px] text-neutral-500">تابع من التطبيق</p>
+                          <p className="text-[10px] text-muted-foreground">تابع من التطبيق</p>
                         </div>
                         <div>
                           <div className="w-8 h-8 mx-auto bg-gradient-to-br from-[#8B5CF6]/20 to-[#67E8F9]/20 rounded-full flex items-center justify-center mb-1">
                             <span className="text-[#06B6D4] text-xs font-bold">4</span>
                           </div>
-                          <p className="text-[10px] text-neutral-500">تذكيرات</p>
+                          <p className="text-[10px] text-muted-foreground">تذكيرات</p>
                         </div>
                       </div>
 
                       {/* Benefits */}
-                      <div className="flex items-center justify-center gap-4 text-[10px] text-neutral-500 border-t border-[#DE6FA1]/10 pt-3">
+                      <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground border-t border-[#DE6FA1]/10 pt-3">
                         <span className="flex items-center gap-1">
                           <svg className="w-3 h-3 text-[#EC4899]" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
@@ -850,7 +850,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
 
                     {/* Payment Methods */}
                     <div className="flex items-center justify-center gap-3 mt-4">
-                      <span className="text-[10px] text-neutral-400">طرق الدفع المقبولة:</span>
+                      <span className="text-[10px] text-muted-foreground">طرق الدفع المقبولة:</span>
                       <div className="flex items-center gap-2">
                         <div className="h-5 px-2 bg-neutral-100 rounded flex items-center justify-center">
                           <span className="text-[10px] font-medium text-[#1A1F71]">VISA</span>
@@ -868,7 +868,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
 
                 {/* Security Note */}
                 <div className="mt-6 text-center">
-                  <p className="text-xs text-muted flex items-center justify-center gap-1">
+                  <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>

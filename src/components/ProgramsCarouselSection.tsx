@@ -1,6 +1,5 @@
 'use client'
 
-import { useRef } from 'react'
 import type { Product } from '@/types/database'
 import { ProgramCard } from '@/components/ProgramCard'
 import { Card } from '@/components/ui/card'
@@ -10,8 +9,6 @@ interface ProgramsCarouselSectionProps {
 }
 
 export function ProgramsCarouselSection({ products }: ProgramsCarouselSectionProps) {
-  const scrollRef = useRef<HTMLDivElement>(null)
-
   if (products.length === 0) {
     return (
       <section id="shop" className="py-16 sm:py-24">
@@ -40,17 +37,17 @@ export function ProgramsCarouselSection({ products }: ProgramsCarouselSectionPro
       </div>
 
       <div
-        ref={scrollRef}
-        className="flex gap-6 overflow-x-auto overflow-y-hidden pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 snap-x snap-mandatory scroll-smooth touch-pan-x"
+        className="flex gap-6 overflow-x-auto overflow-y-hidden pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 snap-x snap-mandatory touch-pan-x [scroll-behavior:auto]"
         style={{
           WebkitOverflowScrolling: 'touch',
           scrollbarWidth: 'thin',
+          contain: 'layout paint',
         }}
       >
         {products.map((product) => (
           <div
             key={product.id}
-            className="flex-shrink-0 w-[85vw] sm:w-[70vw] md:w-[400px] snap-start"
+            className="flex-shrink-0 w-[85vw] sm:w-[70vw] md:w-[400px] snap-start [contain:layout_paint]"
           >
             <ProgramCard product={product} />
           </div>

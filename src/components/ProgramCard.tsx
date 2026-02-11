@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronLeft, Download } from 'lucide-react'
+import { ChevronLeft, Download, Star } from 'lucide-react'
 import type { Product } from '@/types/database'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +23,8 @@ export function ProgramCard({ product }: ProgramCardProps) {
         ((product.before_price_sar! - product.price_sar) / product.before_price_sar!) * 100
       )
     : 0
+  const reviewCount = product.times_bought > 0 ? product.times_bought : 12
+  const rating = 4.9
 
   return (
     <Link href={`/product/${product.id}`} className="block h-full">
@@ -41,6 +43,12 @@ export function ProgramCard({ product }: ProgramCardProps) {
               <Download className="size-12" />
             </div>
           )}
+          {/* Stars + review count - top left */}
+          <div className="absolute left-2 top-2 z-10 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-sm px-2.5 py-1.5 text-white">
+            <Star className="size-4 fill-amber-400 text-amber-400" />
+            <span className="text-sm font-semibold">{rating}</span>
+            <span className="text-xs opacity-90">({reviewCount})</span>
+          </div>
           {hasDiscount && (
             <Badge className="absolute right-2 top-2">
               -{discountPercent}%
