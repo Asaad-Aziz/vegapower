@@ -102,50 +102,37 @@ export default function LandingPage({
       <section id="app" className="border-y bg-primary py-16 text-primary-foreground sm:py-24">
         <div className="container mx-auto max-w-5xl px-4">
           <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">تطبيق فيجا باور</h2>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">تطبيقنا الجديد </h2>
             <p className="mt-3 text-primary-foreground/85">
               صمّم برنامجك، احسب سعراتك، وانضم لمجتمع يتابع معك.
             </p>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                icon: Download,
-                title: 'برنامجك الخاص',
-                desc: 'صمّم برنامج تمارينك بنفسك داخل التطبيق حسب هدفك ومستواك.',
-              },
-              {
-                icon: Calculator,
-                title: 'سعراتك اليومية',
-                desc: 'احسب احتياجك اليومي من السعرات باستخدام الذكاء الاصطناعي.',
-              },
-              {
-                icon: Users,
-                title: 'مجتمع التطبيق',
-                desc: 'انضم لمجتمع الأعضاء، تابع التحديات واحصل على الدعم المستمر.',
-              },
-            ].map((item) => (
-              <Card
-                key={item.title}
-                className={cn(
-                  'border-primary-foreground/15 bg-primary-foreground/10 backdrop-blur-sm',
-                  'transition-colors hover:bg-primary-foreground/15'
-                )}
+          {/* Swipeable app screens - one card per image on mobile, all three on desktop */}
+          <div
+            className="flex gap-6 overflow-x-auto overflow-y-hidden pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 snap-x snap-mandatory scroll-smooth touch-pan-x"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {['/4.png', '/6.png', '/5.png'].map((src) => (
+              <div
+                key={src}
+                className="flex-shrink-0 w-[85vw] sm:w-[70vw] md:w-[calc(33.333%-1rem)] md:max-w-[280px] snap-start"
               >
-                <CardHeader>
-                  <div className="flex size-12 items-center justify-center rounded-xl bg-primary-foreground/20">
-                    <item.icon className="size-6" />
-                  </div>
-                  <CardTitle className="text-primary-foreground">{item.title}</CardTitle>
-                  <CardDescription className="text-primary-foreground/80">{item.desc}</CardDescription>
-                </CardHeader>
-              </Card>
+                <div className="rounded-2xl overflow-hidden border border-primary-foreground/20 bg-primary-foreground/5 shadow-lg">
+                  <Image
+                    src={src}
+                    alt=""
+                    width={280}
+                    height={560}
+                    className="w-full h-auto object-contain"
+                  />
+                </div>
+              </div>
             ))}
           </div>
           <div className="mt-10 flex justify-center">
             <Button size="lg" variant="secondary" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" asChild>
               <Link href={APP_PATH} className="gap-2">
-                انضم من التطبيق
+                انشئ حسابك الآن
                 <ArrowLeft className="size-4" />
               </Link>
             </Button>
