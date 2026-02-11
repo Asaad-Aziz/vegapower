@@ -69,7 +69,7 @@ export default function LandingPage({
                 key={src}
                 className="flex-shrink-0 w-[85vw] sm:w-[70vw] md:w-[calc(33.333%-1rem)] md:max-w-[280px] snap-start"
               >
-                <div className="rounded-2xl overflow-hidden border border-primary-foreground/20 bg-primary-foreground/5 shadow-lg max-h-[65vh] md:max-h-none flex items-center justify-center">
+                <div className="rounded-2xl overflow-hidden border border-primary-foreground/20 bg-primary-foreground/5 shadow-lg w-full h-[60vh] min-h-[320px] md:h-auto md:min-h-0 flex items-center justify-center">
                   <Image
                     src={src}
                     alt=""
@@ -77,17 +77,17 @@ export default function LandingPage({
                     height={560}
                     sizes="(max-width: 768px) 85vw, 280px"
                     loading="lazy"
-                    className="w-full h-auto object-contain max-h-[65vh] md:max-h-none"
+                    className="w-full h-full md:h-auto object-contain"
                   />
                 </div>
               </div>
             ))}
           </div>
           <div className="mt-10 flex justify-center">
-            <Button size="lg" variant="secondary" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" asChild>
+            <Button size="lg" variant="secondary" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 text-lg py-6 px-8 h-auto min-h-[52px]" asChild>
               <Link href={APP_PATH} className="gap-2">
                 انشئ حسابك الآن
-                <ArrowLeft className="size-4" />
+                <ArrowLeft className="size-5" />
               </Link>
             </Button>
           </div>
