@@ -14,7 +14,7 @@ export default function ProductPageClient({ product, storeSettings }: ProductPag
   const profileImageUrl = storeSettings?.profile_image_url || product.profile_image_url || null
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground pt-20">
       <SiteHeader
         brandName={brandName}
         profileImageUrl={profileImageUrl}

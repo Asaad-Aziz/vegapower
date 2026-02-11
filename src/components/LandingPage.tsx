@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import SiteHeader from '@/components/SiteHeader'
+import { HeroSection } from '@/components/HeroSection'
 
 const APP_PATH = '/app'
 
@@ -26,50 +27,10 @@ export default function LandingPage({
   const profileImageUrl = storeSettings?.profile_image_url || products[0]?.profile_image_url || null
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground pt-20">
       <SiteHeader brandName={brandName} profileImageUrl={profileImageUrl} />
 
-      {/* Hero */}
-      <section className="border-b bg-card/30">
-        <div className="container mx-auto grid max-w-5xl gap-10 px-4 py-16 sm:py-24 lg:grid-cols-2 lg:gap-16 lg:py-28">
-          <div className="flex flex-col justify-center">
-            <Badge variant="secondary" className="mb-4 w-fit">
-              علامة لياقة بسيطة وواضحة
-            </Badge>
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              رياضتك أسهل{' '}
-              <span className="text-primary">بين يدك</span>
-            </h1>
-            <p className="mt-4 max-w-md text-lg text-muted-foreground">
-              برامج تمارين وغذاء جاهزة يستخدمها آلاف الأشخاص، وتطبيق واحد يجمع بين التخطيط الذكي ومجتمع الدعم.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button size="lg" asChild>
-                <a href="#shop" className="gap-2">
-                  تصفح البرامج
-                  <ChevronLeft className="size-4" />
-                </a>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href={APP_PATH} className="gap-2">
-                  التطبيق والمجتمع
-                </Link>
-              </Button>
-            </div>
-          </div>
-          <div className="flex items-center justify-center">
-            <div className="flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl border bg-muted/50">
-              <div className="text-center">
-                <div className="mx-auto mb-3 flex size-16 items-center justify-center rounded-full bg-primary/10">
-                  <Download className="size-8 text-primary" />
-                </div>
-                <p className="text-sm text-muted-foreground">صورة الهيرو</p>
-                <p className="text-xs text-muted-foreground/80">استبدلها بصورة علامتك</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSection heroImageUrl={null} />
 
       {/* Stats */}
       <section className="border-b bg-card">
