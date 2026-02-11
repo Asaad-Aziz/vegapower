@@ -27,7 +27,7 @@ export default function LandingPage({
     <div className="min-h-screen bg-background text-foreground pt-20">
       <SiteHeader brandName={brandName} profileImageUrl={profileImageUrl} />
 
-      <HeroSection heroImageUrl="/app%20(1).png" />
+      <HeroSection heroImageUrl="/hero(1).png" />
 
       {/* Stats */}
       <section className="border-b bg-card">
@@ -67,13 +67,13 @@ export default function LandingPage({
                 key={src}
                 className="flex-shrink-0 w-[85vw] sm:w-[70vw] md:w-[calc(33.333%-1rem)] md:max-w-[280px] snap-start"
               >
-                <div className="rounded-2xl overflow-hidden border border-primary-foreground/20 bg-primary-foreground/5 shadow-lg">
+                <div className="rounded-2xl overflow-hidden border border-primary-foreground/20 bg-primary-foreground/5 shadow-lg max-h-[65vh] md:max-h-none flex items-center justify-center">
                   <Image
                     src={src}
                     alt=""
                     width={280}
                     height={560}
-                    className="w-full h-auto object-contain"
+                    className="w-full h-auto object-contain max-h-[65vh] md:max-h-none"
                   />
                 </div>
               </div>
