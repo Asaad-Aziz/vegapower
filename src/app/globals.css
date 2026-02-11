@@ -14,12 +14,12 @@
 /* Vega Power branding + shadcn theme */
 :root {
   --font-arabic: 'Ara Hamah Alislam', sans-serif;
-  --vp-cream: #FAFAFA;
-  --vp-beige: #E5E7EB;
+  --vp-cream: #F1EFEC;
+  --vp-beige: #D4C9BE;
   --vp-navy: #123458;
   --vp-dark: #030303;
   --radius: 0.75rem;
-  --background: #FAFAFA;
+  --background: #F1EFEC;
   --foreground: #030303;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -207,7 +207,7 @@ body {
 .markdown-content p {
   margin-bottom: 1rem;
   line-height: 1.7;
-  color: var(--muted);
+  color: var(--muted-foreground);
 }
 
 .markdown-content ul,
@@ -219,7 +219,7 @@ body {
 .markdown-content li {
   margin-bottom: 0.5rem;
   line-height: 1.6;
-  color: var(--muted);
+  color: var(--muted-foreground);
 }
 
 .markdown-content strong {
