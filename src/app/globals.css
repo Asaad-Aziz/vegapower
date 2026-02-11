@@ -124,8 +124,8 @@ body {
 
 /* Button base */
 .btn-primary {
-  background: var(--accent);
-  color: white;
+  background: var(--primary);
+  color: var(--primary-foreground);
   padding: 14px 28px;
   border-radius: 12px;
   font-weight: 500;
@@ -141,6 +141,7 @@ body {
 
 .btn-primary:hover {
   background: var(--accent-hover);
+  color: var(--primary-foreground);
   transform: translateY(-1px);
 }
 

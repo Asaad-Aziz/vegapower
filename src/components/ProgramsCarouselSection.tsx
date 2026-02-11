@@ -37,17 +37,19 @@ export function ProgramsCarouselSection({ products }: ProgramsCarouselSectionPro
       </div>
 
       <div
-        className="flex gap-6 overflow-x-auto overflow-y-hidden pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 snap-x snap-mandatory touch-pan-x [scroll-behavior:auto]"
+        role="region"
+        aria-label="برامج للتصفح"
+        className="flex gap-6 overflow-x-auto overflow-y-hidden pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 snap-x snap-proximity overscroll-x-contain"
         style={{
           WebkitOverflowScrolling: 'touch',
           scrollbarWidth: 'thin',
-          contain: 'layout paint',
+          touchAction: 'pan-x',
         }}
       >
         {products.map((product) => (
           <div
             key={product.id}
-            className="flex-shrink-0 w-[85vw] sm:w-[70vw] md:w-[400px] snap-start [contain:layout_paint]"
+            className="flex-shrink-0 w-[85vw] sm:w-[70vw] md:w-[400px] snap-start"
           >
             <ProgramCard product={product} />
           </div>

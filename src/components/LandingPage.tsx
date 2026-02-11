@@ -27,7 +27,7 @@ export default function LandingPage({
     <div className="min-h-screen bg-background text-foreground pt-20">
       <SiteHeader brandName={brandName} profileImageUrl={profileImageUrl} />
 
-      <HeroSection heroImageUrl="/hero(1).png" />
+      <HeroSection heroImageUrl="/hero1.png" />
 
       {/* Stats */}
       <section className="border-b bg-card">
@@ -59,8 +59,10 @@ export default function LandingPage({
           </div>
           {/* Swipeable app screens - one card per image on mobile, all three on desktop */}
           <div
-            className="flex gap-6 overflow-x-auto overflow-y-hidden pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 snap-x snap-mandatory touch-pan-x [scroll-behavior:auto]"
-            style={{ WebkitOverflowScrolling: 'touch', contain: 'layout paint' }}
+            role="region"
+            aria-label="لقطات التطبيق"
+            className="flex gap-6 overflow-x-auto overflow-y-hidden pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 snap-x snap-proximity overscroll-x-contain"
+            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
           >
             {['/4.png', '/6.png', '/5.png'].map((src) => (
               <div
@@ -73,6 +75,8 @@ export default function LandingPage({
                     alt=""
                     width={280}
                     height={560}
+                    sizes="(max-width: 768px) 85vw, 280px"
+                    loading="lazy"
                     className="w-full h-auto object-contain max-h-[65vh] md:max-h-none"
                   />
                 </div>

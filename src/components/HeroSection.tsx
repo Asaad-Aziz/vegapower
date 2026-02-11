@@ -131,7 +131,7 @@ export function HeroSection({ heroImageUrl }: HeroSectionProps) {
                 <ChevronLeft className="size-4" />
               </a>
             </Button>
-            <Button size="lg" variant="outline" asChild className="border-white text-white hover:bg-white/10">
+            <Button size="lg" variant="outline" asChild className="bg-primary border-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground">
               <Link href={APP_PATH} className="gap-2">
                 التطبيق والمجتمع
               </Link>
