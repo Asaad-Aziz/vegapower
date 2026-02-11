@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import SiteHeader from '@/components/SiteHeader'
 import { HeroSection } from '@/components/HeroSection'
+import { ProgramsCarouselSection } from '@/components/ProgramsCarouselSection'
 
 const APP_PATH = '/app'
 
@@ -152,80 +153,7 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* Shop */}
-      <section id="shop" className="py-16 sm:py-24">
-        <div className="container mx-auto max-w-5xl px-4">
-          <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">برامج رقمية جاهزة</h2>
-            <p className="mt-3 text-muted-foreground">اختر برنامجاً، حمّله فوراً وابدأ رحلتك.</p>
-          </div>
-
-          {products.length === 0 ? (
-            <Card className="py-16">
-              <p className="text-center text-muted-foreground">لا توجد برامج متاحة حالياً.</p>
-            </Card>
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {products.map((product) => (
-                <Link key={product.id} href={`/product/${product.id}`}>
-                  <Card className="group overflow-hidden transition-shadow hover:shadow-md cursor-pointer h-full">
-                  <div className="relative aspect-[4/3] bg-muted">
-                    {product.product_image_url ? (
-                      <Image
-                        src={product.product_image_url}
-                        alt={product.title}
-                        width={400}
-                        height={300}
-                        className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex size-full items-center justify-center text-muted-foreground/50">
-                        <Download className="size-12" />
-                      </div>
-                    )}
-                    {product.before_price_sar != null && product.before_price_sar > product.price_sar && (
-                      <Badge className="absolute right-2 top-2">
-                        -{Math.round(((product.before_price_sar - product.price_sar) / product.before_price_sar) * 100)}%
-                      </Badge>
-                    )}
-                  </div>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="line-clamp-2 text-lg group-hover:text-primary">
-                      {product.title}
-                    </CardTitle>
-                    <CardDescription className="line-clamp-2">
-                      {product.description.replace(/^#+\s*/m, '').substring(0, 90)}
-                      {product.description.length > 90 ? '...' : ''}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-bold text-primary">
-                          {product.price_sar.toFixed(0)} ر.س
-                        </span>
-                        {product.before_price_sar != null && product.before_price_sar > product.price_sar && (
-                          <span className="text-sm text-muted-foreground line-through">
-                            {product.before_price_sar.toFixed(0)} ر.س
-                          </span>
-                        )}
-                      </div>
-                      <Button variant="ghost" size="sm" className="gap-1 text-primary">
-                        عرض التفاصيل
-                        <ChevronLeft className="size-4" />
-                      </Button>
-                    </div>
-                    {product.times_bought > 0 && (
-                      <p className="mt-2 text-xs text-muted-foreground">{product.times_bought}+ عملية شراء</p>
-                    )}
-                  </CardContent>
-                </Card>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      <ProgramsCarouselSection products={products} />
 
       {/* Footer */}
       <footer className="border-t bg-card/50 py-8">
