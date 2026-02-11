@@ -29,16 +29,15 @@ export function ProgramCard({ product }: ProgramCardProps) {
   return (
     <Link href={`/product/${product.id}`} className="block h-full">
       <Card className="group overflow-hidden transition-shadow hover:shadow-lg cursor-pointer h-full flex flex-col border bg-card">
-        <div className="relative aspect-[4/3] bg-muted flex-shrink-0">
+        <div className="relative aspect-[4/3] bg-muted flex-shrink-0 overflow-hidden">
           {product.product_image_url ? (
             <Image
               src={product.product_image_url}
               alt={product.title}
-              width={400}
-              height={300}
+              fill
               sizes="(max-width: 640px) 85vw, (max-width: 768px) 70vw, 400px"
               loading="lazy"
-              className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
             <div className="flex size-full items-center justify-center text-muted-foreground/50">

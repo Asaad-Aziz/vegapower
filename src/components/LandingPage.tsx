@@ -29,6 +29,36 @@ export default function LandingPage({
 
       <HeroSection heroImageUrl="/hero1.png" />
 
+      {/* About Us */}
+      <section className="py-14 sm:py-20">
+        <div className="container mx-auto max-w-3xl px-4">
+          <div className="text-center mb-10">
+            <p className="text-sm font-medium text-primary tracking-wide mb-3">قصتنا</p>
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl text-foreground">
+              من ملفات رقمية إلى تطبيق متكامل
+            </h2>
+          </div>
+          <div className="space-y-6 text-center text-muted-foreground leading-relaxed">
+            <p>
+              بدأنا بحلم بسيط: نوصل اللياقة لكل شخص بطريقة سهلة وواضحة.
+              كانت البداية ببرامج تمارين وتغذية جاهزة للتحميل — ملفات رقمية
+              ساعدت آلاف الأشخاص يبدأون رحلتهم الصحية من أول يوم.
+            </p>
+            <p>
+              مع الوقت، تطورنا وبنينا تطبيق متكامل يجمع بين التمارين الذكية،
+              حساب السعرات بالذكاء الاصطناعي، ومجتمع داعم يتابع معك كل خطوة.
+              صرنا جزء من رحلة أكثر من <span className="font-semibold text-primary">28,000</span> شخص
+              حققوا أهدافهم الصحية معنا.
+            </p>
+            <div className="h-px w-16 bg-primary/30 mx-auto my-2" />
+            <p className="text-foreground font-medium text-lg">
+              مهمتنا أن نستمر في النمو كمجتمع واحد — نلهم بعض، نحفّز بعض،
+              ونساعد كل شخص يوصل لأفضل نسخة من نفسه.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Stats */}
       <section className="border-b bg-card">
         <div className="container mx-auto max-w-5xl px-4 py-8">
@@ -69,15 +99,15 @@ export default function LandingPage({
                 key={src}
                 className="flex-shrink-0 w-[65vw] sm:w-[50vw] md:w-[calc(33.333%-0.75rem)] md:max-w-[240px] snap-start"
               >
-                <div className="rounded-xl overflow-hidden border border-primary-foreground/20 bg-primary-foreground/5 shadow-md">
+                <div className="rounded-xl overflow-hidden border border-primary-foreground/20 bg-primary-foreground/5 shadow-md aspect-[9/19]">
                   <Image
                     src={src}
                     alt=""
                     width={240}
-                    height={480}
+                    height={507}
                     sizes="(max-width: 768px) 65vw, 240px"
                     loading="lazy"
-                    className="w-full h-auto object-contain"
+                    className="w-full h-full object-cover"
                   />
                 </div>
               </div>
