@@ -413,7 +413,7 @@ export default function AppOnboarding() {
         <div className="text-center max-w-md">
           <div className="w-16 h-16 mx-auto mb-6 rounded-full border-4 border-green-500 border-t-transparent animate-spin" />
           <h2 className="text-xl font-semibold mb-2">جاري التحقق من حالة الدفع...</h2>
-          <p className="text-neutral-400">يرجى الانتظار بينما نتحقق من عملية الدفع</p>
+          <p className="text-neutral-300">يرجى الانتظار بينما نتحقق من عملية الدفع</p>
         </div>
       </div>
     )
@@ -429,7 +429,7 @@ export default function AppOnboarding() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold mb-2">تم الدفع بنجاح! 🎉</h2>
-          <p className="text-neutral-400 mb-4">جاري تحويلك لصفحة النجاح...</p>
+          <p className="text-neutral-300 mb-4">جاري تحويلك لصفحة النجاح...</p>
           {recoveryEmail && (
             <p className="text-sm text-green-400">سيتم إرسال بيانات الدخول إلى: {recoveryEmail}</p>
           )}
@@ -439,7 +439,7 @@ export default function AppOnboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground" dir="rtl">
       {/* Payment Error Banner - shows when StreamPay incorrectly reported failure */}
       {paymentRecoveryStatus === 'failed' && paymentError && (
         <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-red-500/90 text-white text-center">
@@ -487,7 +487,7 @@ export default function AppOnboarding() {
               />
             </div>
             <h1 className="text-3xl font-bold mb-4">أهلاً بك في Vega Power</h1>
-            <p className="text-neutral-500 dark:text-neutral-400 mb-12 leading-relaxed">
+            <p className="text-muted-foreground mb-12 leading-relaxed">
               دعنا نخصص لك خطة تدريبية وغذائية تناسب احتياجات جسمك 100%
             </p>
             <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg shadow-lg">
@@ -501,7 +501,7 @@ export default function AppOnboarding() {
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما هو جنسك؟</h2>
-              <p className="text-neutral-500 dark:text-neutral-400">سنستخدم هذا لضبط حساب السعرات الحرارية.</p>
+              <p className="text-muted-foreground">سنستخدم هذا لضبط حساب السعرات الحرارية.</p>
             </div>
             <div className="flex-1 flex flex-col gap-4 justify-center">
               {[
@@ -533,7 +533,7 @@ export default function AppOnboarding() {
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">كم مرة تتمرن أسبوعياً؟</h2>
-              <p className="text-neutral-500 dark:text-neutral-400">يساعدنا هذا في تحديد مستوى نشاطك الحالي.</p>
+              <p className="text-muted-foreground">يساعدنا هذا في تحديد مستوى نشاطك الحالي.</p>
             </div>
             <div className="flex-1 space-y-3">
               {activityLevels.map((level) => (
@@ -554,7 +554,7 @@ export default function AppOnboarding() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{level.title}</h3>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">{level.subtitle}</p>
+                    <p className="text-sm text-muted-foreground">{level.subtitle}</p>
                   </div>
                 </button>
               ))}
@@ -567,7 +567,7 @@ export default function AppOnboarding() {
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما هو مستوى لياقتك الحالي؟</h2>
-              <p className="text-neutral-500 dark:text-neutral-400">سيساعدنا هذا في تخصيص التمارين المناسبة لك.</p>
+              <p className="text-muted-foreground">سيساعدنا هذا في تخصيص التمارين المناسبة لك.</p>
             </div>
             <div className="flex-1 space-y-3">
               {fitnessLevelOptions.map((level) => (
@@ -588,7 +588,7 @@ export default function AppOnboarding() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{level.title}</h3>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">{level.subtitle}</p>
+                    <p className="text-sm text-muted-foreground">{level.subtitle}</p>
                   </div>
                 </button>
               ))}
@@ -601,7 +601,7 @@ export default function AppOnboarding() {
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">أين تفضل التمرين؟</h2>
-              <p className="text-neutral-500 dark:text-neutral-400">سنخصص التمارين حسب المكان والأدوات المتاحة لديك.</p>
+              <p className="text-muted-foreground">سنخصص التمارين حسب المكان والأدوات المتاحة لديك.</p>
             </div>
             <div className="flex-1 flex flex-col gap-4 justify-center">
               {workoutLocationOptions.map((location) => (
@@ -622,7 +622,7 @@ export default function AppOnboarding() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{location.title}</h3>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">{location.subtitle}</p>
+                    <p className="text-sm text-muted-foreground">{location.subtitle}</p>
                   </div>
                 </button>
               ))}
@@ -635,11 +635,11 @@ export default function AppOnboarding() {
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">الطول والوزن</h2>
-              <p className="text-neutral-500 dark:text-neutral-400">بيانات أساسية لحساب مؤشر كتلة الجسم (BMI).</p>
+              <p className="text-muted-foreground">بيانات أساسية لحساب مؤشر كتلة الجسم (BMI).</p>
             </div>
             <div className="flex-1 space-y-6">
               <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800">
-                <label className="block text-sm text-neutral-500 dark:text-neutral-400 mb-2">الطول (سم)</label>
+                <label className="block text-sm text-muted-foreground mb-2">الطول (سم)</label>
                 <div className="flex items-center gap-4">
                   <input
                     type="range"
@@ -653,7 +653,7 @@ export default function AppOnboarding() {
                 </div>
               </div>
               <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800">
-                <label className="block text-sm text-neutral-500 dark:text-neutral-400 mb-2">الوزن (كجم)</label>
+                <label className="block text-sm text-muted-foreground mb-2">الوزن (كجم)</label>
                 <div className="flex items-center gap-4">
                   <input
                     type="range"
@@ -678,7 +678,7 @@ export default function AppOnboarding() {
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">متى ولدت؟</h2>
-              <p className="text-neutral-500 dark:text-neutral-400">يؤثر العمر على معدل الأيض واحتياجات الطاقة.</p>
+              <p className="text-muted-foreground">يؤثر العمر على معدل الأيض واحتياجات الطاقة.</p>
             </div>
             <div className="flex-1 flex flex-col justify-center">
               <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
@@ -694,7 +694,7 @@ export default function AppOnboarding() {
                   }}
                   className="w-full accent-neutral-500"
                 />
-                <p className="text-neutral-500 dark:text-neutral-400 mt-4">العمر: {userData.age} سنة</p>
+                <p className="text-muted-foreground mt-4">العمر: {userData.age} سنة</p>
               </div>
             </div>
             <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
@@ -708,7 +708,7 @@ export default function AppOnboarding() {
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما هو هدفك؟</h2>
-              <p className="text-neutral-500 dark:text-neutral-400">اختر الهدف الرئيسي لنبني الخطة عليه.</p>
+              <p className="text-muted-foreground">اختر الهدف الرئيسي لنبني الخطة عليه.</p>
             </div>
             <div className="flex-1 space-y-3">
               {fitnessGoals.map((goal) => (
@@ -739,12 +739,12 @@ export default function AppOnboarding() {
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما هو وزنك المثالي؟</h2>
-              <p className="text-neutral-500 dark:text-neutral-400">الهدف الذي تسعى للوصول إليه.</p>
+              <p className="text-muted-foreground">الهدف الذي تسعى للوصول إليه.</p>
             </div>
             <div className="flex-1 flex flex-col justify-center">
               <div className="p-8 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
                 <span className="text-6xl font-bold block mb-2">{userData.targetWeight}</span>
-                <span className="text-neutral-500 dark:text-neutral-400">كجم</span>
+                <span className="text-muted-foreground">كجم</span>
                 <input
                   type="range"
                   min="30"
@@ -766,7 +766,7 @@ export default function AppOnboarding() {
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما مدى سرعة تحقيق هدفك؟</h2>
-              <p className="text-neutral-500 dark:text-neutral-400">تحكم في وتيرة خسارة أو زيادة الوزن أسبوعياً.</p>
+              <p className="text-muted-foreground">تحكم في وتيرة خسارة أو زيادة الوزن أسبوعياً.</p>
             </div>
             <div className="flex-1 flex flex-col justify-center">
               <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
@@ -776,7 +776,7 @@ export default function AppOnboarding() {
                   <span className={`text-3xl transition-opacity ${userData.targetSpeed >= 1 ? 'opacity-100' : 'opacity-30'}`}>🔥</span>
                 </div>
                 <span className="text-4xl font-bold block mb-2">{userData.targetSpeed.toFixed(1)}</span>
-                <span className="text-neutral-500 dark:text-neutral-400">كجم في الأسبوع</span>
+                <span className="text-muted-foreground">كجم في الأسبوع</span>
                 <input
                   type="range"
                   min="0.1"
@@ -788,7 +788,7 @@ export default function AppOnboarding() {
                 />
                 <button
                   onClick={() => setUserData({ ...userData, targetSpeed: 0.5 })}
-                  className="mt-4 px-4 py-2 rounded-full bg-neutral-500/20 text-neutral-600 dark:text-neutral-400 text-sm"
+                  className="mt-4 px-4 py-2 rounded-full bg-neutral-500/20 text-muted-foreground text-sm"
                 >
                   السرعة المستحسنة (0.5 كجم)
                 </button>
@@ -805,7 +805,7 @@ export default function AppOnboarding() {
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما الذي يمنعك من الوصول لهدفك؟</h2>
-              <p className="text-neutral-500 dark:text-neutral-400">سنساعدك في التغلب على هذه التحديات.</p>
+              <p className="text-muted-foreground">سنساعدك في التغلب على هذه التحديات.</p>
             </div>
             <div className="flex-1 space-y-3">
               {challengeOptions.map((ch) => (
@@ -828,7 +828,7 @@ export default function AppOnboarding() {
                   </div>
                   <span className="font-medium">{ch.title}</span>
                   {userData.challenges.includes(ch.id) && (
-                    <svg className="w-5 h-5 text-neutral-500 mr-auto" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-muted-foreground mr-auto" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                     </svg>
                   )}
@@ -846,7 +846,7 @@ export default function AppOnboarding() {
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما الذي تود تحقيقه؟</h2>
-              <p className="text-neutral-500 dark:text-neutral-400">سنخصص الخطة لتشمل هذه الجوانب أيضاً.</p>
+              <p className="text-muted-foreground">سنخصص الخطة لتشمل هذه الجوانب أيضاً.</p>
             </div>
             <div className="flex-1 space-y-3">
               {accomplishmentOptions.map((acc) => (
@@ -869,7 +869,7 @@ export default function AppOnboarding() {
                   </div>
                   <span className="font-medium">{acc.title}</span>
                   {userData.accomplishments.includes(acc.id) && (
-                    <svg className="w-5 h-5 text-neutral-500 mr-auto" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-muted-foreground mr-auto" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                     </svg>
                   )}
@@ -889,7 +889,7 @@ export default function AppOnboarding() {
               <span className="text-5xl">📸</span>
             </div>
             <h2 className="text-2xl font-bold mb-4">هل تتمنى أن يكون تتبع الغذاء أسهل؟</h2>
-            <p className="text-neutral-500 dark:text-neutral-400 mb-8 leading-relaxed">
+            <p className="text-muted-foreground mb-8 leading-relaxed">
               كثير من الناس يتركون الدايت لأن حساب السعرات صعب ومُتعب...
             </p>
             
@@ -899,7 +899,7 @@ export default function AppOnboarding() {
                   <span className="text-2xl">😫</span>
                   <div>
                     <p className="font-medium text-red-600 dark:text-red-400">الطريقة القديمة</p>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">البحث عن كل صنف وإدخاله يدوياً</p>
+                    <p className="text-sm text-muted-foreground">البحث عن كل صنف وإدخاله يدوياً</p>
                   </div>
                 </div>
               </div>
@@ -909,7 +909,7 @@ export default function AppOnboarding() {
                   <span className="text-2xl">🤩</span>
                   <div>
                     <p className="font-medium text-green-600 dark:text-green-400">مع Vega Power</p>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">صوّر أكلك والذكاء الاصطناعي يحسب كل شيء!</p>
+                    <p className="text-sm text-muted-foreground">صوّر أكلك والذكاء الاصطناعي يحسب كل شيء!</p>
                   </div>
                 </div>
               </div>
@@ -928,7 +928,7 @@ export default function AppOnboarding() {
               <span className="text-5xl">💎</span>
             </div>
             <h2 className="text-2xl font-bold mb-4">هل أنت مستعد للاستثمار في صحتك؟</h2>
-            <p className="text-neutral-500 dark:text-neutral-400 mb-6 leading-relaxed">
+            <p className="text-muted-foreground mb-6 leading-relaxed">
               صحتك هي أغلى ما تملك. الاستثمار فيها اليوم يعني حياة أفضل غداً.
             </p>
             
@@ -946,15 +946,15 @@ export default function AppOnboarding() {
             <div className="grid grid-cols-3 gap-3 mb-8">
               <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-center">
                 <p className="text-2xl font-bold text-green-500">94%</p>
-                <p className="text-[10px] text-neutral-500 dark:text-neutral-400">شافوا نتائج</p>
+                <p className="text-[10px] text-muted-foreground">شافوا نتائج</p>
               </div>
               <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-center">
                 <p className="text-2xl font-bold text-blue-500">+50K</p>
-                <p className="text-[10px] text-neutral-500 dark:text-neutral-400">مستخدم</p>
+                <p className="text-[10px] text-muted-foreground">مستخدم</p>
               </div>
               <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-center">
                 <p className="text-2xl font-bold text-purple-500">4.9⭐</p>
-                <p className="text-[10px] text-neutral-500 dark:text-neutral-400">تقييم</p>
+                <p className="text-[10px] text-muted-foreground">تقييم</p>
               </div>
             </div>
 
@@ -973,7 +973,7 @@ export default function AppOnboarding() {
                 <span className="text-4xl">💜</span>
               </div>
               <h2 className="text-2xl font-bold mb-2">قصتنا معك</h2>
-              <p className="text-neutral-500 dark:text-neutral-400 text-sm">لماذا بنينا Vega Power</p>
+              <p className="text-muted-foreground text-sm">لماذا بنينا Vega Power</p>
             </div>
 
             {/* Story Content */}
@@ -1067,13 +1067,13 @@ export default function AppOnboarding() {
             <h2 className="text-2xl font-bold mb-2">
               {isLosingWeight ? 'خسارة' : 'اكتساب'} {weightDiff} كجم هو هدف واقعي جداً!
             </h2>
-            <p className="text-neutral-500 dark:text-neutral-400 mb-8">ليس صعباً على الإطلاق!</p>
+            <p className="text-muted-foreground mb-8">ليس صعباً على الإطلاق!</p>
             <p className="text-neutral-600 dark:text-neutral-300 mb-8 leading-relaxed">
               90% من المستخدمين يقولون أن التغيير واضح جداً بعد استخدام Vega Power...
             </p>
             <div className="p-4 rounded-2xl bg-neutral-500/10 border border-neutral-500/20">
               <p className="text-sm">📈 يعزز الثقة: أنا أستطيع فعلها</p>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">يقلل من خطر الاستسلام</p>
+              <p className="text-xs text-muted-foreground mt-1">يقلل من خطر الاستسلام</p>
             </div>
             <button onClick={nextStep} className="w-full py-4 rounded-[30px] bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-semibold text-lg mt-8">
               التالي
@@ -1135,7 +1135,7 @@ export default function AppOnboarding() {
                 />
               </div>
               <h2 className="text-2xl font-bold mb-1">اشترك في VegaPower</h2>
-              <p className="text-neutral-500 dark:text-neutral-400 text-sm">التطبيق الوحيد اللي تحتاجه لتحقيق أهدافك 💪</p>
+              <p className="text-muted-foreground text-sm">التطبيق الوحيد اللي تحتاجه لتحقيق أهدافك 💪</p>
             </div>
 
             {/* Encouraging Message */}
@@ -1175,7 +1175,7 @@ export default function AppOnboarding() {
                       ))}
                     </div>
                     <p className="text-xs mb-1">"{review.text}"</p>
-                    <p className="text-[10px] text-neutral-500 dark:text-neutral-400">- {review.name}</p>
+                    <p className="text-[10px] text-muted-foreground">- {review.name}</p>
                   </div>
                 ))}
               </div>
@@ -1367,7 +1367,7 @@ export default function AppOnboarding() {
                         {plan.savings}
                       </div>
                     )}
-                    <div className={`text-[10px] mb-0.5 mt-2 ${selectedPlan === plan.key ? 'opacity-80' : 'text-neutral-500 dark:text-neutral-400'}`}>{plan.label}</div>
+                    <div className={`text-[10px] mb-0.5 mt-2 ${selectedPlan === plan.key ? 'opacity-80' : 'text-muted-foreground'}`}>{plan.label}</div>
                     {appliedDiscount && finalPrice !== plan.price ? (
                       <>
                         <div className="text-sm line-through opacity-50">{plan.price}</div>
@@ -1376,7 +1376,7 @@ export default function AppOnboarding() {
                     ) : (
                       <div className="text-xl font-bold">{plan.price}</div>
                     )}
-                    <div className={`text-[10px] ${selectedPlan === plan.key ? 'opacity-80' : 'text-neutral-500 dark:text-neutral-400'}`}>ريال</div>
+                    <div className={`text-[10px] ${selectedPlan === plan.key ? 'opacity-80' : 'text-muted-foreground'}`}>ريال</div>
                     <div className={`text-[9px] mt-1 px-2 py-0.5 rounded-full ${
                       selectedPlan === plan.key ? 'bg-white/20' : 'bg-neutral-200 dark:bg-neutral-700'
                     }`}>
@@ -1425,7 +1425,7 @@ export default function AppOnboarding() {
                       setAppliedDiscount(null)
                       setDiscountCode('')
                     }}
-                    className="text-neutral-500 hover:text-red-500 mr-auto"
+                    className="text-muted-foreground hover:text-red-500 mr-auto"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1470,23 +1470,23 @@ export default function AppOnboarding() {
 
             {/* Payment Methods */}
             <div className="mt-3 flex items-center justify-center gap-3">
-              <div className="flex items-center gap-1 text-[10px] text-neutral-400">
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <span>💳</span> Visa
               </div>
-              <div className="flex items-center gap-1 text-[10px] text-neutral-400">
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <span>💳</span> Mastercard
               </div>
-              <div className="flex items-center gap-1 text-[10px] text-neutral-400">
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <span>💳</span> مدى
               </div>
-              <div className="flex items-center gap-1 text-[10px] text-neutral-400">
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <span>🏦</span> تحويل بنكي
               </div>
             </div>
 
             {/* Footer */}
             <div className="mt-3 text-center">
-              <p className="text-[10px] text-neutral-400">🔒 دفع آمن ومشفر عبر StreamPay</p>
+              <p className="text-[10px] text-muted-foreground">🔒 دفع آمن ومشفر عبر StreamPay</p>
             </div>
           </div>
         )}
