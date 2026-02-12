@@ -41,7 +41,11 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
   const mfContainerRef = useRef<HTMLDivElement>(null)
 
   // Calculate prices with discount
-  const discountPercent = 10
+  const discountCodes: Record<string, number> = {
+    '2026': 10,
+    'VPTEST90': 90,
+  }
+  const discountPercent = discountCodes[discountCode] || 0
   const finalPrice = discountApplied 
     ? product.price_sar * (1 - discountPercent / 100) 
     : product.price_sar
@@ -50,7 +54,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
     : 0
 
   const handleApplyDiscount = () => {
-    if (discountCode === '2026') {
+    if (discountCodes[discountCode]) {
       setDiscountApplied(true)
     }
   }
