@@ -43,7 +43,28 @@ export default function SuccessContent() {
     const paymentId = searchParams.get('id')
     const isTamara = searchParams.get('tamara') === 'true'
     const orderRef = searchParams.get('order_ref')
+    const isMyFatoorah = searchParams.get('provider') === 'myfatoorah'
     
+    // For MyFatoorah payments - result is stored in sessionStorage by the callback
+    if (isMyFatoorah) {
+      try {
+        const storedResult = sessionStorage.getItem('mf_payment_result')
+        if (storedResult) {
+          const data = JSON.parse(storedResult) as VerificationResult
+          setStatus('success')
+          setResult(data)
+          trackPurchaseConversion(data)
+          sessionStorage.removeItem('mf_payment_result')
+          return
+        }
+      } catch {
+        // Fall through to error state
+      }
+      setStatus('error')
+      setResult({ success: false, error: 'لم يتم العثور على نتيجة الدفع' })
+      return
+    }
+
     // For Tamara payments
     if (isTamara && orderRef) {
       const verifyTamaraPayment = async () => {
@@ -73,7 +94,7 @@ export default function SuccessContent() {
       return
     }
 
-    // For Moyasar payments
+    // For legacy Moyasar payments (if any still pending)
     if (!paymentId) {
       setStatus('error')
       setResult({ success: false, error: 'لم يتم توفير معرف الدفع' })

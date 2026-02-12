@@ -1,13 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import Script from 'next/script'
 import ReactMarkdown from 'react-markdown'
 import { trackEvent } from '@/lib/analytics'
 import * as fbq from '@/lib/meta-pixel'
 import type { Product, StoreSettings } from '@/types/database'
-import type { MoyasarConfig } from '@/types/moyasar.d'
 
 interface StorePageProps {
   product: Product
@@ -28,8 +27,10 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
   const [showCheckout, setShowCheckout] = useState(false)
   const [email, setEmail] = useState('')
   const [showPayment, setShowPayment] = useState(false)
-  const [moyasarLoaded, setMoyasarLoaded] = useState(false)
-  const [moyasarInitialized, setMoyasarInitialized] = useState(false)
+  const [mfScriptLoaded, setMfScriptLoaded] = useState(false)
+  const [mfInitialized, setMfInitialized] = useState(false)
+  const [mfEncryptionKey, setMfEncryptionKey] = useState('')
+  const [mfSessionLoading, setMfSessionLoading] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(null)
   const [tamaraLoading, setTamaraLoading] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
@@ -37,6 +38,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
   const [recentBuyers] = useState(() => Math.floor(Math.random() * 20) + 12) // 12-31 recent buyers
   const [discountCode, setDiscountCode] = useState('2026')
   const [discountApplied, setDiscountApplied] = useState(false)
+  const mfContainerRef = useRef<HTMLDivElement>(null)
 
   // Calculate prices with discount
   const discountPercent = 10
@@ -96,7 +98,9 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
     setShowCheckout(false)
     setShowPayment(false)
     setEmail('')
-    setMoyasarInitialized(false)
+    setMfInitialized(false)
+    setMfEncryptionKey('')
+    setMfSessionLoading(false)
     setPaymentMethod(null)
     setTamaraLoading(false)
     document.body.style.overflow = ''
@@ -158,74 +162,140 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
     }
   }
 
+  // Create MyFatoorah session and initialize embedded form
   useEffect(() => {
-    if (showPayment && paymentMethod !== 'tamara' && moyasarLoaded && window.Moyasar && !moyasarInitialized) {
-      const appUrl = (process.env.NEXT_PUBLIC_APP_URL || window.location.origin).replace(/\/$/, '')
-      
-      const publishableKey = process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY || ''
-      logToServer('MOYASAR_INIT', 'Initializing Moyasar Payment Form', {
-        amount: Math.round(finalPrice * 100),
-        appUrl,
-        hasPublishableKey: !!publishableKey,
-        keyPrefix: publishableKey.substring(0, 10),
-        isTestKey: publishableKey.startsWith('pk_test'),
-        isLiveKey: publishableKey.startsWith('pk_live'),
-      })
-      
-      // Small delay to ensure DOM element is ready
-      setTimeout(() => {
-        const moyasarElement = document.querySelector('.moyasar-form')
-        if (moyasarElement) {
-          moyasarElement.innerHTML = ''
-        }
-        
-        window.Moyasar.init({
-          element: '.moyasar-form',
-          amount: Math.round(finalPrice * 100),
-          currency: 'SAR',
-          description: product.title,
-          publishable_api_key: publishableKey,
-          callback_url: `${appUrl}/success`,
-          methods: ['creditcard', 'applepay'],
-          apple_pay: {
-            label: brandName,
-            validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
-            country: 'SA',
-            supported_countries: ['SA', 'AE', 'KW', 'BH', 'OM', 'QA', 'US', 'GB'],
-          },
-          supported_networks: ['mada', 'visa', 'mastercard'],
-          on_initiating: async function() {
-            await logToServer('PAYMENT_INITIATING', 'Payment is being initiated')
-            return true
-          },
-          on_completed: async function(payment) {
-            await logToServer('PAYMENT_COMPLETED', 'Payment completed', payment)
-          },
-          on_failure: async function(error) {
-            await logToServer('PAYMENT_FAILURE', 'Payment failed', error)
-          },
-          metadata: {
-            buyer_email: email,
-            product_id: product.id,
-          },
+    if (showPayment && paymentMethod !== 'tamara' && mfScriptLoaded && !mfInitialized && !mfSessionLoading) {
+      const initMyFatoorah = async () => {
+        setMfSessionLoading(true)
+        await logToServer('MYFATOORAH_INIT', 'Creating MyFatoorah session', {
+          amount: finalPrice,
+          email,
         })
-        
-        logToServer('MOYASAR_INIT_COMPLETE', 'Moyasar init() called successfully')
-        setMoyasarInitialized(true)
-      }, 100)
-    }
-  }, [showPayment, paymentMethod, moyasarLoaded, product, email, moyasarInitialized, brandName, finalPrice])
 
-  // Load Moyasar CSS
-  useEffect(() => {
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = 'https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.css'
-    document.head.appendChild(link)
-    return () => {
-      document.head.removeChild(link)
+        try {
+          // Create session on server
+          const response = await fetch('/api/myfatoorah/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amount: finalPrice,
+              email,
+              productId: product.id,
+            }),
+          })
+
+          const data = await response.json()
+
+          if (!data.success) {
+            await logToServer('MYFATOORAH_SESSION_FAILED', 'Session creation failed', data)
+            alert('فشل في إنشاء جلسة الدفع. يرجى المحاولة مرة أخرى.')
+            setMfSessionLoading(false)
+            return
+          }
+
+          setMfEncryptionKey(data.encryptionKey)
+
+          // Clear previous form
+          if (mfContainerRef.current) {
+            mfContainerRef.current.innerHTML = ''
+          }
+
+          // Small delay for DOM readiness
+          setTimeout(() => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const myfatoorah = (window as any).myfatoorah
+            if (!myfatoorah) {
+              logToServer('MYFATOORAH_ERROR', 'myfatoorah global not found')
+              alert('حدث خطأ في تحميل نموذج الدفع. يرجى تحديث الصفحة.')
+              setMfSessionLoading(false)
+              return
+            }
+
+            const config = {
+              sessionId: data.sessionId,
+              callback: async (paymentResponse: {
+                isSuccess: boolean
+                sessionId: string
+                paymentCompleted: boolean
+                paymentData?: string
+                paymentType?: string
+                redirectionUrl?: string
+              }) => {
+                await logToServer('MYFATOORAH_CALLBACK', 'Payment callback received', paymentResponse)
+
+                if (paymentResponse.isSuccess && paymentResponse.paymentCompleted && paymentResponse.paymentData) {
+                  // Verify and process payment on server
+                  try {
+                    const verifyResponse = await fetch('/api/myfatoorah/verify', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        paymentData: paymentResponse.paymentData,
+                        encryptionKey: data.encryptionKey,
+                        email,
+                        productId: product.id,
+                      }),
+                    })
+
+                    const verifyResult = await verifyResponse.json()
+
+                    if (verifyResult.success) {
+                      // Store result for success page
+                      sessionStorage.setItem(
+                        'mf_payment_result',
+                        JSON.stringify({
+                          success: true,
+                          productTitle: verifyResult.productTitle,
+                          deliveryUrl: verifyResult.deliveryUrl,
+                          productId: verifyResult.productId,
+                          amount: verifyResult.amount,
+                          paymentId: verifyResult.paymentId,
+                        }),
+                      )
+                      window.location.href = '/success?provider=myfatoorah'
+                    } else {
+                      await logToServer('MYFATOORAH_VERIFY_FAILED', 'Verification failed', verifyResult)
+                      alert(verifyResult.error || 'فشل في التحقق من الدفع')
+                    }
+                  } catch (verifyError) {
+                    await logToServer('MYFATOORAH_VERIFY_ERROR', 'Verification error', verifyError)
+                    alert('حدث خطأ في التحقق من الدفع. يرجى التواصل مع الدعم.')
+                  }
+                } else if (paymentResponse.isSuccess && paymentResponse.redirectionUrl) {
+                  // Hosted payment method - redirect URL has paymentId
+                  // Extract paymentId from redirectionUrl and store for later verification
+                  const url = new URL(paymentResponse.redirectionUrl)
+                  const paymentId = url.searchParams.get('paymentId')
+                  if (paymentId) {
+                    sessionStorage.setItem('mf_pending_paymentId', paymentId)
+                    sessionStorage.setItem('mf_pending_encryptionKey', data.encryptionKey)
+                    sessionStorage.setItem('mf_pending_email', email)
+                  }
+                  // MyFatoorah handles the redirect for hosted methods
+                } else if (!paymentResponse.isSuccess) {
+                  await logToServer('MYFATOORAH_PAYMENT_FAILED', 'Payment failed', paymentResponse)
+                  alert('فشلت عملية الدفع. يرجى المحاولة مرة أخرى.')
+                }
+              },
+              containerId: 'myfatoorah-form',
+              shouldHandlePaymentUrl: true,
+            }
+
+            myfatoorah.init(config)
+            logToServer('MYFATOORAH_INIT_COMPLETE', 'MyFatoorah init() called successfully')
+            setMfInitialized(true)
+            setMfSessionLoading(false)
+          }, 200)
+        } catch (error) {
+          await logToServer('MYFATOORAH_INIT_ERROR', 'Initialization error', error)
+          alert('حدث خطأ. يرجى المحاولة مرة أخرى.')
+          setMfSessionLoading(false)
+        }
+      }
+
+      initMyFatoorah()
     }
-  }, [])
+  }, [showPayment, paymentMethod, mfScriptLoaded, mfInitialized, mfSessionLoading, product, email, finalPrice])
 
   return (
     <main className="min-h-screen pb-16">
@@ -618,7 +688,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                   </div>
                 )}
 
-                {/* Payment Form - Moyasar Default + Tamara Option */}
+                {/* Payment Form - MyFatoorah Default + Tamara Option */}
                 {showPayment && paymentMethod !== 'tamara' && (
                   <div className="animate-fade-in">
                     <div className="flex items-center justify-between mb-4">
@@ -626,7 +696,8 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                       <button
                         onClick={() => {
                           setShowPayment(false)
-                          setMoyasarInitialized(false)
+                          setMfInitialized(false)
+                          setMfSessionLoading(false)
                         }}
                         className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
@@ -637,13 +708,19 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                       Paying as <span className="font-medium text-foreground">{email}</span>
                     </p>
                     
-                    {/* Moyasar Payment Form - Default */}
-                    <div className="moyasar-form mb-6"></div>
+                    {/* MyFatoorah Embedded Payment Form */}
+                    {mfSessionLoading && (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="w-8 h-8 border-3 border-neutral-200 border-t-neutral-800 rounded-full animate-spin"></div>
+                        <span className="mr-3 text-sm text-muted-foreground">جاري تحميل نموذج الدفع...</span>
+                      </div>
+                    )}
+                    <div id="myfatoorah-form" ref={mfContainerRef} className="mb-6"></div>
                     
-                    {/* Moyasar Script */}
+                    {/* MyFatoorah Script - Saudi Arabia live */}
                     <Script
-                      src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.umd.min.js"
-                      onLoad={() => setMoyasarLoaded(true)}
+                      src={process.env.NEXT_PUBLIC_MYFATOORAH_JS_URL || 'https://sa.myfatoorah.com/sessions/v1/session.js'}
+                      onLoad={() => setMfScriptLoaded(true)}
                     />
 
                     {/* Divider */}
@@ -826,7 +903,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
-                    دفع آمن عبر Moyasar
+                    دفع آمن ومشفّر
                   </p>
                 </div>
               </div>
