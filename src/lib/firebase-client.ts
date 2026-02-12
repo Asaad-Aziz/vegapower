@@ -1,5 +1,13 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app'
-import { getAuth, signInWithPopup, OAuthProvider, type Auth, type User } from 'firebase/auth'
+import {
+  getAuth,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  OAuthProvider,
+  type Auth,
+  type User,
+} from 'firebase/auth'
 
 // Lazy initialization - only runs on client side when actually needed
 let app: FirebaseApp | null = null
@@ -24,6 +32,14 @@ function getFirebaseAuth(): Auth {
   return auth
 }
 
+function getAppleProvider(): OAuthProvider {
+  const provider = new OAuthProvider('apple.com')
+  provider.addScope('email')
+  provider.addScope('name')
+  provider.setCustomParameters({ locale: 'ar' })
+  return provider
+}
+
 export interface AppleSignInResult {
   uid: string
   email: string | null
@@ -32,31 +48,65 @@ export interface AppleSignInResult {
 
 /**
  * Sign in with Apple using Firebase Auth.
- * Opens a popup where the user authenticates with their Apple ID.
- * 
- * Prerequisites:
- * 1. Apple Sign-In provider must be enabled in Firebase Console > Authentication > Sign-in method
- * 2. Apple Services ID must be configured for your web domain
- * 3. NEXT_PUBLIC_FIREBASE_API_KEY and NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN must be set in .env.local
+ * Tries popup first, falls back to redirect if popup is blocked (common on mobile).
  */
 export async function signInWithApple(): Promise<AppleSignInResult> {
   const firebaseAuth = getFirebaseAuth()
+  const provider = getAppleProvider()
 
-  const provider = new OAuthProvider('apple.com')
-  provider.addScope('email')
-  provider.addScope('name')
+  try {
+    // Try popup first (works on desktop browsers)
+    const result = await signInWithPopup(firebaseAuth, provider)
+    const user: User = result.user
+    return {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+    }
+  } catch (error: unknown) {
+    const firebaseError = error as { code?: string }
 
-  // Use Arabic locale for Apple Sign-In page
-  provider.setCustomParameters({
-    locale: 'ar',
-  })
+    // If popup was blocked, fall back to redirect
+    if (firebaseError.code === 'auth/popup-blocked' || firebaseError.code === 'auth/popup-closed-by-user') {
+      console.log('Popup blocked/closed, falling back to redirect...')
+      // Save current step so we can restore after redirect
+      sessionStorage.setItem('apple_signin_pending', 'true')
+      await signInWithRedirect(firebaseAuth, provider)
+      // This won't return - page will redirect
+      return { uid: '', email: null, displayName: null }
+    }
 
-  const result = await signInWithPopup(firebaseAuth, provider)
-  const user: User = result.user
-
-  return {
-    uid: user.uid,
-    email: user.email,
-    displayName: user.displayName,
+    // Re-throw other errors
+    throw error
   }
+}
+
+/**
+ * Check if we're returning from an Apple Sign-In redirect.
+ * Call this on page load to handle the redirect result.
+ */
+export async function checkAppleSignInRedirect(): Promise<AppleSignInResult | null> {
+  // Only check if we have a pending sign-in
+  const pending = sessionStorage.getItem('apple_signin_pending')
+  if (!pending) return null
+
+  try {
+    const firebaseAuth = getFirebaseAuth()
+    const result = await getRedirectResult(firebaseAuth)
+
+    if (result) {
+      sessionStorage.removeItem('apple_signin_pending')
+      const user: User = result.user
+      return {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+      }
+    }
+  } catch (error) {
+    console.error('Apple Sign-In redirect result error:', error)
+    sessionStorage.removeItem('apple_signin_pending')
+  }
+
+  return null
 }

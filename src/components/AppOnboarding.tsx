@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { initiateCheckout } from '@/lib/meta-pixel'
-import { signInWithApple } from '@/lib/firebase-client'
+import { signInWithApple, checkAppleSignInRedirect } from '@/lib/firebase-client'
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15
 
@@ -163,6 +163,25 @@ export default function AppOnboarding() {
         })
     }
   }, [searchParams, router])
+
+  // Check for Apple Sign-In redirect result (when returning from Apple's auth page)
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const result = await checkAppleSignInRedirect()
+        if (result && result.email) {
+          setUserData(prev => ({ ...prev, email: result.email! }))
+          setAuthMethod('apple')
+          setAppleFirebaseUid(result.uid)
+          // Go to payment page
+          setStep(15 as Step)
+        }
+      } catch (error) {
+        console.error('Apple redirect check error:', error)
+      }
+    }
+    checkRedirect()
+  }, [])
 
   const [userData, setUserData] = useState<UserData>({
     gender: '',
@@ -346,7 +365,10 @@ export default function AppOnboarding() {
         // User cancelled - no error needed
         setAppleSignInError('')
       } else if (firebaseError.code === 'auth/popup-blocked') {
-        setAppleSignInError('تم حظر النافذة المنبثقة. يرجى السماح بالنوافذ المنبثقة وحاول مرة أخرى.')
+        // Redirect fallback is happening automatically, show loading message
+        setAppleSignInError('')
+        setAppleSignInLoading(true) // Keep loading state while redirecting
+        return // Don't set loading to false
       } else {
         setAppleSignInError('حدث خطأ أثناء تسجيل الدخول مع Apple. يرجى المحاولة مرة أخرى.')
       }
