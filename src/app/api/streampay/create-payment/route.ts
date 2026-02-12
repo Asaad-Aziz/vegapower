@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
     const { 
       plan, 
       email, 
+      authMethod,
+      appleFirebaseUid,
       discountCode,
       discountPercent,
       finalPrice,
@@ -112,6 +114,13 @@ export async function POST(request: NextRequest) {
     }
     if (discountCode) {
       successUrlWithParams.searchParams.set('discountCode', discountCode)
+    }
+    // Pass auth method info for the success page
+    if (authMethod) {
+      successUrlWithParams.searchParams.set('authMethod', authMethod)
+    }
+    if (appleFirebaseUid) {
+      successUrlWithParams.searchParams.set('appleFirebaseUid', appleFirebaseUid)
     }
     // Add existing product ID if using dashboard products
     if (existingProductId) {

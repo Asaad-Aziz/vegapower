@@ -10,6 +10,7 @@ function AppSuccessInner() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [hasTrackedPurchase, setHasTrackedPurchase] = useState(false)
+  const [userAuthMethod, setUserAuthMethod] = useState<string>('email')
   const hasCalledApi = useRef(false) // Prevent double API calls
 
   useEffect(() => {
@@ -31,6 +32,8 @@ function AppSuccessInner() {
         const sessionId = searchParams.get('session')
         const userDataParam = searchParams.get('userData')
         const discountCode = searchParams.get('discountCode')
+        const authMethodParam = searchParams.get('authMethod') || 'email'
+        const appleFirebaseUid = searchParams.get('appleFirebaseUid')
         // StreamPay IDs for subscription management
         const streampayConsumerId = searchParams.get('streampayConsumerId')
         const streampayProductId = searchParams.get('streampayProductId')
@@ -52,6 +55,8 @@ function AppSuccessInner() {
               email: emailParam,
               plan,
               amount,
+              authMethod: authMethodParam,
+              appleFirebaseUid: authMethodParam === 'apple' ? appleFirebaseUid : undefined,
               userData: userDataParam ? decodeURIComponent(userDataParam) : null,
               discountCode,
               streampayConsumerId,
@@ -64,6 +69,7 @@ function AppSuccessInner() {
 
           if (data.success) {
             setEmail(emailParam)
+            setUserAuthMethod(data.authMethod || authMethodParam || 'email')
             setStatus('success')
             
             // Track purchase with Meta Pixel
@@ -212,38 +218,73 @@ function AppSuccessInner() {
         <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-right mb-6">
           <h3 className="font-semibold mb-4 text-center">خطوات تسجيل الدخول:</h3>
           
-          <div className="space-y-4">
-            <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 font-bold flex-shrink-0">
-                1
+          {userAuthMethod === 'apple' ? (
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 font-bold flex-shrink-0">
+                  1
+                </div>
+                <div>
+                  <p className="font-medium">حمّل التطبيق</p>
+                  <p className="text-sm text-neutral-400">من App Store أو Google Play</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium">حمّل التطبيق</p>
-                <p className="text-sm text-neutral-400">من App Store أو Google Play</p>
-              </div>
-            </div>
 
-            <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 font-bold flex-shrink-0">
-                2
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 font-bold flex-shrink-0">
+                  2
+                </div>
+                <div>
+                  <p className="font-medium">افتح التطبيق</p>
+                  <p className="text-sm text-neutral-400">اضغط على &quot;متابعة مع Apple&quot;</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium">تحقق من بريدك</p>
-                <p className="text-sm text-neutral-400">أرسلنا كلمة المرور المؤقتة إلى:</p>
-                <p className="text-sm text-green-500 mt-1" dir="ltr">{email}</p>
-              </div>
-            </div>
 
-            <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 font-bold flex-shrink-0">
-                3
-              </div>
-              <div>
-                <p className="font-medium">سجّل دخولك</p>
-                <p className="text-sm text-neutral-400">استخدم البريد وكلمة المرور المؤقتة</p>
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 font-bold flex-shrink-0">
+                  3
+                </div>
+                <div>
+                  <p className="font-medium">سجّل دخولك بحساب Apple</p>
+                  <p className="text-sm text-neutral-400">استخدم نفس حساب Apple الذي سجلت به</p>
+                  <p className="text-sm text-green-500 mt-1" dir="ltr">{email}</p>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 font-bold flex-shrink-0">
+                  1
+                </div>
+                <div>
+                  <p className="font-medium">حمّل التطبيق</p>
+                  <p className="text-sm text-neutral-400">من App Store أو Google Play</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 font-bold flex-shrink-0">
+                  2
+                </div>
+                <div>
+                  <p className="font-medium">تحقق من بريدك</p>
+                  <p className="text-sm text-neutral-400">أرسلنا كلمة المرور المؤقتة إلى:</p>
+                  <p className="text-sm text-green-500 mt-1" dir="ltr">{email}</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 font-bold flex-shrink-0">
+                  3
+                </div>
+                <div>
+                  <p className="font-medium">سجّل دخولك</p>
+                  <p className="text-sm text-neutral-400">استخدم البريد وكلمة المرور المؤقتة</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* App Store Buttons */}

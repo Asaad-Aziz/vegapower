@@ -29,6 +29,8 @@ export async function POST(request: NextRequest) {
       amount, 
       userData, 
       discountCode,
+      authMethod,             // 'apple' | 'email' - how user signed up
+      appleFirebaseUid,       // Firebase UID from Apple Sign-In (if authMethod === 'apple')
       streampayConsumerId,    // StreamPay consumer ID for subscription management
       streampayProductId,     // StreamPay product ID from dashboard
       // Note: subscriptionId is created automatically by StreamPay when payment succeeds
@@ -40,6 +42,8 @@ export async function POST(request: NextRequest) {
       email, 
       plan, 
       amount,
+      authMethod,
+      appleFirebaseUid,
       streampayConsumerId,
       streampayProductId,
     })
@@ -73,8 +77,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Generate temporary password
-    const tempPassword = generatePassword()
+    // For Apple Sign-In users, we don't need a temp password
+    const isAppleSignIn = authMethod === 'apple' && appleFirebaseUid
+    const tempPassword = isAppleSignIn ? '' : generatePassword()
 
     // Calculate subscription expiration
     const now = new Date()
@@ -99,15 +104,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create Firebase user
-    console.log('Creating Firebase user for:', email)
-    // Pass true to update password if user exists (since we're sending them the email with this password)
-    const firebaseUid = await createFirebaseUser(email, tempPassword, true)
+    // Create Firebase user (or use existing Apple Sign-In user)
+    let firebaseUid: string | null = null
 
-    if (!firebaseUid) {
-      console.error('Failed to create Firebase user')
+    if (isAppleSignIn) {
+      // Apple Sign-In: user already exists in Firebase Auth via Apple provider
+      // Use the UID from the client-side Apple Sign-In
+      firebaseUid = appleFirebaseUid
+      console.log('Using existing Apple Sign-In Firebase user:', firebaseUid)
     } else {
-      console.log('Firebase user created:', firebaseUid)
+      // Email sign-up: create email/password account
+      console.log('Creating Firebase user for:', email)
+      // Pass true to update password if user exists (since we're sending them the email with this password)
+      firebaseUid = await createFirebaseUser(email, tempPassword, true)
+
+      if (!firebaseUid) {
+        console.error('Failed to create Firebase user')
+      } else {
+        console.log('Firebase user created:', firebaseUid)
+      }
     }
 
     // Prepare Firebase user data
@@ -169,6 +184,7 @@ export async function POST(request: NextRequest) {
       onboardingCompleted: true,
       hasEverSubscribed: true,
       email: email,
+      authMethod: authMethod || 'email',
       createdAt: now,
       lastUpdated: now,
     }
@@ -203,10 +219,72 @@ export async function POST(request: NextRequest) {
       console.error('Failed to store subscription:', insertError)
     }
 
-    // Send email with temporary password
+    // Send email
     const resendApiKey = process.env.RESEND_API_KEY
     if (resendApiKey && firebaseUid) {
       try {
+        // Different email content based on auth method
+        const emailSubject = isAppleSignIn
+          ? 'مرحباً بك في Vega Power - تم تفعيل اشتراكك 🎉'
+          : 'مرحباً بك في Vega Power - بيانات تسجيل الدخول 🎉'
+
+        const loginInstructions = isAppleSignIn
+          ? `
+            <div style="background: #fff; padding: 25px; border-radius: 12px; margin-bottom: 20px;">
+              <h2 style="color: #333; margin: 0 0 20px 0; font-size: 18px;">طريقة تسجيل الدخول</h2>
+              <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; background: #000; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                  <span style="color: #fff; font-size: 20px;">🍎</span>
+                </div>
+                <div>
+                  <p style="margin: 0; color: #333; font-weight: bold;">تسجيل الدخول عبر Apple</p>
+                  <p style="margin: 4px 0 0 0; color: #666; font-size: 13px;">اضغط "متابعة مع Apple" في التطبيق</p>
+                </div>
+              </div>
+            </div>
+
+            <div style="background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+              <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">خطوات تسجيل الدخول:</h3>
+              <ol style="margin: 0; padding: 0 20px; color: #666; line-height: 2;">
+                <li>حمّل تطبيق Vega Power من App Store أو Google Play</li>
+                <li>افتح التطبيق واضغط "تسجيل الدخول"</li>
+                <li>اضغط "متابعة مع Apple"</li>
+                <li>سجّل دخولك بنفس حساب Apple الذي استخدمته للدفع</li>
+              </ol>
+            </div>
+          `
+          : `
+            <div style="background: #fff; padding: 25px; border-radius: 12px; margin-bottom: 20px;">
+              <h2 style="color: #333; margin: 0 0 20px 0; font-size: 18px;">بيانات تسجيل الدخول</h2>
+              
+              <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">البريد الإلكتروني</p>
+                <p style="margin: 0; color: #10b981; font-size: 16px; font-weight: bold;" dir="ltr">${email}</p>
+              </div>
+              
+              <div style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+                <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">كلمة المرور المؤقتة</p>
+                <p style="margin: 0; color: #10b981; font-size: 24px; font-weight: bold; font-family: monospace; letter-spacing: 2px;" dir="ltr">${tempPassword}</p>
+              </div>
+            </div>
+
+            <div style="background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+              <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">خطوات تسجيل الدخول:</h3>
+              <ol style="margin: 0; padding: 0 20px; color: #666; line-height: 2;">
+                <li>حمّل تطبيق Vega Power من App Store أو Google Play</li>
+                <li>افتح التطبيق واضغط "تسجيل الدخول"</li>
+                <li>أدخل البريد وكلمة المرور المؤقتة أعلاه</li>
+                <li>غيّر كلمة المرور من الإعدادات (اختياري)</li>
+              </ol>
+            </div>
+
+            <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+              <p style="margin: 0; color: #92400e; font-size: 13px;">
+                ⚠️ ننصحك بتغيير كلمة المرور بعد تسجيل الدخول الأول من إعدادات التطبيق للحفاظ على أمان حسابك.
+              </p>
+            </div>
+          `
+
         const emailResponse = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
@@ -216,7 +294,7 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({
             from: 'Vega Power <noreply@vegapowerstore.com>',
             to: email,
-            subject: 'مرحباً بك في Vega Power - بيانات تسجيل الدخول 🎉',
+            subject: emailSubject,
             html: `
               <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa;">
                 <div style="background: linear-gradient(135deg, #0D1A33, #1A2640); padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 20px;">
@@ -225,19 +303,7 @@ export async function POST(request: NextRequest) {
                   <p style="color: rgba(255,255,255,0.7); margin: 10px 0 0 0;">تم تفعيل اشتراكك بنجاح</p>
                 </div>
                 
-                <div style="background: #fff; padding: 25px; border-radius: 12px; margin-bottom: 20px;">
-                  <h2 style="color: #333; margin: 0 0 20px 0; font-size: 18px;">بيانات تسجيل الدخول</h2>
-                  
-                  <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">البريد الإلكتروني</p>
-                    <p style="margin: 0; color: #10b981; font-size: 16px; font-weight: bold;" dir="ltr">${email}</p>
-                  </div>
-                  
-                  <div style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
-                    <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;">كلمة المرور المؤقتة</p>
-                    <p style="margin: 0; color: #10b981; font-size: 24px; font-weight: bold; font-family: monospace; letter-spacing: 2px;" dir="ltr">${tempPassword}</p>
-                  </div>
-                </div>
+                ${loginInstructions}
 
                 <div style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
                   <h3 style="margin: 0 0 15px 0; font-size: 16px;">خطتك الشخصية: ${firebaseUserData.programName}</h3>
@@ -256,26 +322,10 @@ export async function POST(request: NextRequest) {
                     </div>
                   </div>
                 </div>
-
-                <div style="background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                  <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">خطوات تسجيل الدخول:</h3>
-                  <ol style="margin: 0; padding: 0 20px; color: #666; line-height: 2;">
-                    <li>حمّل تطبيق Vega Power من App Store أو Google Play</li>
-                    <li>افتح التطبيق واضغط "تسجيل الدخول"</li>
-                    <li>أدخل البريد وكلمة المرور المؤقتة أعلاه</li>
-                    <li>غيّر كلمة المرور من الإعدادات (اختياري)</li>
-                  </ol>
-                </div>
-
-                <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                  <p style="margin: 0; color: #92400e; font-size: 13px;">
-                    ⚠️ ننصحك بتغيير كلمة المرور بعد تسجيل الدخول الأول من إعدادات التطبيق للحفاظ على أمان حسابك.
-                  </p>
-                </div>
                 
                 <div style="text-align: center; padding: 20px 0;">
                   <p style="color: #999; font-size: 12px; margin: 0;">
-                    لم تستلم الإيميل؟ تحقق من مجلد السبام أو تواصل معنا<br>
+                    تحتاج مساعدة؟ تواصل معنا<br>
                     © Vega Power - جميع الحقوق محفوظة
                   </p>
                 </div>
@@ -306,6 +356,7 @@ export async function POST(request: NextRequest) {
       email,
       plan,
       amount: parseFloat(amount) || 155,
+      authMethod: authMethod || 'email',
       firebaseUserCreated: !!firebaseUid,
     })
 

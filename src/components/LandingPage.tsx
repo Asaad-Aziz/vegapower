@@ -87,25 +87,25 @@ export default function LandingPage({
               صمّم برنامجك، احسب سعراتك، وانضم لمجتمع يتابع معك.
             </p>
           </div>
-          {/* Swipeable app screens */}
+          {/* App screens */}
           <div
             role="region"
             aria-label="لقطات التطبيق"
-            className="flex gap-4 overflow-x-auto overflow-y-hidden pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 snap-x snap-proximity overscroll-x-contain"
+            className="flex justify-center gap-6 sm:gap-8 overflow-x-auto overflow-y-hidden pb-3 snap-x snap-proximity overscroll-x-contain"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             {['/4.png', '/6.png', '/5.png'].map((src) => (
               <div
                 key={src}
-                className="flex-shrink-0 w-[65vw] sm:w-[50vw] md:w-[calc(33.333%-0.75rem)] md:max-w-[240px] snap-start"
+                className="flex-shrink-0 w-[50vw] sm:w-[35vw] md:w-[200px] snap-start"
               >
                 <div className="rounded-xl overflow-hidden border border-primary-foreground/20 bg-primary-foreground/5 shadow-md aspect-[9/19]">
                   <Image
                     src={src}
                     alt=""
-                    width={240}
-                    height={507}
-                    sizes="(max-width: 768px) 65vw, 240px"
+                    width={200}
+                    height={422}
+                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 35vw, 200px"
                     loading="lazy"
                     className="w-full h-full object-cover"
                   />
