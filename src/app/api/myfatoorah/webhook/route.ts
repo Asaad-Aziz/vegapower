@@ -46,21 +46,44 @@ export async function POST(request: NextRequest) {
     // Get full payment details from MyFatoorah API
     const paymentDetails = paymentId ? await getPaymentStatus(paymentId) : null
 
-    // Get product details
-    const { data: product } = await supabase.from('product').select('*').single()
-
-    if (!product) {
-      console.error(`[MyFatoorah Webhook ${timestamp}] Product not found`)
-      return NextResponse.json({ error: 'Product not found' }, { status: 500 })
-    }
-
     const buyerEmail =
       paymentDetails?.Data?.CustomerEmail ||
       body?.Data?.CustomerEmail ||
       'unknown@email.com'
+
+    // Try to find product by CustomerReference (which is the product UUID passed as ExternalIdentifier)
+    const customerReference = body?.Data?.CustomerReference
+    let product = null
+
+    if (customerReference) {
+      const { data } = await supabase
+        .from('product')
+        .select('*')
+        .eq('id', customerReference)
+        .single()
+      product = data
+    }
+
+    // Fallback: try to get the first product if no match
+    if (!product) {
+      const { data } = await supabase
+        .from('product')
+        .select('*')
+        .limit(1)
+        .single()
+      product = data
+    }
+
+    if (!product) {
+      console.error(`[MyFatoorah Webhook ${timestamp}] Product not found for CustomerReference: ${customerReference}`)
+      return NextResponse.json({ error: 'Product not found' }, { status: 500 })
+    }
+
+    console.log(`[MyFatoorah Webhook ${timestamp}] Found product: ${product.id} - ${product.title}`)
+
     const paidAmount =
       paymentDetails?.Data?.InvoiceValue ||
-      body?.Data?.InvoiceValue ||
+      parseFloat(body?.Data?.InvoiceValueInBaseCurrency) ||
       product.price_sar
 
     // Create order

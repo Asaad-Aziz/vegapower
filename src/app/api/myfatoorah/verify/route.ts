@@ -55,11 +55,24 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (existingOrder) {
-      // Already processed
-      const { data: product } = await supabase
-        .from('product')
-        .select('id, title, delivery_url, price_sar')
-        .single()
+      // Already processed - try to find product by ID or fallback
+      let product = null
+      if (productId) {
+        const { data } = await supabase
+          .from('product')
+          .select('id, title, delivery_url, price_sar')
+          .eq('id', productId)
+          .single()
+        product = data
+      }
+      if (!product) {
+        const { data } = await supabase
+          .from('product')
+          .select('id, title, delivery_url, price_sar')
+          .limit(1)
+          .single()
+        product = data
+      }
 
       return NextResponse.json({
         success: existingOrder.status === 'paid',
@@ -72,13 +85,26 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Get product details
-    const { data: product, error: productError } = await supabase
-      .from('product')
-      .select('*')
-      .single()
+    // Get product details by ID or fallback
+    let product = null
+    if (productId) {
+      const { data } = await supabase
+        .from('product')
+        .select('*')
+        .eq('id', productId)
+        .single()
+      product = data
+    }
+    if (!product) {
+      const { data } = await supabase
+        .from('product')
+        .select('*')
+        .limit(1)
+        .single()
+      product = data
+    }
 
-    if (productError || !product) {
+    if (!product) {
       return NextResponse.json(
         { success: false, error: 'Product not found' },
         { status: 500 },
