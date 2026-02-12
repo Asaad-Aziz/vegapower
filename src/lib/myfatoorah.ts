@@ -1,7 +1,7 @@
 // MyFatoorah API utilities
 import { createDecipheriv } from 'crypto'
 
-const getApiUrl = () => process.env.MYFATOORAH_API_URL || 'https://api-sa.myfatoorah.com'
+const getApiUrl = () => (process.env.MYFATOORAH_API_URL || 'https://api-sa.myfatoorah.com').replace(/\/+$/, '')
 const getApiKey = () => process.env.MYFATOORAH_API_KEY || ''
 
 // ----- Types -----
@@ -106,13 +106,20 @@ export async function createPaymentSession(
       }),
     })
 
+    const responseText = await response.text()
+
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error('MyFatoorah session creation failed:', response.status, errorText)
-      return null
+      console.error('MyFatoorah session creation failed:', response.status, responseText)
+      // Try to parse error response for a better message
+      try {
+        const errorJson = JSON.parse(responseText)
+        return errorJson as MyFatoorahSessionResponse
+      } catch {
+        return null
+      }
     }
 
-    return await response.json()
+    return JSON.parse(responseText) as MyFatoorahSessionResponse
   } catch (error) {
     console.error('Failed to create MyFatoorah session:', error)
     return null
