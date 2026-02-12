@@ -47,19 +47,19 @@ export default function AnalyticsPanel({ events }: AnalyticsPanelProps) {
       {/* Overview Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <div className="glass-card p-6">
-          <p className="text-sm text-muted mb-1">Page Views</p>
+          <p className="text-sm text-neutral-500 mb-1">Page Views</p>
           <p className="text-3xl font-bold">{pageViews}</p>
         </div>
         <div className="glass-card p-6">
-          <p className="text-sm text-muted mb-1">Buy Clicks</p>
+          <p className="text-sm text-neutral-500 mb-1">Buy Clicks</p>
           <p className="text-3xl font-bold">{buyClicks}</p>
         </div>
         <div className="glass-card p-6">
-          <p className="text-sm text-muted mb-1">Purchases</p>
+          <p className="text-sm text-neutral-500 mb-1">Purchases</p>
           <p className="text-3xl font-bold">{purchases}</p>
         </div>
         <div className="glass-card p-6">
-          <p className="text-sm text-muted mb-1">Conversion Rate</p>
+          <p className="text-sm text-neutral-500 mb-1">Conversion Rate</p>
           <p className="text-3xl font-bold">{conversionRate}%</p>
         </div>
       </div>
@@ -71,7 +71,7 @@ export default function AnalyticsPanel({ events }: AnalyticsPanelProps) {
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Page Views</span>
-              <span className="text-sm text-muted">{pageViews}</span>
+              <span className="text-sm text-neutral-500">{pageViews}</span>
             </div>
             <div className="h-3 bg-neutral-100 rounded-full overflow-hidden">
               <div className="h-full bg-neutral-400 rounded-full" style={{ width: '100%' }} />
@@ -80,7 +80,7 @@ export default function AnalyticsPanel({ events }: AnalyticsPanelProps) {
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Buy Clicks</span>
-              <span className="text-sm text-muted">
+              <span className="text-sm text-neutral-500">
                 {buyClicks} ({pageViews > 0 ? ((buyClicks / pageViews) * 100).toFixed(1) : 0}%)
               </span>
             </div>
@@ -94,7 +94,7 @@ export default function AnalyticsPanel({ events }: AnalyticsPanelProps) {
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Purchases</span>
-              <span className="text-sm text-muted">
+              <span className="text-sm text-neutral-500">
                 {purchases} ({clickToPurchase}% of clicks)
               </span>
             </div>
@@ -114,16 +114,16 @@ export default function AnalyticsPanel({ events }: AnalyticsPanelProps) {
         <div className="space-y-3">
           {Object.entries(dailyStats).map(([date, stats]) => (
             <div key={date} className="flex items-center gap-4">
-              <span className="text-sm text-muted w-16">{date}</span>
+              <span className="text-sm text-neutral-500 w-16">{date}</span>
               <div className="flex-1 flex items-center gap-2">
                 <div
                   className="h-6 bg-neutral-200 rounded"
                   style={{ width: `${(stats.views / maxViews) * 100}%`, minWidth: stats.views > 0 ? '4px' : '0' }}
                   title={`${stats.views} views`}
                 />
-                <span className="text-xs text-muted">{stats.views} views</span>
+                <span className="text-xs text-neutral-500">{stats.views} views</span>
               </div>
-              <div className="flex gap-4 text-xs text-muted">
+              <div className="flex gap-4 text-xs text-neutral-500">
                 <span>{stats.clicks} clicks</span>
                 <span className="font-medium text-foreground">{stats.purchases} sales</span>
               </div>
@@ -133,7 +133,7 @@ export default function AnalyticsPanel({ events }: AnalyticsPanelProps) {
       </div>
 
       {/* Info */}
-      <div className="text-center text-sm text-muted">
+      <div className="text-center text-sm text-neutral-500">
         <p>Analytics are tracked automatically when visitors view your store.</p>
       </div>
     </div>

@@ -213,7 +213,7 @@ export default function ProductEditor({
               min="0"
               placeholder="0"
             />
-            <p className="text-xs text-muted mt-1">يظهر للزوار كإثبات اجتماعي</p>
+            <p className="text-xs text-neutral-500 mt-1">يظهر للزوار كإثبات اجتماعي</p>
           </div>
         </div>
       </section>
@@ -230,7 +230,7 @@ export default function ProductEditor({
             className="input-field"
             placeholder="https://drive.google.com/..."
           />
-          <p className="text-xs text-muted mt-1">الرابط الذي سيتم إرساله للعميل بعد الشراء</p>
+          <p className="text-xs text-neutral-500 mt-1">الرابط الذي سيتم إرساله للعميل بعد الشراء</p>
         </div>
       </section>
 

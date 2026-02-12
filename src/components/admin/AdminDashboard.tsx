@@ -69,13 +69,13 @@ export default function AdminDashboard({ products, storeSettings, orders, analyt
             <a
               href="/"
               target="_blank"
-              className="text-sm text-muted hover:text-foreground transition-colors"
+              className="text-sm text-neutral-500 hover:text-foreground transition-colors"
             >
               View Store →
             </a>
             <button
               onClick={handleLogout}
-              className="text-sm text-muted hover:text-foreground transition-colors"
+              className="text-sm text-neutral-500 hover:text-foreground transition-colors"
             >
               Logout
             </button>
@@ -98,7 +98,7 @@ export default function AdminDashboard({ products, storeSettings, orders, analyt
                 className={`py-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.id
                     ? 'border-neutral-900 text-neutral-900'
-                    : 'border-transparent text-muted hover:text-neutral-600'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-600'
                 }`}
               >
                 {tab.label}
@@ -123,7 +123,7 @@ export default function AdminDashboard({ products, storeSettings, orders, analyt
             {/* Products List */}
             {products.length === 0 ? (
               <div className="glass-card p-12 text-center">
-                <p className="text-muted mb-4">No products yet. Create your first product!</p>
+                <p className="text-neutral-500 mb-4">No products yet. Create your first product!</p>
                 <button onClick={handleCreateNew} className="btn-primary">
                   + Add New Product
                 </button>
@@ -145,7 +145,7 @@ export default function AdminDashboard({ products, storeSettings, orders, analyt
                       )}
                       <div>
                         <h3 className="font-medium">{product.title}</h3>
-                        <div className="flex items-center gap-3 text-sm text-muted">
+                        <div className="flex items-center gap-3 text-sm text-neutral-500">
                           <span>{product.price_sar} ر.س</span>
                           {product.goal && (
                             <span className="px-2 py-0.5 bg-neutral-100 rounded-full text-xs">
@@ -177,7 +177,7 @@ export default function AdminDashboard({ products, storeSettings, orders, analyt
           <div>
             <button
               onClick={handleBack}
-              className="mb-4 text-sm text-muted hover:text-foreground transition-colors flex items-center gap-1"
+              className="mb-4 text-sm text-neutral-500 hover:text-foreground transition-colors flex items-center gap-1"
             >
               ← Back to Products
             </button>

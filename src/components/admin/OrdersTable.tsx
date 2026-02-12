@@ -44,15 +44,15 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
         <div className="glass-card p-6">
-          <p className="text-sm text-muted mb-1">Total Orders</p>
+          <p className="text-sm text-neutral-500 mb-1">Total Orders</p>
           <p className="text-3xl font-bold">{orders.length}</p>
         </div>
         <div className="glass-card p-6">
-          <p className="text-sm text-muted mb-1">Successful Payments</p>
+          <p className="text-sm text-neutral-500 mb-1">Successful Payments</p>
           <p className="text-3xl font-bold">{orders.filter((o) => o.status === 'paid').length}</p>
         </div>
         <div className="glass-card p-6">
-          <p className="text-sm text-muted mb-1">Total Revenue</p>
+          <p className="text-sm text-neutral-500 mb-1">Total Revenue</p>
           <p className="text-3xl font-bold">{totalRevenue.toFixed(2)} SAR</p>
         </div>
       </div>
@@ -85,16 +85,16 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
           <table className="w-full">
             <thead>
               <tr className="bg-neutral-50 border-b border-neutral-100">
-                <th className="text-left px-6 py-3 text-sm font-medium text-muted">Email</th>
-                <th className="text-left px-6 py-3 text-sm font-medium text-muted">Amount</th>
-                <th className="text-left px-6 py-3 text-sm font-medium text-muted">Status</th>
-                <th className="text-left px-6 py-3 text-sm font-medium text-muted">Date</th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-neutral-500">Email</th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-neutral-500">Amount</th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-neutral-500">Status</th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-neutral-500">Date</th>
               </tr>
             </thead>
             <tbody>
               {filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-muted">
+                  <td colSpan={4} className="px-6 py-12 text-center text-neutral-500">
                     No orders found
                   </td>
                 </tr>
@@ -116,7 +116,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                         {order.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-muted">
+                    <td className="px-6 py-4 text-sm text-neutral-500">
                       {new Date(order.created_at).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',

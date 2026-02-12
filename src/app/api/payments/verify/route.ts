@@ -123,6 +123,12 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  // Increment times_bought on the product
+  await supabase
+    .from('product')
+    .update({ times_bought: (product.times_bought || 0) + 1 })
+    .eq('id', product.id)
+
   // Send confirmation email (METHOD C - always on)
   if (buyerEmail !== 'unknown@email.com') {
     await sendPurchaseEmail({

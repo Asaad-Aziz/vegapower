@@ -146,6 +146,12 @@ export async function POST(request: NextRequest) {
           }
         }
 
+        // Increment times_bought on the product
+        await supabase
+          .from('product')
+          .update({ times_bought: (product.times_bought || 0) + 1 })
+          .eq('id', product.id)
+
         // Send confirmation email
         if (buyerEmail !== 'unknown@email.com') {
           await sendPurchaseEmail({

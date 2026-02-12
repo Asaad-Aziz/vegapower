@@ -110,7 +110,7 @@ export default function StoreSettingsEditor({ settings }: StoreSettingsEditorPro
       {/* Profile Section */}
       <section className="glass-card p-6">
         <h2 className="text-lg font-semibold mb-4">Store Profile</h2>
-        <p className="text-sm text-muted mb-6">
+        <p className="text-sm text-neutral-500 mb-6">
           This information is shared across all products in your store.
         </p>
         <div className="space-y-6">
@@ -151,7 +151,7 @@ export default function StoreSettingsEditor({ settings }: StoreSettingsEditorPro
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-semibold">Testimonials</h2>
-            <p className="text-sm text-muted">Customer reviews shown on all product pages</p>
+            <p className="text-sm text-neutral-500">Customer reviews shown on all product pages</p>
           </div>
           <button onClick={addTestimonial} className="btn-secondary text-sm">
             + Add
@@ -161,7 +161,7 @@ export default function StoreSettingsEditor({ settings }: StoreSettingsEditorPro
           {testimonials.map((testimonial, index) => (
             <div key={testimonial.id} className="p-4 bg-neutral-50 rounded-lg">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-muted">Testimonial {index + 1}</span>
+                <span className="text-sm font-medium text-neutral-500">Testimonial {index + 1}</span>
                 <button
                   onClick={() => removeTestimonial(testimonial.id)}
                   className="text-sm text-red-600 hover:text-red-700"
@@ -194,7 +194,7 @@ export default function StoreSettingsEditor({ settings }: StoreSettingsEditorPro
               />
             </div>
           ))}
-          {testimonials.length === 0 && <p className="text-muted text-sm">No testimonials yet.</p>}
+          {testimonials.length === 0 && <p className="text-neutral-500 text-sm">No testimonials yet.</p>}
         </div>
       </section>
 
@@ -203,7 +203,7 @@ export default function StoreSettingsEditor({ settings }: StoreSettingsEditorPro
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-semibold">FAQ</h2>
-            <p className="text-sm text-muted">Frequently asked questions for all products</p>
+            <p className="text-sm text-neutral-500">Frequently asked questions for all products</p>
           </div>
           <button onClick={addFaq} className="btn-secondary text-sm">
             + Add
@@ -213,7 +213,7 @@ export default function StoreSettingsEditor({ settings }: StoreSettingsEditorPro
           {faqs.map((faq, index) => (
             <div key={faq.id} className="p-4 bg-neutral-50 rounded-lg">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-muted">FAQ {index + 1}</span>
+                <span className="text-sm font-medium text-neutral-500">FAQ {index + 1}</span>
                 <button
                   onClick={() => removeFaq(faq.id)}
                   className="text-sm text-red-600 hover:text-red-700"
@@ -237,7 +237,7 @@ export default function StoreSettingsEditor({ settings }: StoreSettingsEditorPro
               />
             </div>
           ))}
-          {faqs.length === 0 && <p className="text-muted text-sm">No FAQ items yet.</p>}
+          {faqs.length === 0 && <p className="text-neutral-500 text-sm">No FAQ items yet.</p>}
         </div>
       </section>
 
@@ -246,7 +246,7 @@ export default function StoreSettingsEditor({ settings }: StoreSettingsEditorPro
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-semibold">Social Links</h2>
-            <p className="text-sm text-muted">Your social media profiles</p>
+            <p className="text-sm text-neutral-500">Your social media profiles</p>
           </div>
           <button onClick={addSocialLink} className="btn-secondary text-sm">
             + Add
@@ -256,7 +256,7 @@ export default function StoreSettingsEditor({ settings }: StoreSettingsEditorPro
           {socialLinks.map((link, index) => (
             <div key={link.id} className="p-4 bg-neutral-50 rounded-lg">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-muted">Link {index + 1}</span>
+                <span className="text-sm font-medium text-neutral-500">Link {index + 1}</span>
                 <button
                   onClick={() => removeSocialLink(link.id)}
                   className="text-sm text-red-600 hover:text-red-700"
@@ -287,7 +287,7 @@ export default function StoreSettingsEditor({ settings }: StoreSettingsEditorPro
               </div>
             </div>
           ))}
-          {socialLinks.length === 0 && <p className="text-muted text-sm">No social links yet.</p>}
+          {socialLinks.length === 0 && <p className="text-neutral-500 text-sm">No social links yet.</p>}
         </div>
       </section>
 

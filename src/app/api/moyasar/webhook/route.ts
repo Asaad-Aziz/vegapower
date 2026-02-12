@@ -61,6 +61,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
     }
 
+    // Increment times_bought on the product (only if order was newly created)
+    if (!orderError) {
+      await supabase
+        .from('product')
+        .update({ times_bought: (product.times_bought || 0) + 1 })
+        .eq('id', product.id)
+    }
+
     // Send email if we have a valid email
     if (buyerEmail !== 'unknown@email.com') {
       await sendPurchaseEmail({
