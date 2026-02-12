@@ -29,7 +29,7 @@ export async function sendPurchaseEmail({
 }: SendPurchaseEmailParams): Promise<boolean> {
   try {
     const resend = getResend()
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'Vega Power <onboarding@resend.dev>'
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'Vega Power <noreply@vegapowerstore.com>'
     
     console.log('Sending email to:', to, 'from:', fromEmail)
     
