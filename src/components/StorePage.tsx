@@ -33,6 +33,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
   const [mfSessionLoading, setMfSessionLoading] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(null)
   const [tamaraLoading, setTamaraLoading] = useState(false)
+  const [freeOrderLoading, setFreeOrderLoading] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [viewersCount] = useState(() => Math.floor(Math.random() * 15) + 8) // 8-22 viewers
   const [recentBuyers] = useState(() => Math.floor(Math.random() * 20) + 12) // 12-31 recent buyers
@@ -139,9 +140,64 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
     }
   }
 
+  const handleFreeOrder = async () => {
+    setFreeOrderLoading(true)
+    try {
+      const response = await fetch('/api/orders/free', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          productId: product.id,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Track purchase conversion
+        fbq.purchase({
+          content_name: data.productTitle || product.title,
+          content_ids: [product.id],
+          content_type: 'product',
+          value: 0,
+          currency: 'SAR',
+          num_items: 1,
+        })
+
+        // Store result for success page (same flow as MyFatoorah)
+        sessionStorage.setItem(
+          'mf_payment_result',
+          JSON.stringify({
+            success: true,
+            productTitle: data.productTitle,
+            deliveryUrl: data.deliveryUrl,
+            productId: data.productId,
+            amount: 0,
+            paymentId: data.paymentId,
+          }),
+        )
+        window.location.href = '/success?provider=myfatoorah'
+      } else {
+        console.error('Free order failed:', data.error)
+        alert('حدث خطأ. يرجى المحاولة مرة أخرى.')
+        setFreeOrderLoading(false)
+      }
+    } catch (error) {
+      console.error('Free order error:', error)
+      alert('حدث خطأ. يرجى المحاولة مرة أخرى.')
+      setFreeOrderLoading(false)
+    }
+  }
+
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (validateEmail(email)) {
+      // For free products, skip payment and process directly
+      if (finalPrice === 0) {
+        handleFreeOrder()
+        return
+      }
       // Meta Pixel: AddPaymentInfo
       fbq.addPaymentInfo({
         content_ids: [product.id],
@@ -372,13 +428,19 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
             {/* Price */}
             <div className="mb-4">
               <div className="flex items-baseline gap-3 flex-wrap">
-                <span className="text-3xl font-bold text-primary">
-                  {product.price_sar.toFixed(0)} ر.س
-                </span>
-                {product.before_price_sar && product.before_price_sar > product.price_sar && (
-                  <span className="text-xl text-muted-foreground line-through">
-                    {product.before_price_sar.toFixed(0)} ر.س
-                  </span>
+                {product.price_sar === 0 ? (
+                  <span className="text-3xl font-bold text-green-600">مجاني</span>
+                ) : (
+                  <>
+                    <span className="text-3xl font-bold text-primary">
+                      {product.price_sar.toFixed(0)} ر.س
+                    </span>
+                    {product.before_price_sar && product.before_price_sar > product.price_sar && (
+                      <span className="text-xl text-muted-foreground line-through">
+                        {product.before_price_sar.toFixed(0)} ر.س
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -388,10 +450,11 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
               onClick={handleBuyClick}
               className="btn-primary w-full text-center text-lg py-4"
             >
-              احصل عليه الآن
+              {product.price_sar === 0 ? 'احصل عليه مجاناً' : 'احصل عليه الآن'}
             </button>
             
-            {/* Payment Methods */}
+            {/* Payment Methods - hide for free products */}
+            {product.price_sar > 0 && (
             <div className="flex items-center justify-center gap-2 mt-3">
               {/* Tamara */}
               <div className="h-4 w-auto">
@@ -424,6 +487,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                 <span className="text-white text-[8px] font-bold">mada</span>
               </div>
             </div>
+            )}
             
             {/* Scarcity Text */}
             <p className="text-center text-xs text-muted-foreground mt-3">
@@ -603,17 +667,21 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                 <div className="bg-neutral-50 rounded-xl p-4 mb-4">
                   <div className="flex justify-between items-center py-2 border-b border-neutral-200">
                     <span className="text-muted-foreground text-sm">{product.title}</span>
-                    <span className={`font-medium ${discountApplied ? 'line-through text-muted-foreground' : ''}`}>
-                      {product.price_sar.toFixed(0)} ر.س
-                    </span>
+                    {product.price_sar === 0 ? (
+                      <span className="font-medium text-green-600">مجاني</span>
+                    ) : (
+                      <span className={`font-medium ${discountApplied ? 'line-through text-muted-foreground' : ''}`}>
+                        {product.price_sar.toFixed(0)} ر.س
+                      </span>
+                    )}
                   </div>
-                  {product.before_price_sar && product.before_price_sar > product.price_sar && (
+                  {product.price_sar > 0 && product.before_price_sar && product.before_price_sar > product.price_sar && (
                     <div className="flex justify-between items-center py-2 border-b border-border text-primary">
                       <span className="text-sm">💰 التوفير</span>
                       <span className="font-medium">-{(product.before_price_sar - product.price_sar).toFixed(0)} ر.س</span>
                     </div>
                   )}
-                  {discountApplied && (
+                  {product.price_sar > 0 && discountApplied && (
                     <div className="flex justify-between items-center py-2 border-b border-border text-primary">
                       <span className="text-sm">🎁 كود الخصم ({discountPercent}%)</span>
                       <span className="font-medium">-{discountAmount.toFixed(0)} ر.س</span>
@@ -621,11 +689,16 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                   )}
                   <div className="flex justify-between items-center pt-2">
                     <span className="font-semibold">الإجمالي</span>
-                    <span className="text-xl font-bold text-primary">{finalPrice.toFixed(0)} ر.س</span>
+                    {finalPrice === 0 ? (
+                      <span className="text-xl font-bold text-green-600">مجاني</span>
+                    ) : (
+                      <span className="text-xl font-bold text-primary">{finalPrice.toFixed(0)} ر.س</span>
+                    )}
                   </div>
                 </div>
 
-                {/* Discount Code */}
+                {/* Discount Code - hide for free products */}
+                {product.price_sar > 0 && (
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-2">كود الخصم</label>
                   <div className="flex gap-2">
@@ -658,6 +731,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                     <p className="text-xs text-primary mt-1">🎉 تم تطبيق الخصم بنجاح!</p>
                   )}
                 </div>
+                )}
 
                 {/* Email Form */}
                 {!showPayment && (
@@ -679,10 +753,19 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                       <button
                         type="submit"
                         className="btn-primary w-full py-4 text-lg relative overflow-hidden group"
-                        disabled={!validateEmail(email)}
+                        disabled={!validateEmail(email) || freeOrderLoading}
                       >
                         <span className="relative z-10 flex items-center justify-center gap-2">
-                          🔒 متابعة للدفع الآمن
+                          {freeOrderLoading ? (
+                            <>
+                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              جاري المعالجة...
+                            </>
+                          ) : finalPrice === 0 ? (
+                            'احصل عليه مجاناً'
+                          ) : (
+                            '🔒 متابعة للدفع الآمن'
+                          )}
                         </span>
                       </button>
                       <p className="text-center text-[10px] text-muted-foreground mt-2">
