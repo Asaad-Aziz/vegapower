@@ -69,13 +69,19 @@ export function ProgramCard({ product }: ProgramCardProps) {
         <CardContent className="pt-0">
           <div className="flex items-center justify-between">
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-bold text-primary">
-                {product.price_sar.toFixed(0)} ر.س
-              </span>
-              {hasDiscount && (
-                <span className="text-sm text-muted-foreground line-through">
-                  {product.before_price_sar!.toFixed(0)} ر.س
-                </span>
+              {product.price_sar === 0 ? (
+                <span className="text-xl font-bold text-green-600">مجاني</span>
+              ) : (
+                <>
+                  <span className="text-xl font-bold text-primary">
+                    {product.price_sar.toFixed(0)} ر.س
+                  </span>
+                  {hasDiscount && (
+                    <span className="text-sm text-muted-foreground line-through">
+                      {product.before_price_sar!.toFixed(0)} ر.س
+                    </span>
+                  )}
+                </>
               )}
             </div>
             <Button variant="ghost" size="sm" className="gap-1 text-primary">

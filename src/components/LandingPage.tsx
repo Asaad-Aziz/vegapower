@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronLeft, ArrowLeft } from 'lucide-react'
+import { ChevronLeft, ArrowLeft, Gift } from 'lucide-react'
 import type { Product, StoreSettings } from '@/types/database'
 import { Button } from '@/components/ui/button'
 import SiteHeader from '@/components/SiteHeader'
@@ -22,12 +22,74 @@ export default function LandingPage({
 }: LandingPageProps) {
   const brandName = storeSettings?.brand_name || products[0]?.brand_name || 'Vega Power'
   const profileImageUrl = storeSettings?.profile_image_url || products[0]?.profile_image_url || null
+  const freeProducts = products.filter((p) => p.price_sar === 0)
+  const paidProducts = products.filter((p) => p.price_sar > 0)
 
   return (
     <div className="min-h-screen bg-background text-foreground pt-20">
       <SiteHeader brandName={brandName} profileImageUrl={profileImageUrl} />
 
       <HeroSection heroImageUrl="/hero1.png" />
+
+      {/* Free Offer Banner */}
+      {freeProducts.length > 0 && (
+        <section className="py-8 sm:py-12">
+          <div className="container mx-auto max-w-5xl px-4">
+            {freeProducts.map((freeProduct) => (
+              <Link key={freeProduct.id} href={`/product/${freeProduct.id}`} className="block group">
+                <div className="relative overflow-hidden rounded-2xl border-2 border-green-500/30 bg-gradient-to-l from-green-50 via-emerald-50/50 to-background shadow-lg transition-all hover:shadow-xl hover:border-green-500/50">
+                  {/* Glow effect */}
+                  <div className="absolute -top-20 -left-20 w-40 h-40 bg-green-400/10 rounded-full blur-3xl" />
+                  <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-emerald-400/10 rounded-full blur-3xl" />
+                  
+                  <div className="relative flex flex-col sm:flex-row items-center gap-4 sm:gap-6 p-5 sm:p-6">
+                    {/* Product Image */}
+                    {freeProduct.product_image_url && (
+                      <div className="flex-shrink-0 w-28 h-28 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-white shadow-md">
+                        <Image
+                          src={freeProduct.product_image_url}
+                          alt={freeProduct.title}
+                          width={128}
+                          height={128}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Content */}
+                    <div className="flex-1 text-center sm:text-right min-w-0">
+                      <div className="inline-flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full mb-2">
+                        <Gift className="size-3.5" />
+                        عرض مجاني
+                      </div>
+                      <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-1.5 line-clamp-1">
+                        {freeProduct.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                        {freeProduct.description.replace(/^#+\s*/m, '').substring(0, 120)}
+                        {freeProduct.description.length > 120 ? '...' : ''}
+                      </p>
+                      {freeProduct.times_bought > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          {freeProduct.times_bought}+ شخص حصل عليه
+                        </p>
+                      )}
+                    </div>
+
+                    {/* CTA */}
+                    <div className="flex-shrink-0">
+                      <div className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl transition-all group-hover:shadow-lg group-hover:shadow-green-600/25 flex items-center gap-2 text-sm sm:text-base">
+                        احصل عليه مجاناً
+                        <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* About Us */}
       <section className="py-14 sm:py-20">
@@ -124,7 +186,7 @@ export default function LandingPage({
         </div>
       </section>
 
-      <ProgramsCarouselSection products={products} />
+      <ProgramsCarouselSection products={paidProducts} />
 
       {/* Footer */}
       <footer className="border-t bg-card/50 py-8">
