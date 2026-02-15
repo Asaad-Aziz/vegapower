@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { initiateCheckout } from '@/lib/meta-pixel'
 import { signInWithApple, checkAppleSignInRedirect } from '@/lib/firebase-client'
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21
 
 interface UserData {
   gender: 'male' | 'female' | ''
@@ -171,6 +171,7 @@ export default function AppOnboarding() {
   const [appleFirebaseUid, setAppleFirebaseUid] = useState('')
   const [appleSignInLoading, setAppleSignInLoading] = useState(false)
   const [appleSignInError, setAppleSignInError] = useState('')
+  const [graphAnimated, setGraphAnimated] = useState(false)
 
   // Handle StreamPay false-negative: payment succeeded but redirected to failure URL
   useEffect(() => {
@@ -232,7 +233,7 @@ export default function AppOnboarding() {
           setAuthMethod('apple')
           setAppleFirebaseUid(result.uid)
           // Go to payment page
-          setStep(20 as Step)
+          setStep(21 as Step)
         }
       } catch (error) {
         console.error('Apple redirect check error:', error)
@@ -272,17 +273,23 @@ export default function AppOnboarding() {
     programName: '',
   })
 
-  const totalSteps = 21
+  const totalSteps = 22
   const progress = (step / (totalSteps - 1)) * 100
 
   const nextStep = () => {
-    if (step < 20) setStep((step + 1) as Step)
+    if (step < 21) setStep((step + 1) as Step)
+  }
+
+  // Delayed advance — lets user see their selection before moving on
+  const selectAndAdvance = (updateFn: () => void) => {
+    updateFn()
+    setTimeout(() => nextStep(), 400)
   }
 
   const prevStep = () => {
-    if (step === 20) {
-      // Skip processing step (19), go back to motivation (18)
-      setStep(18 as Step)
+    if (step === 21) {
+      // Skip processing step (20), go back to graph (19)
+      setStep(19 as Step)
     } else if (step > 0) {
       setStep((step - 1) as Step)
     }
@@ -344,9 +351,9 @@ export default function AppOnboarding() {
     }
   }
 
-  // Calculate all values when reaching step 19 (Processing)
+  // Calculate all values when reaching step 20 (Processing)
   useEffect(() => {
-    if (step === 19) {
+    if (step === 20) {
       const calories = calculateCalories()
       const macros = getMacroPercentages()
       const programName = getProgramName()
@@ -396,6 +403,15 @@ export default function AppOnboarding() {
     }
   }, [step])
 
+  // Trigger graph animation when reaching step 19
+  useEffect(() => {
+    if (step === 19) {
+      setGraphAnimated(false)
+      const timer = setTimeout(() => setGraphAnimated(true), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [step])
+
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
   // Handle Apple Sign-In
@@ -412,7 +428,7 @@ export default function AppOnboarding() {
         setAppleFirebaseUid(result.uid)
         // Auto-advance to payment page after short delay
         setTimeout(() => {
-          setStep(20 as Step)
+          setStep(21 as Step)
         }, 800)
       } else {
         // Apple might hide the email (private relay)
@@ -590,7 +606,7 @@ export default function AppOnboarding() {
       )}
       
       {/* Progress Bar */}
-      {step > 0 && step < 20 && (
+      {step > 0 && step < 21 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
           <div className="w-[200px] h-1.5 bg-vp-beige/50 dark:bg-neutral-700 rounded-full overflow-hidden">
             <div 
@@ -602,7 +618,7 @@ export default function AppOnboarding() {
       )}
 
       {/* Back Button */}
-      {(step > 0 && step < 19 || step === 20) && (
+      {(step > 0 && step < 20 || step === 21) && (
         <button
           onClick={prevStep}
           className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center"
@@ -651,16 +667,20 @@ export default function AppOnboarding() {
               ].map((g) => (
                 <button
                   key={g.id}
-                  onClick={() => {
-                    setUserData({ ...userData, gender: g.id as 'male' | 'female' })
-                    nextStep()
-                  }}
-                  className={`p-6 rounded-2xl text-center transition-all ${
+                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, gender: g.id as 'male' | 'female' }))}
+                  className={`p-6 rounded-2xl text-center transition-all duration-300 relative ${
                     userData.gender === g.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.03]'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
+                  {userData.gender === g.id && (
+                    <div className="absolute top-3 left-3 w-6 h-6 rounded-full bg-vp-navy flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    </div>
+                  )}
                   <span className="text-4xl mb-2 block">{g.emoji}</span>
                   <span className="text-xl font-semibold">{g.label}</span>
                 </button>
@@ -680,18 +700,21 @@ export default function AppOnboarding() {
               {activityLevels.map((level) => (
                 <button
                   key={level.id}
-                  onClick={() => {
-                    setUserData({ ...userData, activityLevel: level.value })
-                    nextStep()
-                  }}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, activityLevel: level.value }))}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
                     userData.activityLevel === level.value
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className="w-14 h-14 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-2xl">
-                    {level.emoji}
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                    userData.activityLevel === level.value ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                  }`}>
+                    {userData.activityLevel === level.value ? (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    ) : level.emoji}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{level.title}</h3>
@@ -714,18 +737,21 @@ export default function AppOnboarding() {
               {fitnessLevelOptions.map((level) => (
                 <button
                   key={level.id}
-                  onClick={() => {
-                    setUserData({ ...userData, fitnessLevel: level.id })
-                    nextStep()
-                  }}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, fitnessLevel: level.id }))}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
                     userData.fitnessLevel === level.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className="w-14 h-14 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-2xl">
-                    {level.emoji}
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                    userData.fitnessLevel === level.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                  }`}>
+                    {userData.fitnessLevel === level.id ? (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    ) : level.emoji}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{level.title}</h3>
@@ -748,18 +774,21 @@ export default function AppOnboarding() {
               {workoutLocationOptions.map((location) => (
                 <button
                   key={location.id}
-                  onClick={() => {
-                    setUserData({ ...userData, workoutLocation: location.id })
-                    nextStep()
-                  }}
-                  className={`w-full p-5 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, workoutLocation: location.id }))}
+                  className={`w-full p-5 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
                     userData.workoutLocation === location.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className="w-16 h-16 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-3xl">
-                    {location.emoji}
+                  <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-3xl transition-colors duration-300 ${
+                    userData.workoutLocation === location.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                  }`}>
+                    {userData.workoutLocation === location.id ? (
+                      <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    ) : location.emoji}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{location.title}</h3>
@@ -855,18 +884,21 @@ export default function AppOnboarding() {
               {fitnessGoals.map((goal) => (
                 <button
                   key={goal.id}
-                  onClick={() => {
-                    setUserData({ ...userData, fitnessGoal: goal.value, targetWeight: userData.weight })
-                    nextStep()
-                  }}
-                  className={`w-full p-5 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, fitnessGoal: goal.value, targetWeight: userData.weight }))}
+                  className={`w-full p-5 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
                     userData.fitnessGoal === goal.value
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className="w-14 h-14 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-2xl">
-                    {goal.emoji}
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                    userData.fitnessGoal === goal.value ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                  }`}>
+                    {userData.fitnessGoal === goal.value ? (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    ) : goal.emoji}
                   </div>
                   <h3 className="font-semibold text-lg">{goal.title}</h3>
                 </button>
@@ -913,18 +945,21 @@ export default function AppOnboarding() {
               {daysPerWeekOptions.map((option) => (
                 <button
                   key={option.id}
-                  onClick={() => {
-                    setUserData({ ...userData, daysPerWeek: option.id })
-                    nextStep()
-                  }}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, daysPerWeek: option.id }))}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
                     userData.daysPerWeek === option.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className="w-14 h-14 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-2xl">
-                    {option.emoji}
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                    userData.daysPerWeek === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                  }`}>
+                    {userData.daysPerWeek === option.id ? (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    ) : option.emoji}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{option.title}</h3>
@@ -947,18 +982,21 @@ export default function AppOnboarding() {
               {splitPreferenceOptions.map((option) => (
                 <button
                   key={option.id}
-                  onClick={() => {
-                    setUserData({ ...userData, splitPreference: option.id })
-                    nextStep()
-                  }}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, splitPreference: option.id }))}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
                     userData.splitPreference === option.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className="w-14 h-14 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-2xl">
-                    {option.emoji}
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                    userData.splitPreference === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                  }`}>
+                    {userData.splitPreference === option.id ? (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    ) : option.emoji}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{option.title}</h3>
@@ -981,18 +1019,21 @@ export default function AppOnboarding() {
               {trainingStyleOptions.map((option) => (
                 <button
                   key={option.id}
-                  onClick={() => {
-                    setUserData({ ...userData, trainingStyle: option.id })
-                    nextStep()
-                  }}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, trainingStyle: option.id }))}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
                     userData.trainingStyle === option.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className="w-14 h-14 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-2xl">
-                    {option.emoji}
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                    userData.trainingStyle === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                  }`}>
+                    {userData.trainingStyle === option.id ? (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    ) : option.emoji}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{option.title}</h3>
@@ -1116,18 +1157,21 @@ export default function AppOnboarding() {
               {cardioPreferenceOptions.map((option) => (
                 <button
                   key={option.id}
-                  onClick={() => {
-                    setUserData({ ...userData, cardioPreference: option.id })
-                    nextStep()
-                  }}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, cardioPreference: option.id }))}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
                     userData.cardioPreference === option.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className="w-14 h-14 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-2xl">
-                    {option.emoji}
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                    userData.cardioPreference === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                  }`}>
+                    {userData.cardioPreference === option.id ? (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    ) : option.emoji}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{option.title}</h3>
@@ -1283,8 +1327,182 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 19: Processing */}
+        {/* Step 19: Progress Graph */}
         {step === 19 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-6 pt-8">
+              <h2 className="text-2xl font-bold mb-2">رحلتك مع Vega Power</h2>
+              <p className="text-muted-foreground">شوف الفرق بين الاستمرار بدون خطة وبين استخدام التطبيق</p>
+            </div>
+
+            {/* Animated Graph */}
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="rounded-2xl bg-neutral-100 dark:bg-neutral-800 p-5 relative overflow-hidden">
+                {/* Graph Legend */}
+                <div className="flex justify-center gap-6 mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-vp-navy" />
+                    <span className="text-xs font-medium">مع Vega Power 🚀</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-neutral-400" />
+                    <span className="text-xs font-medium text-muted-foreground">بدون خطة</span>
+                  </div>
+                </div>
+
+                {/* SVG Chart */}
+                <div className="relative" style={{ height: 220 }}>
+                  <svg viewBox="0 0 320 200" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                      {/* Gradient for the success line area fill */}
+                      <linearGradient id="successGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.3" />
+                        <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.02" />
+                      </linearGradient>
+                      {/* Glow filter for the success line */}
+                      <filter id="glow">
+                        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                        <feMerge>
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
+
+                    {/* Grid lines */}
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <line key={`grid-${i}`} x1="40" y1={20 + i * 40} x2="310" y2={20 + i * 40} stroke="currentColor" strokeOpacity="0.08" strokeWidth="1" />
+                    ))}
+
+                    {/* Y-axis labels */}
+                    <text x="32" y="24" textAnchor="end" className="fill-current text-muted-foreground" fontSize="8" opacity="0.5">هدفك</text>
+                    <text x="32" y="104" textAnchor="end" className="fill-current text-muted-foreground" fontSize="8" opacity="0.5">الآن</text>
+                    <text x="32" y="184" textAnchor="end" className="fill-current text-muted-foreground" fontSize="8" opacity="0.5">بداية</text>
+
+                    {/* X-axis month labels */}
+                    {['اليوم', 'شهر ١', 'شهر ٢', 'شهر ٣', 'شهر ٤', 'شهر ٦'].map((label, i) => (
+                      <text key={`x-${i}`} x={40 + i * 54} y="198" textAnchor="middle" className="fill-current text-muted-foreground" fontSize="7" opacity="0.5">{label}</text>
+                    ))}
+
+                    {/* Area fill under success line */}
+                    <path
+                      d="M40,140 C94,135 148,110 202,70 S280,25 310,20 L310,180 L40,180 Z"
+                      fill="url(#successGradient)"
+                      opacity={graphAnimated ? 1 : 0}
+                      style={{ transition: 'opacity 1s ease-out 0.5s' }}
+                    />
+
+                    {/* Flat "without" line — stays stagnant with slight wobble */}
+                    <path
+                      d="M40,140 C94,142 148,145 202,143 S280,146 310,144"
+                      fill="none"
+                      stroke="#9ca3af"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray="400"
+                      strokeDashoffset={graphAnimated ? 0 : 400}
+                      style={{ transition: 'stroke-dashoffset 1.5s ease-out 0.3s' }}
+                    />
+
+                    {/* Success "with Vega Power" line — curves up to goal */}
+                    <path
+                      d="M40,140 C94,135 148,110 202,70 S280,25 310,20"
+                      fill="none"
+                      stroke="#1e3a5f"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      filter="url(#glow)"
+                      strokeDasharray="400"
+                      strokeDashoffset={graphAnimated ? 0 : 400}
+                      style={{ transition: 'stroke-dashoffset 2s ease-out 0.6s' }}
+                    />
+
+                    {/* Animated dot at end of success line */}
+                    <circle
+                      cx="310" cy="20" r="5"
+                      fill="#1e3a5f"
+                      opacity={graphAnimated ? 1 : 0}
+                      style={{ transition: 'opacity 0.3s ease-out 2.4s' }}
+                    />
+                    <circle
+                      cx="310" cy="20" r="8"
+                      fill="#1e3a5f"
+                      opacity={graphAnimated ? 0.2 : 0}
+                      style={{ transition: 'opacity 0.3s ease-out 2.4s' }}
+                    >
+                      {graphAnimated && (
+                        <animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite" />
+                      )}
+                    </circle>
+
+                    {/* Goal star at the top */}
+                    <text
+                      x="310" y="12"
+                      textAnchor="middle"
+                      fontSize="12"
+                      opacity={graphAnimated ? 1 : 0}
+                      style={{ transition: 'opacity 0.5s ease-out 2.6s' }}
+                    >🎯</text>
+
+                    {/* Stagnant dot at end of flat line */}
+                    <circle
+                      cx="310" cy="144" r="4"
+                      fill="#9ca3af"
+                      opacity={graphAnimated ? 1 : 0}
+                      style={{ transition: 'opacity 0.3s ease-out 1.6s' }}
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Stats cards below graph */}
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <div
+                  className="p-4 rounded-2xl bg-vp-navy/5 border border-vp-navy/15 text-center"
+                  style={{
+                    opacity: graphAnimated ? 1 : 0,
+                    transform: graphAnimated ? 'translateY(0)' : 'translateY(12px)',
+                    transition: 'all 0.5s ease-out 2s',
+                  }}
+                >
+                  <p className="text-2xl font-bold text-vp-navy mb-1">3x</p>
+                  <p className="text-xs text-muted-foreground">نتائج أسرع مع خطة مخصصة</p>
+                </div>
+                <div
+                  className="p-4 rounded-2xl bg-vp-navy/5 border border-vp-navy/15 text-center"
+                  style={{
+                    opacity: graphAnimated ? 1 : 0,
+                    transform: graphAnimated ? 'translateY(0)' : 'translateY(12px)',
+                    transition: 'all 0.5s ease-out 2.3s',
+                  }}
+                >
+                  <p className="text-2xl font-bold text-vp-navy mb-1">91%</p>
+                  <p className="text-xs text-muted-foreground">من المستخدمين حققوا أهدافهم</p>
+                </div>
+              </div>
+
+              {/* Motivational text */}
+              <div
+                className="mt-4 p-3 rounded-xl bg-vp-navy text-white text-center"
+                style={{
+                  opacity: graphAnimated ? 1 : 0,
+                  transform: graphAnimated ? 'translateY(0)' : 'translateY(12px)',
+                  transition: 'all 0.5s ease-out 2.6s',
+                }}
+              >
+                <p className="text-sm font-semibold">لا تضيع وقتك بدون خطة واضحة</p>
+                <p className="text-xs opacity-80 mt-1">خلّ الذكاء الاصطناعي يبني لك الطريق 🚀</p>
+              </div>
+            </div>
+
+            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-6">
+              التالي
+            </button>
+          </div>
+        )}
+
+        {/* Step 20: Processing */}
+        {step === 20 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
             <div className="text-6xl font-bold mb-4 text-vp-navy">
               {processingProgress}%
@@ -1322,8 +1540,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 20: Payment - Full Featured */}
-        {step === 20 && (
+        {/* Step 21: Payment - Full Featured */}
+        {step === 21 && (
           <div className="flex-1 flex flex-col animate-fade-in overflow-auto -my-8 py-8">
             {/* Header */}
             <div className="text-center mb-4">
