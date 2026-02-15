@@ -280,10 +280,10 @@ export default function AppOnboarding() {
     if (step < 21) setStep((step + 1) as Step)
   }
 
-  // Delayed advance — lets user see their selection before moving on
+  // Select and advance immediately
   const selectAndAdvance = (updateFn: () => void) => {
     updateFn()
-    setTimeout(() => nextStep(), 400)
+    nextStep()
   }
 
   const prevStep = () => {
@@ -1756,7 +1756,6 @@ export default function AppOnboarding() {
             <div className="flex gap-2 mb-3">
               {[
                 { key: 'monthly' as PlanType, label: 'شهر', price: plans.monthly.price, days: plans.monthly.days, savings: null },
-                { key: 'quarterly' as PlanType, label: '3 أشهر', price: plans.quarterly.price, days: plans.quarterly.days, savings: plans.quarterly.savings },
                 { key: 'yearly' as PlanType, label: 'سنة', price: plans.yearly.price, days: plans.yearly.days, savings: plans.yearly.savings },
               ].map((plan) => {
                 const finalPrice = getFinalPrice(plan.price)
