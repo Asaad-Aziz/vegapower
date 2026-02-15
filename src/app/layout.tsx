@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import MetaPixel from "@/components/MetaPixel";
+import SnapPixel from "@/components/SnapPixel";
 
 export const metadata: Metadata = {
   title: "Vega Power | رياضتك أسهل بين يدك",
@@ -16,6 +17,7 @@ export default function RootLayout({
     <html lang="ar" dir="rtl">
       <body className="antialiased">
         <MetaPixel />
+        <SnapPixel />
         {children}
       </body>
     </html>

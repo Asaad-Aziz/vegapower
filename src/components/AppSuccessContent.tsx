@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { purchase } from '@/lib/meta-pixel'
+import { snapPurchase } from '@/lib/snapchat-pixel'
 
 function AppSuccessInner() {
   const searchParams = useSearchParams()
@@ -72,17 +73,24 @@ function AppSuccessInner() {
             setUserAuthMethod(data.authMethod || authMethodParam || 'email')
             setStatus('success')
             
-            // Track purchase with Meta Pixel
+            // Track purchase with Meta Pixel + Snapchat Pixel
             if (!hasTrackedPurchase && !data.alreadyProcessed) {
               const productId = `streampay_${plan === 'yearly' ? 'yearly' : plan === 'quarterly' ? '3months' : 'monthly'}`
+              const purchaseValue = amount ? parseFloat(amount) : 155
               
               purchase({
                 content_name: `Vega Power App - ${plan === 'yearly' ? 'سنوي' : plan === 'quarterly' ? '3 أشهر' : 'شهري'}`,
                 content_ids: [productId],
                 content_type: 'product',
-                value: amount ? parseFloat(amount) : 155,
+                value: purchaseValue,
                 currency: 'SAR',
                 num_items: 1,
+              })
+              snapPurchase({
+                price: purchaseValue,
+                currency: 'SAR',
+                item_ids: [productId],
+                transaction_id: sessionId || undefined,
               })
               setHasTrackedPurchase(true)
               console.log('StreamPay purchase tracking:', { productId, amount, plan })
@@ -121,17 +129,24 @@ function AppSuccessInner() {
           setStatus('success')
           setEmail(data.email)
           
-          // Track purchase with Meta Pixel (only once)
+          // Track purchase with Meta Pixel + Snapchat Pixel (only once)
           if (!hasTrackedPurchase && !data.alreadyProcessed) {
             const productId = data.plan ? `moyasar_${data.plan === 'yearly' ? 'yearly' : data.plan === 'quarterly' ? '3months' : 'monthly'}` : 'vega_app_subscription'
+            const purchaseValue = data.amount || 155
             
             purchase({
               content_name: `Vega Power App - ${data.plan === 'yearly' ? 'سنوي' : data.plan === 'quarterly' ? '3 أشهر' : 'شهري'}`,
               content_ids: [productId],
               content_type: 'product',
-              value: data.amount || 155,
+              value: purchaseValue,
               currency: 'SAR',
               num_items: 1,
+            })
+            snapPurchase({
+              price: purchaseValue,
+              currency: 'SAR',
+              item_ids: [productId],
+              transaction_id: paymentId || undefined,
             })
             setHasTrackedPurchase(true)
             console.log('Moyasar purchase tracking:', { productId, amount: data.amount, plan: data.plan })

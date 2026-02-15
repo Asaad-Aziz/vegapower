@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { trackEvent } from '@/lib/analytics'
 import * as fbq from '@/lib/meta-pixel'
+import { snapPurchase } from '@/lib/snapchat-pixel'
 
 interface VerificationResult {
   success: boolean
@@ -36,6 +37,12 @@ export default function SuccessContent() {
       value: data.amount || 0,
       currency: 'SAR',
       num_items: 1,
+    })
+    // Snapchat Pixel: Purchase Event
+    snapPurchase({
+      price: data.amount || 0,
+      currency: 'SAR',
+      item_ids: [data.productId || 'unknown'],
     })
   }
 

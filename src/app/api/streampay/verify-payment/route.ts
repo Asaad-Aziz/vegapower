@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 import { createFirebaseUser, saveUserDataToFirestore } from '@/lib/firebase-admin'
-import { trackSnapchatPurchase } from '@/lib/snapchat-capi'
 
 // Generate a random password
 function generatePassword(length = 12): string {
@@ -344,19 +343,6 @@ export async function POST(request: NextRequest) {
         console.error('Email error:', emailErr)
       }
     }
-
-    // Track purchase with Snapchat CAPI (fire-and-forget)
-    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || ''
-    const clientUserAgent = request.headers.get('user-agent') || ''
-    trackSnapchatPurchase({
-      email,
-      value: parseFloat(amount) || 155,
-      currency: 'SAR',
-      plan,
-      paymentId: sessionId,
-      ipAddress: clientIp,
-      userAgent: clientUserAgent,
-    }).catch(err => console.error('Snapchat CAPI tracking error:', err))
 
     console.log('StreamPay verify-payment completed:', {
       email,

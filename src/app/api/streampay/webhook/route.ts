@@ -8,7 +8,6 @@ import {
   updateSubscriptionInFirestore,
   findUserByStreampayConsumerId,
 } from '@/lib/firebase-admin'
-import { trackSnapchatPurchase } from '@/lib/snapchat-capi'
 
 // GET endpoint - Health check and webhook status
 export async function GET() {
@@ -824,16 +823,6 @@ export async function POST(request: NextRequest) {
     } else {
       console.log('Webhook: User already exists or no firebaseUid, skipping email:', { userAlreadyExists, hasFirebaseUid: !!firebaseUid })
     }
-
-    // Track purchase with Snapchat CAPI (fire-and-forget)
-    const finalAmount = typeof amount === 'number' ? (amount > 1000 ? amount / 100 : amount) : plans[plan]?.days || 155
-    trackSnapchatPurchase({
-      email,
-      value: finalAmount,
-      currency: currency || 'SAR',
-      plan,
-      paymentId: payment_id,
-    }).catch(err => console.error('Snapchat CAPI tracking error (webhook):', err))
 
     console.log('StreamPay webhook processed successfully:', {
       payment_id,
