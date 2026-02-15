@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Vega Power - خطتك التدريبية جاهزة</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #F1EFEC;
+      font-family: 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+
+    table { border-spacing: 0; border-collapse: collapse; }
+    td { padding: 0; }
+    img { border: 0; display: block; outline: none; text-decoration: none; }
+
+    .wrapper {
+      width: 100%;
+      background-color: #F1EFEC;
+      padding: 32px 16px;
+    }
+
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(3, 3, 3, 0.06);
+    }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, #123458 0%, #1a4a7a 50%, #123458 100%);
+      padding: 48px 32px 40px;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 24px;
+      background: #ffffff;
+      border-radius: 24px 24px 0 0;
+    }
+
+    .logo-circle {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 20px;
+      background: #ffffff;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .hero h1 {
+      color: #ffffff;
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .hero p {
+      color: rgba(255,255,255,0.85);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* Content */
+    .content {
+      padding: 12px 32px 32px;
+    }
+
+    .greeting {
+      font-size: 16px;
+      color: #030303;
+      line-height: 1.7;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    /* Features */
+    .features {
+      margin-bottom: 28px;
+    }
+
+    .feature-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .feature-card {
+      flex: 1;
+      background: #F1EFEC;
+      border-radius: 14px;
+      padding: 20px 16px;
+      text-align: center;
+    }
+
+    .feature-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .feature-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #123458;
+      line-height: 1.5;
+    }
+
+    /* Stats banner */
+    .stats-banner {
+      background: linear-gradient(135deg, #123458, #1a4a7a);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 28px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.7);
+      margin-top: 2px;
+    }
+
+    /* Steps */
+    .how-it-works {
+      margin-bottom: 28px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #123458;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      background: #123458;
+      color: #ffffff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .step-text {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.6;
+      padding-top: 4px;
+    }
+
+    .step-text strong {
+      color: #123458;
+    }
+
+    /* CTA */
+    .cta-section {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #123458, #1a4a7a);
+      color: #ffffff !important;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 16px 48px;
+      border-radius: 14px;
+      text-decoration: none;
+      letter-spacing: 0.3px;
+      box-shadow: 0 4px 16px rgba(18, 52, 88, 0.35);
+    }
+
+    .cta-sub {
+      font-size: 12px;
+      color: #999;
+      margin-top: 12px;
+    }
+
+    /* Offer badge */
+    .offer-badge {
+      background: #123458;
+      color: #ffffff;
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .offer-badge .offer-title {
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0.85;
+      margin-bottom: 4px;
+    }
+
+    .offer-badge .offer-price {
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .offer-badge .offer-price .old-price {
+      text-decoration: line-through;
+      opacity: 0.5;
+      font-size: 16px;
+      font-weight: 400;
+    }
+
+    .offer-badge .offer-note {
+      font-size: 11px;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+
+    /* Testimonial */
+    .testimonial {
+      background: #F1EFEC;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .testimonial .stars {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .testimonial .quote {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.7;
+      font-style: italic;
+      margin-bottom: 8px;
+    }
+
+    .testimonial .author {
+      font-size: 12px;
+      color: #999;
+      font-weight: 500;
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: #D4C9BE;
+      margin: 24px 0;
+      opacity: 0.5;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 24px 32px 32px;
+      text-align: center;
+      background: #F1EFEC;
+    }
+
+    .footer p {
+      font-size: 11px;
+      color: #999;
+      line-height: 1.8;
+    }
+
+    .footer a {
+      color: #123458;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .social-links {
+      margin-top: 12px;
+    }
+
+    .social-links a {
+      display: inline-block;
+      margin: 0 6px;
+      font-size: 12px;
+      color: #123458;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    /* Mobile */
+    @media only screen and (max-width: 600px) {
+      .wrapper { padding: 16px 8px; }
+      .hero { padding: 36px 20px 32px; }
+      .hero h1 { font-size: 22px; }
+      .content { padding: 8px 20px 24px; }
+      .footer { padding: 20px; }
+      .feature-row { flex-direction: column; gap: 8px; }
+      .stats-row { gap: 20px; }
+      .stat-number { font-size: 24px; }
+      .cta-button { padding: 14px 36px; font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+
+      <!-- Hero Section -->
+      <div class="hero">
+        <div style="text-align:center;">
+          <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 20px;">
+            <tr>
+              <td style="width:72px;height:72px;background:#ffffff;border-radius:18px;text-align:center;vertical-align:middle;box-shadow:0 4px 16px rgba(0,0,0,0.15);">
+                <img src="https://vegapowerstore.com/Vegapower%20Logo-05.jpg" alt="Vega Power" width="60" height="60" style="display:block;margin:6px auto;border-radius:12px;" />
+              </td>
+            </tr>
+          </table>
+        </div>
+        <h1>خطتك التدريبية والغذائية<br/>جاهزة وتنتظرك</h1>
+        <p>الذكاء الاصطناعي يبني لك برنامج مخصص 100% لجسمك وأهدافك</p>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+
+        <p class="greeting">
+          مرحبا! 👋<br/>
+          هل تبحث عن خطة تدريبية وغذائية مصممة خصيصا لك؟<br/>
+          <strong style="color:#123458;">Vega Power</strong> يخصص كل شيء بناء على بياناتك — بدون تخمين.
+        </p>
+
+        <!-- Features Grid -->
+        <div class="features">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td style="padding:0 6px 12px 0;width:50%;vertical-align:top;">
+                <div style="background:#F1EFEC;border-radius:14px;padding:20px 12px;text-align:center;">
+                  <div style="font-size:28px;margin-bottom:8px;">🏋️</div>
+                  <div style="font-size:13px;font-weight:700;color:#123458;line-height:1.5;">برامج تدريب<br/>مخصصة بالكامل</div>
+                </div>
+              </td>
+              <td style="padding:0 0 12px 6px;width:50%;vertical-align:top;">
+                <div style="background:#F1EFEC;border-radius:14px;padding:20px 12px;text-align:center;">
+                  <div style="font-size:28px;margin-bottom:8px;">📸</div>
+                  <div style="font-size:13px;font-weight:700;color:#123458;line-height:1.5;">صور أكلك واعرف<br/>السعرات بالـ AI</div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 6px 0 0;width:50%;vertical-align:top;">
+                <div style="background:#F1EFEC;border-radius:14px;padding:20px 12px;text-align:center;">
+                  <div style="font-size:28px;margin-bottom:8px;">🎯</div>
+                  <div style="font-size:13px;font-weight:700;color:#123458;line-height:1.5;">خطة غذائية<br/>بسعرات محسوبة</div>
+                </div>
+              </td>
+              <td style="padding:0 0 0 6px;width:50%;vertical-align:top;">
+                <div style="background:#F1EFEC;border-radius:14px;padding:20px 12px;text-align:center;">
+                  <div style="font-size:28px;margin-bottom:8px;">📊</div>
+                  <div style="font-size:13px;font-weight:700;color:#123458;line-height:1.5;">تتبع تقدمك<br/>يوم بيوم</div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-banner">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td style="text-align:center;width:33%;">
+                <div style="font-size:28px;font-weight:800;color:#ffffff;">91%</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px;">حققوا أهدافهم</div>
+              </td>
+              <td style="text-align:center;width:33%;">
+                <div style="font-size:28px;font-weight:800;color:#ffffff;">3x</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px;">نتائج أسرع</div>
+              </td>
+              <td style="text-align:center;width:33%;">
+                <div style="font-size:28px;font-weight:800;color:#ffffff;">+5K</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px;">مستخدم نشط</div>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- How it works -->
+        <div class="how-it-works">
+          <div class="section-title">كيف يعمل التطبيق؟</div>
+
+          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td style="padding-bottom:16px;">
+                <table cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td style="width:32px;height:32px;background:#123458;color:#ffffff;border-radius:50%;text-align:center;vertical-align:middle;font-size:14px;font-weight:700;">١</td>
+                    <td style="padding-right:14px;font-size:14px;color:#333;line-height:1.6;"><strong style="color:#123458;">أجب على أسئلة بسيطة</strong> عن جسمك وأهدافك ومستوى لياقتك</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-bottom:16px;">
+                <table cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td style="width:32px;height:32px;background:#123458;color:#ffffff;border-radius:50%;text-align:center;vertical-align:middle;font-size:14px;font-weight:700;">٢</td>
+                    <td style="padding-right:14px;font-size:14px;color:#333;line-height:1.6;"><strong style="color:#123458;">الذكاء الاصطناعي يبني خطتك</strong> — تمارين + تغذية + سعرات + ماكروز</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-bottom:16px;">
+                <table cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td style="width:32px;height:32px;background:#123458;color:#ffffff;border-radius:50%;text-align:center;vertical-align:middle;font-size:14px;font-weight:700;">٣</td>
+                    <td style="padding-right:14px;font-size:14px;color:#333;line-height:1.6;"><strong style="color:#123458;">ابدأ التمرين فورا</strong> وتابع تقدمك بشكل يومي مع التطبيق</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Testimonial -->
+        <div class="testimonial">
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <div class="quote">"خسرت 8 كيلو في شهرين بدون ما أحس بحرمان! التطبيق غير حياتي بالكامل."</div>
+          <div class="author">— سارة، مستخدمة Vega Power</div>
+        </div>
+
+        <!-- Offer -->
+        <div class="offer-badge">
+          <div class="offer-title">🎊 عرض خاص لفترة محدودة 🎊</div>
+          <div class="offer-price">سنة كاملة بـ <span class="old-price">448</span> 155 ريال فقط!</div>
+          <div class="offer-note">يعني أقل من 0.43 ر.س في اليوم</div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-section">
+          <a href="https://vegapowerstore.com/app" class="cta-button">
+            ابدأ خطتك الآن 🚀
+          </a>
+          <p class="cta-sub">مجاني لاكتشاف خطتك — ادفع فقط إذا عجبتك</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Urgency note -->
+        <p style="text-align:center;font-size:13px;color:#666;line-height:1.7;">
+          لا تضيع وقتك بدون خطة واضحة.<br/>
+          <strong style="color:#123458;">خلّ الذكاء الاصطناعي يبني لك الطريق.</strong>
+        </p>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>
+          Vega Power &copy; 2026<br/>
+          <a href="https://vegapowerstore.com">vegapowerstore.com</a><br/><br/>
+          <a href="mailto:support@vegapowerstore.com">support@vegapowerstore.com</a>
+        </p>
+        <div class="social-links" style="margin-top:12px;">
+          <a href="https://twitter.com/vegapower">Twitter</a> &middot;
+          <a href="https://instagram.com/vegapower">Instagram</a> &middot;
+          <a href="https://tiktok.com/@vegapower">TikTok</a>
+        </div>
+        <p style="margin-top:16px;font-size:10px;color:#bbb;">
+          تم إرسال هذا البريد لأنك مهتم بخدمات Vega Power.<br/>
+          <a href="#" style="color:#bbb;text-decoration:underline;">إلغاء الاشتراك</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
