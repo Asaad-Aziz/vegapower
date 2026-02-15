@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { initiateCheckout } from '@/lib/meta-pixel'
 import { signInWithApple, checkAppleSignInRedirect } from '@/lib/firebase-client'
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20
 
 interface UserData {
   gender: 'male' | 'female' | ''
@@ -19,6 +19,12 @@ interface UserData {
   age: number
   fitnessGoal: string
   targetWeight: number
+  daysPerWeek: string
+  splitPreference: string
+  trainingStyle: string
+  priorityMuscles: string[]
+  injuries: string[]
+  cardioPreference: string
   targetSpeed: number
   challenges: string[]
   accomplishments: string[]
@@ -92,6 +98,58 @@ const fitnessLevelOptions = [
 const workoutLocationOptions = [
   { id: 'Gym', emoji: '🏋️', title: 'النادي الرياضي', subtitle: 'أتمرن في الجيم مع المعدات الكاملة' },
   { id: 'Home', emoji: '🏠', title: 'المنزل', subtitle: 'أتمرن في البيت بأدوات بسيطة أو بدون أدوات' },
+]
+
+// Days per week
+const daysPerWeekOptions = [
+  { id: '3', emoji: '3️⃣', title: '٣ أيام', subtitle: 'مثالي للمبتدئين' },
+  { id: '5', emoji: '5️⃣', title: '٥ أيام', subtitle: 'الخيار الأكثر شيوعاً' },
+  { id: '7', emoji: '7️⃣', title: '٧ أيام', subtitle: 'للرياضيين المتقدمين' },
+]
+
+// Split preference
+const splitPreferenceOptions = [
+  { id: 'full_body', emoji: '🏋️', title: 'جسم كامل', subtitle: 'تمرين جميع العضلات في كل جلسة' },
+  { id: 'upper_lower', emoji: '🔄', title: 'علوي / سفلي', subtitle: 'تبديل بين الجزء العلوي والسفلي' },
+  { id: 'push_pull_legs', emoji: '💪', title: 'دفع / سحب / أرجل', subtitle: 'فصل تمارين الدفع والسحب والأرجل' },
+  { id: 'muscle_split', emoji: '🎯', title: 'تقسيم عضلي', subtitle: 'مجموعة عضلية واحدة في اليوم' },
+  { id: 'ai_decide', emoji: '🤖', title: 'دع الذكاء الاصطناعي يقرر', subtitle: 'AI يختار أفضل تقسيم لك' },
+]
+
+// Training style
+const trainingStyleOptions = [
+  { id: 'strength', emoji: '🏋️', title: 'قوة وطاقة', subtitle: 'أوزان ثقيلة، تكرارات قليلة' },
+  { id: 'hypertrophy', emoji: '💪', title: 'بناء العضلات', subtitle: 'أوزان متوسطة، تكرارات أكثر' },
+  { id: 'functional', emoji: '🤸', title: 'لياقة وظيفية', subtitle: 'وزن الجسم، مرونة، حركات رياضية' },
+  { id: 'mixed', emoji: '🔀', title: 'مزيج من كل شيء', subtitle: 'تنوع في جميع أنماط التمرين' },
+]
+
+// Priority muscles
+const priorityMuscleOptions = [
+  { id: 'chest', emoji: '🫁', title: 'الصدر' },
+  { id: 'back', emoji: '🔙', title: 'الظهر' },
+  { id: 'shoulders', emoji: '🤷', title: 'الأكتاف' },
+  { id: 'arms', emoji: '💪', title: 'الذراعين' },
+  { id: 'legs', emoji: '🦵', title: 'الأرجل' },
+  { id: 'glutes', emoji: '🍑', title: 'المؤخرة' },
+  { id: 'abs', emoji: '🎯', title: 'البطن' },
+]
+
+// Injuries
+const injuryOptions = [
+  { id: 'knee', emoji: '🦵', title: 'الركبة' },
+  { id: 'shoulder', emoji: '🤷', title: 'الكتف' },
+  { id: 'lower_back', emoji: '🔙', title: 'أسفل الظهر' },
+  { id: 'wrist', emoji: '✋', title: 'المعصم' },
+  { id: 'hip', emoji: '🦴', title: 'الورك' },
+]
+
+// Cardio preference
+const cardioPreferenceOptions = [
+  { id: 'every_session', emoji: '🏃', title: 'في كل جلسة تمرين', subtitle: '١٠-١٥ دقيقة كارديو بعد كل تمرين' },
+  { id: '2_3_times', emoji: '📅', title: '٢-٣ مرات في الأسبوع', subtitle: 'كارديو مضاف لبعض أيام التمرين' },
+  { id: 'separate_days', emoji: '🗓️', title: 'أيام كارديو منفصلة', subtitle: 'أيام مخصصة للكارديو فقط في الخطة' },
+  { id: 'no_cardio', emoji: '🚫', title: 'بدون كارديو', subtitle: 'التركيز على الأوزان فقط' },
 ]
 
 export default function AppOnboarding() {
@@ -174,7 +232,7 @@ export default function AppOnboarding() {
           setAuthMethod('apple')
           setAppleFirebaseUid(result.uid)
           // Go to payment page
-          setStep(15 as Step)
+          setStep(20 as Step)
         }
       } catch (error) {
         console.error('Apple redirect check error:', error)
@@ -194,6 +252,12 @@ export default function AppOnboarding() {
     age: new Date().getFullYear() - 2000,
     fitnessGoal: '',
     targetWeight: 65,
+    daysPerWeek: '',
+    splitPreference: '',
+    trainingStyle: '',
+    priorityMuscles: [],
+    injuries: [],
+    cardioPreference: '',
     targetSpeed: 0.5,
     challenges: [],
     accomplishments: [],
@@ -208,20 +272,17 @@ export default function AppOnboarding() {
     programName: '',
   })
 
-  const totalSteps = 16
+  const totalSteps = 21
   const progress = (step / (totalSteps - 1)) * 100
 
   const nextStep = () => {
-    if (step < 15) setStep((step + 1) as Step)
+    if (step < 20) setStep((step + 1) as Step)
   }
 
   const prevStep = () => {
-    if (step === 14) {
-      // Skip processing step (13), go back to motivation (12)
-      setStep(12 as Step)
-    } else if (step === 15) {
-      // Go back to account creation from payment
-      setStep(14 as Step)
+    if (step === 20) {
+      // Skip processing step (19), go back to motivation (18)
+      setStep(18 as Step)
     } else if (step > 0) {
       setStep((step - 1) as Step)
     }
@@ -283,9 +344,9 @@ export default function AppOnboarding() {
     }
   }
 
-  // Calculate all values when reaching step 13 (Processing)
+  // Calculate all values when reaching step 19 (Processing)
   useEffect(() => {
-    if (step === 13) {
+    if (step === 19) {
       const calories = calculateCalories()
       const macros = getMacroPercentages()
       const programName = getProgramName()
@@ -351,7 +412,7 @@ export default function AppOnboarding() {
         setAppleFirebaseUid(result.uid)
         // Auto-advance to payment page after short delay
         setTimeout(() => {
-          setStep(15 as Step)
+          setStep(20 as Step)
         }, 800)
       } else {
         // Apple might hide the email (private relay)
@@ -421,6 +482,12 @@ export default function AppOnboarding() {
             age: userData.age,
             fitnessGoal: userData.fitnessGoal,
             targetWeight: userData.targetWeight,
+            daysPerWeek: userData.daysPerWeek,
+            splitPreference: userData.splitPreference,
+            trainingStyle: userData.trainingStyle,
+            priorityMuscles: userData.priorityMuscles,
+            injuries: userData.injuries,
+            cardioPreference: userData.cardioPreference,
             targetSpeed: userData.targetSpeed,
             challenges: userData.challenges,
             accomplishments: userData.accomplishments,
@@ -523,7 +590,7 @@ export default function AppOnboarding() {
       )}
       
       {/* Progress Bar */}
-      {step > 0 && step < 15 && (
+      {step > 0 && step < 20 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
           <div className="w-[200px] h-1.5 bg-vp-beige/50 dark:bg-neutral-700 rounded-full overflow-hidden">
             <div 
@@ -535,7 +602,7 @@ export default function AppOnboarding() {
       )}
 
       {/* Back Button */}
-      {(step > 0 && step < 13 || step === 14 || step === 15) && (
+      {(step > 0 && step < 19 || step === 20) && (
         <button
           onClick={prevStep}
           className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center"
@@ -835,8 +902,245 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 9: Speed */}
+        {/* Step 9: Days Per Week */}
         {step === 9 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">كم يوم تتمرن في الأسبوع؟</h2>
+              <p className="text-muted-foreground">سنبني خطتك التدريبية بناءً على جدولك.</p>
+            </div>
+            <div className="flex-1 space-y-3">
+              {daysPerWeekOptions.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => {
+                    setUserData({ ...userData, daysPerWeek: option.id })
+                    nextStep()
+                  }}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                    userData.daysPerWeek === option.id
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
+                >
+                  <div className="w-14 h-14 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-2xl">
+                    {option.emoji}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">{option.title}</h3>
+                    <p className="text-sm text-muted-foreground">{option.subtitle}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 10: Split Preference */}
+        {step === 10 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">كيف تفضل تقسيم تمارينك؟</h2>
+              <p className="text-muted-foreground">نظام التقسيم يحدد توزيع العضلات على الأيام.</p>
+            </div>
+            <div className="flex-1 space-y-3">
+              {splitPreferenceOptions.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => {
+                    setUserData({ ...userData, splitPreference: option.id })
+                    nextStep()
+                  }}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                    userData.splitPreference === option.id
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
+                >
+                  <div className="w-14 h-14 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-2xl">
+                    {option.emoji}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">{option.title}</h3>
+                    <p className="text-sm text-muted-foreground">{option.subtitle}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 11: Training Style */}
+        {step === 11 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">ما أسلوب التمرين المفضل؟</h2>
+              <p className="text-muted-foreground">سنخصص نوع التمارين حسب أسلوبك.</p>
+            </div>
+            <div className="flex-1 space-y-3">
+              {trainingStyleOptions.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => {
+                    setUserData({ ...userData, trainingStyle: option.id })
+                    nextStep()
+                  }}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                    userData.trainingStyle === option.id
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
+                >
+                  <div className="w-14 h-14 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-2xl">
+                    {option.emoji}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">{option.title}</h3>
+                    <p className="text-sm text-muted-foreground">{option.subtitle}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 12: Priority Muscles (multi-select, max 2) */}
+        {step === 12 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">هل تريد التركيز على عضلات معينة؟</h2>
+              <p className="text-muted-foreground">اختر حتى عضلتين لإعطائهما أولوية (اختياري).</p>
+            </div>
+            <div className="flex-1 space-y-3">
+              {priorityMuscleOptions.map((muscle) => (
+                <button
+                  key={muscle.id}
+                  onClick={() => {
+                    const isSelected = userData.priorityMuscles.includes(muscle.id)
+                    if (isSelected) {
+                      setUserData({ ...userData, priorityMuscles: userData.priorityMuscles.filter(m => m !== muscle.id) })
+                    } else if (userData.priorityMuscles.length < 2) {
+                      setUserData({ ...userData, priorityMuscles: [...userData.priorityMuscles, muscle.id] })
+                    }
+                  }}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                    userData.priorityMuscles.includes(muscle.id)
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      : userData.priorityMuscles.length >= 2
+                        ? 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent opacity-50'
+                        : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
+                >
+                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xl">
+                    {muscle.emoji}
+                  </div>
+                  <span className="font-medium">{muscle.title}</span>
+                  {userData.priorityMuscles.includes(muscle.id) && (
+                    <svg className="w-5 h-5 text-vp-navy mr-auto" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+            {userData.priorityMuscles.length > 0 && (
+              <p className="text-center text-sm text-muted-foreground mt-2">
+                تم اختيار {userData.priorityMuscles.length} من 2
+              </p>
+            )}
+            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
+              {userData.priorityMuscles.length === 0 ? 'تخطي' : 'التالي'}
+            </button>
+          </div>
+        )}
+
+        {/* Step 13: Injuries (multi-select with clear) */}
+        {step === 13 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">هل لديك أي إصابات؟</h2>
+              <p className="text-muted-foreground">سنتجنب التمارين التي قد تؤثر على الإصابة.</p>
+            </div>
+            <div className="flex-1 space-y-3">
+              {injuryOptions.map((injury) => (
+                <button
+                  key={injury.id}
+                  onClick={() => {
+                    const injuries = userData.injuries.includes(injury.id)
+                      ? userData.injuries.filter(i => i !== injury.id)
+                      : [...userData.injuries, injury.id]
+                    setUserData({ ...userData, injuries })
+                  }}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                    userData.injuries.includes(injury.id)
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
+                >
+                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xl">
+                    {injury.emoji}
+                  </div>
+                  <span className="font-medium">{injury.title}</span>
+                  {userData.injuries.includes(injury.id) && (
+                    <svg className="w-5 h-5 text-vp-navy mr-auto" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 space-y-3">
+              {userData.injuries.length > 0 && (
+                <button
+                  onClick={() => setUserData({ ...userData, injuries: [] })}
+                  className="w-full py-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-muted-foreground font-medium text-sm"
+                >
+                  لا إصابات (مسح الاختيار)
+                </button>
+              )}
+              <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
+                {userData.injuries.length === 0 ? 'لا إصابات' : 'التالي'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 14: Cardio Preference */}
+        {step === 14 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">هل تريد كارديو في خطتك؟</h2>
+              <p className="text-muted-foreground">الكارديو يساعد في حرق الدهون وتحسين صحة القلب.</p>
+            </div>
+            <div className="flex-1 space-y-3">
+              {cardioPreferenceOptions.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => {
+                    setUserData({ ...userData, cardioPreference: option.id })
+                    nextStep()
+                  }}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
+                    userData.cardioPreference === option.id
+                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
+                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
+                >
+                  <div className="w-14 h-14 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-2xl">
+                    {option.emoji}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">{option.title}</h3>
+                    <p className="text-sm text-muted-foreground">{option.subtitle}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 15: Speed */}
+        {step === 15 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما مدى سرعة تحقيق هدفك؟</h2>
@@ -874,8 +1178,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 10: Challenges */}
-        {step === 10 && (
+        {/* Step 16: Challenges */}
+        {step === 16 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما الذي يمنعك من الوصول لهدفك؟</h2>
@@ -915,8 +1219,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 11: Accomplishments */}
-        {step === 11 && (
+        {/* Step 17: Accomplishments */}
+        {step === 17 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما الذي تود تحقيقه؟</h2>
@@ -956,8 +1260,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 12: Motivation */}
-        {step === 12 && (
+        {/* Step 18: Motivation */}
+        {step === 18 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-vp-navy/10 flex items-center justify-center">
               <span className="text-4xl">💪</span>
@@ -979,8 +1283,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 13: Processing */}
-        {step === 13 && (
+        {/* Step 19: Processing */}
+        {step === 19 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
             <div className="text-6xl font-bold mb-4 text-vp-navy">
               {processingProgress}%
@@ -1018,108 +1322,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 14: Account Creation - Apple or Email */}
-        {step === 14 && (
-          <div className="flex-1 flex flex-col justify-center animate-fade-in">
-            <div className="text-center mb-8 pt-8">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-vp-navy/10 flex items-center justify-center">
-                <span className="text-4xl">👤</span>
-              </div>
-              <h2 className="text-2xl font-bold mb-2">أنشئ حسابك</h2>
-              <p className="text-muted-foreground">اختر طريقة إنشاء الحساب للوصول للتطبيق بعد الدفع</p>
-            </div>
-
-            {/* Apple Sign-In success state */}
-            {authMethod === 'apple' && userData.email && (
-              <div className="p-4 rounded-2xl bg-green-500/10 border border-green-500/20 mb-4 text-center">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-green-500/20 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <p className="text-green-700 dark:text-green-400 font-semibold mb-1">تم التسجيل بنجاح!</p>
-                <p className="text-sm text-muted-foreground" dir="ltr">{userData.email}</p>
-                <p className="text-xs text-muted-foreground mt-2">جاري التوجيه لصفحة الدفع...</p>
-              </div>
-            )}
-
-            {/* Apple Sign-In Button */}
-            {authMethod !== 'apple' && (
-              <>
-                <button
-                  onClick={handleAppleSignIn}
-                  disabled={appleSignInLoading}
-                  className="w-full py-4 rounded-2xl bg-black text-white font-semibold text-lg flex items-center justify-center gap-3 shadow-lg hover:bg-neutral-900 transition-colors disabled:opacity-60"
-                >
-                  {appleSignInLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span>جاري التسجيل...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                      </svg>
-                      <span>متابعة مع Apple</span>
-                    </>
-                  )}
-                </button>
-
-                {appleSignInError && (
-                  <p className="text-sm text-red-500 text-center mt-2">{appleSignInError}</p>
-                )}
-
-                <p className="text-xs text-center text-muted-foreground mt-3 mb-1">
-                  بعد الدفع، سجّل دخولك في التطبيق بحساب Apple مباشرة
-                </p>
-
-                {/* Divider */}
-                <div className="flex items-center gap-4 my-5">
-                  <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700"></div>
-                  <span className="text-sm text-muted-foreground">أو</span>
-                  <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700"></div>
-                </div>
-
-                {/* Email Input */}
-                <div className="space-y-3">
-                  <input
-                    type="email"
-                    value={userData.email}
-                    onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-                    placeholder="أدخل بريدك الإلكتروني"
-                    dir="ltr"
-                    className="w-full p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-vp-navy/40 outline-none text-base text-center"
-                  />
-                  {userData.email.trim() && !validateEmail(userData.email) && (
-                    <p className="text-xs text-red-500 text-center">أدخل بريداً إلكترونياً صحيحاً</p>
-                  )}
-                  <button
-                    onClick={() => {
-                      if (validateEmail(userData.email)) {
-                        setAuthMethod('email')
-                        setStep(15 as Step)
-                      }
-                    }}
-                    disabled={!validateEmail(userData.email)}
-                    className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg disabled:opacity-50 transition-opacity flex items-center justify-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <span>متابعة بالبريد الإلكتروني</span>
-                  </button>
-                  <p className="text-xs text-center text-muted-foreground">
-                    سنرسل لك كلمة مرور مؤقتة لتسجيل الدخول في التطبيق
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Step 15: Payment - Full Featured */}
-        {step === 15 && (
+        {/* Step 20: Payment - Full Featured */}
+        {step === 20 && (
           <div className="flex-1 flex flex-col animate-fade-in overflow-auto -my-8 py-8">
             {/* Header */}
             <div className="text-center mb-4">
@@ -1304,39 +1508,20 @@ export default function AppOnboarding() {
               </div>
             </div>
 
-            {/* Account Info Banner */}
-            <div className="mb-3 p-3 rounded-xl bg-vp-navy/5 border border-vp-navy/15 flex items-center gap-3">
-              {authMethod === 'apple' ? (
-                <>
-                  <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground">تسجيل الدخول عبر Apple</p>
-                    <p className="text-sm font-medium" dir="ltr">{userData.email}</p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="w-8 h-8 rounded-full bg-vp-navy/10 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-vp-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground">البريد الإلكتروني</p>
-                    <p className="text-sm font-medium" dir="ltr">{userData.email}</p>
-                  </div>
-                </>
+            {/* Email Input */}
+            <div className="mb-3">
+              <label className="block text-xs text-muted-foreground mb-1.5 text-center">البريد الإلكتروني — سنرسل لك بيانات الدخول</label>
+              <input
+                type="email"
+                value={userData.email}
+                onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+                placeholder="أدخل بريدك الإلكتروني"
+                dir="ltr"
+                className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-vp-navy/40 outline-none text-sm text-center"
+              />
+              {userData.email.trim() && !validateEmail(userData.email) && (
+                <p className="text-xs text-red-500 text-center mt-1">أدخل بريداً إلكترونياً صحيحاً</p>
               )}
-              <button
-                onClick={() => setStep(14 as Step)}
-                className="text-xs text-vp-navy font-medium hover:underline flex-shrink-0"
-              >
-                تغيير
-              </button>
             </div>
 
             {/* New Year Special Offer Banner */}
