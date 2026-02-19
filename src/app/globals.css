@@ -14,6 +14,7 @@
 /* Vega Power branding + shadcn theme */
 :root {
   --font-arabic: 'Ara Hamah Alislam', sans-serif;
+  --font-combined: var(--font-inter), 'Ara Hamah Alislam', system-ui, -apple-system, sans-serif;
   --vp-cream: #F1EFEC;
   --vp-beige: #D4C9BE;
   --vp-navy: #123458;
@@ -66,8 +67,8 @@
   --color-vp-beige: var(--vp-beige);
   --color-vp-navy: var(--vp-navy);
   --color-vp-dark: var(--vp-dark);
-  --font-sans: var(--font-arabic);
-  --font-mono: var(--font-arabic);
+  --font-sans: var(--font-combined);
+  --font-mono: var(--font-combined);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -112,7 +113,7 @@ html {
 }
 
 body {
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
