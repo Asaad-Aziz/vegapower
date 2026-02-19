@@ -83,6 +83,7 @@ export interface AffiliateCode {
   discount_percentage: number
   commission_percentage: number
   access_token: string
+  streampay_coupon_id: string | null
   is_active: boolean
   created_at: string
   updated_at: string

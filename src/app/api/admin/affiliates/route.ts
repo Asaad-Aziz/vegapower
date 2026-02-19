@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@/lib/supabase'
+import StreamSDK from '@streamsdk/typescript'
 
 async function isAuthenticated() {
   const cookieStore = await cookies()
@@ -49,14 +50,36 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServerClient()
+    const discountPct = discount_percentage || 10
+    const codeUpper = code.toUpperCase().trim()
+
+    // Create coupon in StreamPay so recurring product invoices get the discount
+    let streampay_coupon_id: string | null = null
+    const apiKey = process.env.STREAMPAY_API_KEY
+    if (apiKey) {
+      try {
+        const client = StreamSDK.init(apiKey)
+        const coupon = await client.createCoupon({
+          name: codeUpper,
+          discount_value: discountPct,
+          is_percentage: true,
+          is_active: true,
+        })
+        streampay_coupon_id = coupon.id
+        console.log('StreamPay coupon created:', coupon.id, codeUpper)
+      } catch (couponErr) {
+        console.error('Failed to create StreamPay coupon (continuing without it):', couponErr)
+      }
+    }
 
     const { data, error } = await supabase
       .from('affiliate_codes')
       .insert({
-        code: code.toUpperCase().trim(),
+        code: codeUpper,
         affiliate_name,
-        discount_percentage: discount_percentage || 10,
+        discount_percentage: discountPct,
         commission_percentage: commission_percentage || 10,
+        streampay_coupon_id,
       })
       .select()
       .single()

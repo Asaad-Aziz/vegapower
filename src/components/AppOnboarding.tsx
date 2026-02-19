@@ -164,6 +164,7 @@ export default function AppOnboarding() {
   const [appliedDiscount, setAppliedDiscount] = useState<{ percent: number; label: string } | null>(null)
   const [discountError, setDiscountError] = useState('')
   const [discountValidating, setDiscountValidating] = useState(false)
+  const [streampayCouponId, setStreampayCouponId] = useState<string | null>(null)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [paymentError, setPaymentError] = useState('')
   const [paymentRecoveryStatus, setPaymentRecoveryStatus] = useState<'idle' | 'checking' | 'success' | 'failed'>('idle')
@@ -487,6 +488,7 @@ export default function AppOnboarding() {
           appleFirebaseUid: authMethod === 'apple' ? appleFirebaseUid : undefined,
           discountCode: appliedDiscount ? discountCode : null,
           discountPercent: appliedDiscount?.percent || 0,
+          streampayCouponId: appliedDiscount ? streampayCouponId : null,
           finalPrice,
           userData: {
             gender: userData.gender,
@@ -541,6 +543,7 @@ export default function AppOnboarding() {
     const code = discountCode.toUpperCase().trim()
     if (discountCodes[code]) {
       setAppliedDiscount(discountCodes[code])
+      setStreampayCouponId(null)
       setDiscountError('')
       return
     }
@@ -551,6 +554,7 @@ export default function AppOnboarding() {
       const data = await res.json()
       if (data.valid) {
         setAppliedDiscount({ percent: data.discount_percentage, label: `${data.discount_percentage}%` })
+        setStreampayCouponId(data.streampay_coupon_id || null)
         setDiscountError('')
         return
       }
@@ -560,6 +564,7 @@ export default function AppOnboarding() {
       setDiscountValidating(false)
     }
     setAppliedDiscount(null)
+    setStreampayCouponId(null)
     setDiscountError('كود الخصم غير صالح')
   }
 

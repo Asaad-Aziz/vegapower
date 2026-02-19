@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
       appleFirebaseUid,
       discountCode,
       discountPercent,
+      streampayCouponId,
       finalPrice,
       userData 
     } = body
@@ -177,14 +178,31 @@ export async function POST(request: NextRequest) {
         failure_redirect_url: `${baseUrl}/app?payment=failed`,
       })
       
-      const paymentLink = await client.createPaymentLink({
+      // Build item with optional coupon at the item level
+      const item: { product_id: string; quantity: number; coupons?: string[] } = {
+        product_id: existingProductId,
+        quantity: 1,
+      }
+      if (streampayCouponId) {
+        item.coupons = [streampayCouponId]
+      }
+
+      const paymentLinkInput: Parameters<typeof client.createPaymentLink>[0] = {
         name: `Vega Power App - ${selectedPlan.productName}`,
         organization_consumer_id: consumer.id,
-        items: [{ product_id: existingProductId, quantity: 1 }],
+        items: [item],
         success_redirect_url: successUrlWithParams.toString(),
         failure_redirect_url: `${baseUrl}/app?payment=failed`,
-        contact_information_type: 'EMAIL', // Required for proper redirect handling
-      })
+        contact_information_type: 'EMAIL',
+      }
+
+      // Also attach coupon at the payment link level
+      if (streampayCouponId) {
+        paymentLinkInput.coupons = [streampayCouponId]
+        console.log('Applying StreamPay coupon:', streampayCouponId)
+      }
+
+      const paymentLink = await client.createPaymentLink(paymentLinkInput)
       
       console.log('Payment link response:', JSON.stringify(paymentLink, null, 2))
 

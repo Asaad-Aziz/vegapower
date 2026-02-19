@@ -11,10 +11,14 @@ CREATE TABLE affiliate_codes (
   discount_percentage DECIMAL(5, 2) NOT NULL DEFAULT 10,
   commission_percentage DECIMAL(5, 2) NOT NULL DEFAULT 10,
   access_token TEXT NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(24), 'hex'),
+  streampay_coupon_id TEXT,
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- If table already exists, add the column:
+-- ALTER TABLE affiliate_codes ADD COLUMN IF NOT EXISTS streampay_coupon_id TEXT;
 
 -- ============================================
 -- AFFILIATE PAYOUTS TABLE

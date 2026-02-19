@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     const { data: affiliate } = await supabase
       .from('affiliate_codes')
-      .select('code, discount_percentage, is_active')
+      .select('code, discount_percentage, streampay_coupon_id, is_active')
       .eq('code', code)
       .eq('is_active', true)
       .single()
@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
       valid: true,
       code: affiliate.code,
       discount_percentage: affiliate.discount_percentage,
+      streampay_coupon_id: affiliate.streampay_coupon_id || null,
     })
   } catch (error) {
     console.error('Validate code error:', error)
