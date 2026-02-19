@@ -203,13 +203,9 @@ export async function POST(request: NextRequest) {
         console.log('Using provided StreamPay coupon ID:', resolvedCouponId)
       }
 
-      // Build item with coupon at item level
-      const item: { product_id: string; quantity: number; coupons?: string[] } = {
+      const item: { product_id: string; quantity: number } = {
         product_id: existingProductId,
         quantity: 1,
-      }
-      if (resolvedCouponId) {
-        item.coupons = [resolvedCouponId]
       }
 
       const paymentLinkInput: Parameters<typeof client.createPaymentLink>[0] = {
@@ -221,7 +217,6 @@ export async function POST(request: NextRequest) {
         contact_information_type: 'EMAIL',
       }
 
-      // Also attach coupon at the payment link level
       if (resolvedCouponId) {
         paymentLinkInput.coupons = [resolvedCouponId]
         console.log('Attaching coupon to payment link:', resolvedCouponId)
