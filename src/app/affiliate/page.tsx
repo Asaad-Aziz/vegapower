@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 interface AffiliateData {
@@ -17,7 +17,7 @@ interface AffiliateData {
   payouts: { amount_sar: number; note: string | null; created_at: string }[]
 }
 
-export default function AffiliateDashboardPage() {
+function AffiliateDashboardContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
   const [data, setData] = useState<AffiliateData | null>(null)
@@ -189,5 +189,17 @@ export default function AffiliateDashboardPage() {
         </p>
       </main>
     </div>
+  )
+}
+
+export default function AffiliateDashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+        <div className="text-neutral-500">Loading...</div>
+      </div>
+    }>
+      <AffiliateDashboardContent />
+    </Suspense>
   )
 }
