@@ -177,5 +177,5 @@ MIT
 ## deploying
 
 git add -A
-git commit -m "2f"
+git commit -m "affiliate"
 git push origin master 

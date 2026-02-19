@@ -6,7 +6,7 @@ import { sendPurchaseEmail } from '@/lib/email'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { paymentData, encryptionKey, email, productId } = body
+    const { paymentData, encryptionKey, email, productId, discountCode } = body
 
     if (!paymentData || !encryptionKey) {
       return NextResponse.json(
@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
       amount_sar: paidAmount,
       status: 'paid',
       moyasar_payment_id: mfPaymentId,
+      discount_code: discountCode || null,
     })
 
     if (orderError) {

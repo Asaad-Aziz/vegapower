@@ -39,24 +39,41 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
   const [recentBuyers] = useState(() => Math.floor(Math.random() * 20) + 12) // 12-31 recent buyers
   const [discountCode, setDiscountCode] = useState('2026')
   const [discountApplied, setDiscountApplied] = useState(false)
+  const [discountPercent, setDiscountPercent] = useState(0)
+  const [discountValidating, setDiscountValidating] = useState(false)
   const mfContainerRef = useRef<HTMLDivElement>(null)
 
-  // Calculate prices with discount
-  const discountCodes: Record<string, number> = {
+  const hardcodedCodes: Record<string, number> = {
     '2026': 10,
     'VPTEST90': 90,
   }
-  const discountPercent = discountCodes[discountCode] || 0
-  const finalPrice = discountApplied 
-    ? product.price_sar * (1 - discountPercent / 100) 
+
+  const finalPrice = discountApplied
+    ? product.price_sar * (1 - discountPercent / 100)
     : product.price_sar
-  const discountAmount = discountApplied 
-    ? product.price_sar * (discountPercent / 100) 
+  const discountAmount = discountApplied
+    ? product.price_sar * (discountPercent / 100)
     : 0
 
-  const handleApplyDiscount = () => {
-    if (discountCodes[discountCode]) {
+  const handleApplyDiscount = async () => {
+    const code = discountCode.toUpperCase().trim()
+    if (hardcodedCodes[code]) {
+      setDiscountPercent(hardcodedCodes[code])
       setDiscountApplied(true)
+      return
+    }
+    setDiscountValidating(true)
+    try {
+      const res = await fetch(`/api/validate-code?code=${encodeURIComponent(code)}`)
+      const data = await res.json()
+      if (data.valid) {
+        setDiscountPercent(data.discount_percentage)
+        setDiscountApplied(true)
+      }
+    } catch {
+      // silent fail
+    } finally {
+      setDiscountValidating(false)
     }
   }
 
@@ -149,6 +166,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
         body: JSON.stringify({
           email,
           productId: product.id,
+          discountCode: discountApplied ? discountCode : null,
         }),
       })
 
@@ -294,6 +312,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                         encryptionKey: data.encryptionKey,
                         email,
                         productId: product.id,
+                        discountCode: discountApplied ? discountCode : null,
                       }),
                     })
 
@@ -717,14 +736,14 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
                     <button
                       type="button"
                       onClick={handleApplyDiscount}
-                      disabled={discountApplied || !discountCode}
+                      disabled={discountApplied || !discountCode || discountValidating}
                       className={`px-4 py-2 rounded-xl font-medium transition-all ${
                         discountApplied 
                           ? 'bg-primary/10 text-primary' 
                           : 'bg-neutral-900 text-white hover:bg-neutral-800'
                       }`}
                     >
-                      {discountApplied ? '✓ تم' : 'تطبيق'}
+                      {discountApplied ? '✓ تم' : discountValidating ? '...' : 'تطبيق'}
                     </button>
                   </div>
                   {discountApplied && (

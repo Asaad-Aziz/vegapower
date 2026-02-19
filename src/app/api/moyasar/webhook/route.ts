@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
         amount_sar: paidAmount,
         status: 'paid',
         moyasar_payment_id: paymentId,
+        discount_code: metadata?.discount_code || null,
       })
 
     if (orderError && orderError.code !== '23505') {

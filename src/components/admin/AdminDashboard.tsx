@@ -2,20 +2,24 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Product, Order, AnalyticsEvent, StoreSettings, FitnessGoal } from '@/types/database'
+import type { Product, Order, AnalyticsEvent, StoreSettings, FitnessGoal, AffiliateCode, AffiliatePayout } from '@/types/database'
 import ProductEditor from './ProductEditor'
 import StoreSettingsEditor from './StoreSettingsEditor'
 import OrdersTable from './OrdersTable'
 import AnalyticsPanel from './AnalyticsPanel'
+import AffiliatesPanel from './AffiliatesPanel'
 
 interface AdminDashboardProps {
   products: Product[]
   storeSettings: StoreSettings | null
   orders: Order[]
   analytics: AnalyticsEvent[]
+  affiliates: AffiliateCode[]
+  affiliatePayouts: AffiliatePayout[]
+  affiliateOrders: { discount_code: string | null; amount_sar: number; status: string }[]
 }
 
-type Tab = 'products' | 'store' | 'orders' | 'analytics'
+type Tab = 'products' | 'store' | 'orders' | 'analytics' | 'affiliates'
 
 const goalLabels: Record<FitnessGoal, string> = {
   fat_loss: 'خسارة دهون',
@@ -24,7 +28,7 @@ const goalLabels: Record<FitnessGoal, string> = {
   all: 'الكل',
 }
 
-export default function AdminDashboard({ products, storeSettings, orders, analytics }: AdminDashboardProps) {
+export default function AdminDashboard({ products, storeSettings, orders, analytics, affiliates, affiliatePayouts, affiliateOrders }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('products')
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [isCreatingNew, setIsCreatingNew] = useState(false)
@@ -57,6 +61,7 @@ export default function AdminDashboard({ products, storeSettings, orders, analyt
     { id: 'store', label: 'Store Settings' },
     { id: 'orders', label: 'Orders' },
     { id: 'analytics', label: 'Analytics' },
+    { id: 'affiliates', label: 'Affiliates' },
   ]
 
   return (
@@ -192,6 +197,13 @@ export default function AdminDashboard({ products, storeSettings, orders, analyt
         {activeTab === 'store' && <StoreSettingsEditor settings={storeSettings} />}
         {activeTab === 'orders' && <OrdersTable orders={orders} />}
         {activeTab === 'analytics' && <AnalyticsPanel events={analytics} />}
+        {activeTab === 'affiliates' && (
+          <AffiliatesPanel
+            affiliates={affiliates}
+            payouts={affiliatePayouts}
+            affiliateOrders={affiliateOrders}
+          />
+        )}
       </main>
     </div>
   )

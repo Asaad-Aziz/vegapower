@@ -74,3 +74,25 @@ export interface AnalyticsEvent {
   session_id: string
   created_at: string
 }
+
+// Affiliate code data shape
+export interface AffiliateCode {
+  id: string
+  code: string
+  affiliate_name: string
+  discount_percentage: number
+  commission_percentage: number
+  access_token: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Affiliate payout data shape
+export interface AffiliatePayout {
+  id: string
+  affiliate_code_id: string
+  amount_sar: number
+  note: string | null
+  created_at: string
+}
