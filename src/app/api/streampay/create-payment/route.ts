@@ -178,13 +178,38 @@ export async function POST(request: NextRequest) {
         failure_redirect_url: `${baseUrl}/app?payment=failed`,
       })
       
-      // Build item with optional coupon at the item level
+      // Resolve the StreamPay coupon ID: use the one from DB, or look up by code name
+      let resolvedCouponId = streampayCouponId || null
+      if (!resolvedCouponId && discountCode) {
+        try {
+          const codeUpper = String(discountCode).toUpperCase().trim()
+          console.log('Looking up StreamPay coupon for code:', codeUpper)
+          const couponsResult = await client.listCoupons({ page: 1, size: 100 })
+          console.log('StreamPay coupons found:', couponsResult.data?.length || 0)
+          const match = couponsResult.data?.find(
+            (c) => c.name.toUpperCase() === codeUpper && c.is_active
+          )
+          if (match) {
+            resolvedCouponId = match.id
+            console.log('Matched StreamPay coupon:', match.id, match.name)
+          } else {
+            console.log('No matching active coupon found. Available:', 
+              couponsResult.data?.map((c) => `${c.name} (active=${c.is_active})`))
+          }
+        } catch (lookupErr) {
+          console.error('Failed to look up StreamPay coupon:', lookupErr)
+        }
+      } else if (resolvedCouponId) {
+        console.log('Using provided StreamPay coupon ID:', resolvedCouponId)
+      }
+
+      // Build item with coupon at item level
       const item: { product_id: string; quantity: number; coupons?: string[] } = {
         product_id: existingProductId,
         quantity: 1,
       }
-      if (streampayCouponId) {
-        item.coupons = [streampayCouponId]
+      if (resolvedCouponId) {
+        item.coupons = [resolvedCouponId]
       }
 
       const paymentLinkInput: Parameters<typeof client.createPaymentLink>[0] = {
@@ -197,9 +222,9 @@ export async function POST(request: NextRequest) {
       }
 
       // Also attach coupon at the payment link level
-      if (streampayCouponId) {
-        paymentLinkInput.coupons = [streampayCouponId]
-        console.log('Applying StreamPay coupon:', streampayCouponId)
+      if (resolvedCouponId) {
+        paymentLinkInput.coupons = [resolvedCouponId]
+        console.log('Attaching coupon to payment link:', resolvedCouponId)
       }
 
       const paymentLink = await client.createPaymentLink(paymentLinkInput)
