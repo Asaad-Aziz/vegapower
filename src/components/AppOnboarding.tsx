@@ -163,6 +163,7 @@ export default function AppOnboarding() {
   const [discountCode, setDiscountCode] = useState('')
   const [appliedDiscount, setAppliedDiscount] = useState<{ percent: number; label: string } | null>(null)
   const [discountError, setDiscountError] = useState('')
+  const [discountValidating, setDiscountValidating] = useState(false)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [paymentError, setPaymentError] = useState('')
   const [paymentRecoveryStatus, setPaymentRecoveryStatus] = useState<'idle' | 'checking' | 'success' | 'failed'>('idle')
@@ -536,15 +537,30 @@ export default function AppOnboarding() {
   }
 
   // Apply discount code
-  const applyDiscountCode = () => {
+  const applyDiscountCode = async () => {
     const code = discountCode.toUpperCase().trim()
     if (discountCodes[code]) {
       setAppliedDiscount(discountCodes[code])
       setDiscountError('')
-    } else {
-      setAppliedDiscount(null)
-      setDiscountError('كود الخصم غير صالح')
+      return
     }
+    setDiscountError('')
+    setDiscountValidating(true)
+    try {
+      const res = await fetch(`/api/validate-code?code=${encodeURIComponent(code)}`)
+      const data = await res.json()
+      if (data.valid) {
+        setAppliedDiscount({ percent: data.discount_percentage, label: `${data.discount_percentage}%` })
+        setDiscountError('')
+        return
+      }
+    } catch {
+      // fall through to error
+    } finally {
+      setDiscountValidating(false)
+    }
+    setAppliedDiscount(null)
+    setDiscountError('كود الخصم غير صالح')
   }
 
   // Calculate final price with discount
@@ -1813,10 +1829,10 @@ export default function AppOnboarding() {
                 />
                 <button
                   onClick={applyDiscountCode}
-                  disabled={!discountCode.trim()}
+                  disabled={!discountCode.trim() || discountValidating}
                   className="px-4 py-2.5 rounded-xl bg-vp-navy/10 text-vp-navy hover:bg-vp-navy/20 disabled:opacity-50 text-sm font-medium transition-colors"
                 >
-                  تطبيق
+                  {discountValidating ? '...' : 'تطبيق'}
                 </button>
               </div>
               {discountError && (
