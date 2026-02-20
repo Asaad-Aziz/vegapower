@@ -113,6 +113,12 @@ export default function PaywallPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentError, setPaymentError] = useState('')
   const [activeReview, setActiveReview] = useState(0)
+  const [graphAnimated, setGraphAnimated] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setGraphAnimated(true), 400)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -256,43 +262,86 @@ export default function PaywallPage() {
           <p className="text-sm text-neutral-500">مدربك الشخصي بالذكاء الاصطناعي</p>
         </div>
 
-        {/* Hero Stats */}
-        <div className="flex justify-center gap-6 mb-6">
-          <div className="text-center">
-            <p className="text-2xl font-black text-vp-navy">+5K</p>
-            <p className="text-[11px] text-neutral-500">متدرب نشط</p>
+        {/* Animated Progress Chart */}
+        <div className="bg-white rounded-3xl p-5 shadow-sm mb-4">
+          <p className="text-[11px] text-neutral-400 text-center mb-1">شوف الفرق</p>
+          <div className="flex justify-center gap-5 mb-3">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-vp-navy" />
+              <span className="text-[11px] font-medium text-neutral-700">مع Vega Power</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-neutral-300" />
+              <span className="text-[11px] font-medium text-neutral-400">بدون خطة</span>
+            </div>
           </div>
-          <div className="w-px bg-neutral-200" />
-          <div className="text-center">
-            <p className="text-2xl font-black text-vp-navy">4.9</p>
-            <p className="text-[11px] text-neutral-500">تقييم التطبيق</p>
+          <div className="relative" style={{ height: 180 }}>
+            <svg viewBox="0 0 320 170" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <linearGradient id="pw-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#123458" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#123458" stopOpacity="0.01" />
+                </linearGradient>
+                <filter id="pw-glow">
+                  <feGaussianBlur stdDeviation="2" result="b" />
+                  <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              {[0, 1, 2, 3].map(i => (
+                <line key={i} x1="35" y1={15 + i * 45} x2="310" y2={15 + i * 45} stroke="currentColor" strokeOpacity="0.06" strokeWidth="1" />
+              ))}
+              <text x="28" y="19" textAnchor="end" className="fill-current" fontSize="7" opacity="0.3">هدفك</text>
+              <text x="28" y="84" textAnchor="end" className="fill-current" fontSize="7" opacity="0.3">الآن</text>
+              <text x="28" y="154" textAnchor="end" className="fill-current" fontSize="7" opacity="0.3">بداية</text>
+              {['اليوم', 'شهر ١', 'شهر ٣', 'شهر ٦'].map((l, i) => (
+                <text key={i} x={35 + i * 92} y="168" textAnchor="middle" className="fill-current" fontSize="7" opacity="0.3">{l}</text>
+              ))}
+              <path d="M35,110 C127,105 200,85 265,40 S300,18 310,15 L310,150 L35,150 Z" fill="url(#pw-grad)" opacity={graphAnimated ? 1 : 0} style={{ transition: 'opacity 1s ease-out 0.5s' }} />
+              <path d="M35,110 C127,112 200,115 265,113 S300,116 310,114" fill="none" stroke="#d1d5db" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="400" strokeDashoffset={graphAnimated ? 0 : 400} style={{ transition: 'stroke-dashoffset 1.5s ease-out 0.3s' }} />
+              <path d="M35,110 C127,105 200,85 265,40 S300,18 310,15" fill="none" stroke="#123458" strokeWidth="3" strokeLinecap="round" filter="url(#pw-glow)" strokeDasharray="400" strokeDashoffset={graphAnimated ? 0 : 400} style={{ transition: 'stroke-dashoffset 2s ease-out 0.6s' }} />
+              <circle cx="310" cy="15" r="5" fill="#123458" opacity={graphAnimated ? 1 : 0} style={{ transition: 'opacity 0.3s ease-out 2.4s' }} />
+              <circle cx="310" cy="15" r="8" fill="#123458" opacity={graphAnimated ? 0.2 : 0} style={{ transition: 'opacity 0.3s ease-out 2.4s' }}>
+                {graphAnimated && <animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite" />}
+              </circle>
+              <text x="310" y="8" textAnchor="middle" fontSize="11" opacity={graphAnimated ? 1 : 0} style={{ transition: 'opacity 0.5s ease-out 2.6s' }}>🎯</text>
+              <circle cx="310" cy="114" r="4" fill="#d1d5db" opacity={graphAnimated ? 1 : 0} style={{ transition: 'opacity 0.3s ease-out 1.6s' }} />
+            </svg>
           </div>
-          <div className="w-px bg-neutral-200" />
-          <div className="text-center">
-            <p className="text-2xl font-black text-vp-navy">%93</p>
-            <p className="text-[11px] text-neutral-500">نسبة الرضا</p>
+          <div className="grid grid-cols-2 gap-2.5 mt-2">
+            <div className="p-3 rounded-2xl bg-vp-navy/5 text-center" style={{ opacity: graphAnimated ? 1 : 0, transform: graphAnimated ? 'translateY(0)' : 'translateY(10px)', transition: 'all 0.5s ease-out 2s' }}>
+              <p className="text-xl font-black text-vp-navy">3x</p>
+              <p className="text-[10px] text-neutral-500">نتائج أسرع مع خطة مخصصة</p>
+            </div>
+            <div className="p-3 rounded-2xl bg-vp-navy/5 text-center" style={{ opacity: graphAnimated ? 1 : 0, transform: graphAnimated ? 'translateY(0)' : 'translateY(10px)', transition: 'all 0.5s ease-out 2.3s' }}>
+              <p className="text-xl font-black text-vp-navy">%91</p>
+              <p className="text-[10px] text-neutral-500">حققوا أهدافهم</p>
+            </div>
           </div>
         </div>
 
-        {/* What You Get */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm mb-4">
-          <h2 className="text-base font-bold text-vp-navy mb-4 text-center">ايش بتحصل مع Vega Power؟</h2>
-          <div className="space-y-3.5">
+        {/* What You Get — Feature Grid */}
+        <div className="mb-4">
+          <h2 className="text-base font-bold text-vp-navy mb-3 text-center">ايش بتحصل؟</h2>
+          <div className="grid grid-cols-2 gap-2.5">
             {[
-              { icon: '🤖', title: 'برنامج تمارين مخصص بالذكاء الاصطناعي', desc: 'يتكيف مع مستواك وأهدافك  ' },
-              { icon: '🍽️', title: 'حساب السعرات والماكروز اليومية', desc: 'أرقام دقيقة عشان تشوف نتائج فعلية' },
-              { icon: '📊', title: 'متابعة تقدمك أسبوعياً', desc: 'تعرف وين أنت ووين رايح بالضبط' },
-              { icon: '👥', title: 'مجتمع متدربين يحفزك', desc: 'ما أنت لحالك، انضم لآلاف يتمرنون معك' },
-              { icon: '🔄', title: 'تحديثات وتعديلات مستمرة', desc: 'البرنامج يتغير معك مو ثابت' },
+              { icon: '🤖', title: 'برنامج تمارين AI', desc: 'مخصص لك ويتكيف أسبوعياً', color: 'from-blue-50 to-indigo-50', border: 'border-blue-100' },
+              { icon: '🍽️', title: 'سعرات وماكروز', desc: 'أرقام دقيقة لنتائج حقيقية', color: 'from-green-50 to-emerald-50', border: 'border-green-100' },
+              { icon: '📊', title: 'تتبع التقدم', desc: 'شوف تطورك كل أسبوع', color: 'from-purple-50 to-violet-50', border: 'border-purple-100' },
+              { icon: '👥', title: 'مجتمع محفز', desc: 'آلاف يتمرنون معك', color: 'from-orange-50 to-amber-50', border: 'border-orange-100' },
             ].map((f) => (
-              <div key={f.title} className="flex gap-3 items-start">
-                <span className="text-xl mt-0.5 shrink-0">{f.icon}</span>
-                <div>
-                  <p className="text-sm font-semibold text-neutral-800">{f.title}</p>
-                  <p className="text-xs text-neutral-500 mt-0.5">{f.desc}</p>
-                </div>
+              <div key={f.title} className={`bg-gradient-to-br ${f.color} border ${f.border} rounded-2xl p-3.5 text-center`}>
+                <span className="text-2xl block mb-1.5">{f.icon}</span>
+                <p className="text-xs font-bold text-neutral-800 mb-0.5">{f.title}</p>
+                <p className="text-[10px] text-neutral-500 leading-relaxed">{f.desc}</p>
               </div>
             ))}
+          </div>
+          <div className="mt-2.5 bg-gradient-to-br from-vp-navy/5 to-vp-navy/10 border border-vp-navy/10 rounded-2xl p-3.5 flex items-center gap-3">
+            <span className="text-2xl shrink-0">🔄</span>
+            <div>
+              <p className="text-xs font-bold text-neutral-800">برنامج يتطور معك</p>
+              <p className="text-[10px] text-neutral-500">يتغير ويتحدث كل فترة — مو برنامج ثابت</p>
+            </div>
           </div>
         </div>
 
