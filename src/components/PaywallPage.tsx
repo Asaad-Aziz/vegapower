@@ -6,7 +6,6 @@ import { initiateCheckout } from '@/lib/meta-pixel'
 
 const plans = {
   monthly: { price: 45, period: 'شهر', productId: 'moyasar_monthly', savings: null, days: 30, label: 'شهري' },
-  quarterly: { price: 92, period: '3 أشهر', productId: 'moyasar_3months', savings: 23, days: 90, label: '3 أشهر' },
   yearly: { price: 155, period: 'سنة', productId: 'moyasar_yearly', savings: 293, days: 365, label: 'سنوي' },
 }
 
@@ -27,7 +26,7 @@ const EMAIL_DOMAINS = [
   'live.com',
 ]
 
-type PlanType = 'monthly' | 'quarterly' | 'yearly'
+type PlanType = 'monthly' | 'yearly'
 
 const reviews = [
   { name: 'سارة', rating: 5, text: 'التطبيق غيّر حياتي! نزلت ١٢ كيلو في ٣ أشهر بدون ما أحرم نفسي من أكل.', period: 'مشتركة من ٣ أشهر' },
@@ -251,7 +250,7 @@ export default function PaywallPage() {
         {/* Header */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
-            <Image src="/vegapowerlogo.png" alt="Vega Power" width={56} height={56} className="rounded-2xl shadow-md" />
+            <Image src="/Vegapower Logo-05.jpg" alt="Vega Power" width={64} height={64} className="rounded-2xl shadow-md" />
           </div>
           <h1 className="text-2xl font-black text-vp-navy mb-1">Vega Power</h1>
           <p className="text-sm text-neutral-500">مدربك الشخصي بالذكاء الاصطناعي</p>
@@ -280,7 +279,7 @@ export default function PaywallPage() {
           <h2 className="text-base font-bold text-vp-navy mb-4 text-center">ايش بتحصل مع Vega Power؟</h2>
           <div className="space-y-3.5">
             {[
-              { icon: '🤖', title: 'برنامج تمارين مخصص بالذكاء الاصطناعي', desc: 'يتكيف مع مستواك وأهدافك كل أسبوع' },
+              { icon: '🤖', title: 'برنامج تمارين مخصص بالذكاء الاصطناعي', desc: 'يتكيف مع مستواك وأهدافك  ' },
               { icon: '🍽️', title: 'حساب السعرات والماكروز اليومية', desc: 'أرقام دقيقة عشان تشوف نتائج فعلية' },
               { icon: '📊', title: 'متابعة تقدمك أسبوعياً', desc: 'تعرف وين أنت ووين رايح بالضبط' },
               { icon: '👥', title: 'مجتمع متدربين يحفزك', desc: 'ما أنت لحالك، انضم لآلاف يتمرنون معك' },
@@ -361,7 +360,7 @@ export default function PaywallPage() {
 
         {/* Plan Selection */}
         <div className="mb-4">
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             {(Object.entries(plans) as [PlanType, typeof plans[PlanType]][]).map(([key, plan]) => {
               const price = getFinalPrice(plan.price)
               const daily = getDailyPrice(price, plan.days)
@@ -449,11 +448,15 @@ export default function PaywallPage() {
           <p className="text-xs text-red-500 text-center mb-3">{paymentError}</p>
         )}
 
+        <p className="text-[11px] text-neutral-400 text-center mb-3 leading-relaxed">
+          اشتراك يتجدد تلقائياً — تقدر تلغيه أي وقت من التطبيق أو عبر الدعم
+        </p>
+
         {/* Trust Signals */}
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-4 text-[11px] text-neutral-400">
             <span className="flex items-center gap-1">🔒 دفع آمن</span>
-            <span className="flex items-center gap-1">↩️ إلغاء أي وقت</span>
+            <span className="flex items-center gap-1">↩️ إلغاء بسهولة</span>
             <span className="flex items-center gap-1">⚡ وصول فوري</span>
           </div>
           <p className="text-[10px] text-neutral-400 leading-relaxed">
