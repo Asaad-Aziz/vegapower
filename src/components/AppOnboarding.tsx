@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { initiateCheckout } from '@/lib/meta-pixel'
@@ -52,6 +52,76 @@ const discountCodes: Record<string, { percent: number; label: string }> = {
   'VEGA20': { percent: 20, label: '20%' },
   'NEWYEAR': { percent: 15, label: '15%' },
   'FITNESS': { percent: 10, label: '10%' },
+}
+
+const EMAIL_DOMAINS = [
+  'gmail.com',
+  'hotmail.com',
+  'outlook.com',
+  'yahoo.com',
+  'icloud.com',
+  'outlook.sa',
+  'live.com',
+]
+
+function EmailInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  const atIndex = value.indexOf('@')
+  const hasAt = atIndex !== -1
+  const localPart = hasAt ? value.slice(0, atIndex) : value
+  const domainPart = hasAt ? value.slice(atIndex + 1) : ''
+
+  const suggestions = hasAt && localPart.length > 0
+    ? EMAIL_DOMAINS.filter(d => d.startsWith(domainPart.toLowerCase()) && d !== domainPart.toLowerCase())
+    : []
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <input
+        type="email"
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value)
+          setShowSuggestions(true)
+        }}
+        onFocus={() => setShowSuggestions(true)}
+        placeholder="أدخل بريدك الإلكتروني"
+        dir="ltr"
+        className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-vp-navy/40 outline-none text-sm text-center"
+      />
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg overflow-hidden max-h-48 overflow-y-auto">
+          {suggestions.map((domain) => (
+            <button
+              key={domain}
+              type="button"
+              className="w-full text-left px-4 py-2.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+              dir="ltr"
+              onClick={() => {
+                onChange(`${localPart}@${domain}`)
+                setShowSuggestions(false)
+              }}
+            >
+              <span className="text-muted-foreground">{localPart}@</span>
+              <span className="font-medium">{domain}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 type PlanType = 'monthly' | 'quarterly' | 'yearly'
@@ -1747,16 +1817,12 @@ export default function AppOnboarding() {
               </div>
             </div>
 
-            {/* Email Input */}
+            {/* Email Input with domain suggestions */}
             <div className="mb-3">
               <label className="block text-xs text-muted-foreground mb-1.5 text-center">البريد الإلكتروني — سنرسل لك بيانات الدخول</label>
-              <input
-                type="email"
+              <EmailInput
                 value={userData.email}
-                onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-                placeholder="أدخل بريدك الإلكتروني"
-                dir="ltr"
-                className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-vp-navy/40 outline-none text-sm text-center"
+                onChange={(val) => setUserData({ ...userData, email: val })}
               />
               {userData.email.trim() && !validateEmail(userData.email) && (
                 <p className="text-xs text-red-500 text-center mt-1">أدخل بريداً إلكترونياً صحيحاً</p>
