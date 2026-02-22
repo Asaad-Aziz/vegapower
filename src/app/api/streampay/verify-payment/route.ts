@@ -219,6 +219,18 @@ export async function POST(request: NextRequest) {
       console.error('Failed to store subscription:', insertError)
     }
 
+    // Also insert into orders table so affiliate tracking can find it
+    const { error: orderError } = await supabase.from('orders').insert({
+      buyer_email: email,
+      amount_sar: parseFloat(amount) || 155,
+      status: 'paid',
+      moyasar_payment_id: sessionId || `streampay_${Date.now()}`,
+      discount_code: discountCode || null,
+    })
+    if (orderError && orderError.code !== '23505') {
+      console.error('Failed to create order for affiliate tracking:', orderError)
+    }
+
     // Send email
     const resendApiKey = process.env.RESEND_API_KEY
     if (resendApiKey && firebaseUid) {
