@@ -31,7 +31,18 @@ function AppSuccessInner() {
         const plan = searchParams.get('plan') || 'monthly'
         const amount = searchParams.get('amount')
         const sessionId = searchParams.get('session')
-        const userDataParam = searchParams.get('userData')
+        const userDataFromUrl = searchParams.get('userData')
+        let userDataParam = userDataFromUrl
+        // Prefer sessionStorage (URL may be truncated by StreamPay's 2000 char limit)
+        if (!userDataParam) {
+          try {
+            const stored = sessionStorage.getItem('sp_userData')
+            if (stored) {
+              userDataParam = stored
+              sessionStorage.removeItem('sp_userData')
+            }
+          } catch {}
+        }
         const discountCode = searchParams.get('discountCode')
         const authMethodParam = searchParams.get('authMethod') || 'email'
         const appleFirebaseUid = searchParams.get('appleFirebaseUid')
@@ -58,7 +69,9 @@ function AppSuccessInner() {
               amount,
               authMethod: authMethodParam,
               appleFirebaseUid: authMethodParam === 'apple' ? appleFirebaseUid : undefined,
-              userData: userDataParam ? decodeURIComponent(userDataParam) : null,
+              userData: userDataParam
+                ? (userDataFromUrl ? decodeURIComponent(userDataParam) : userDataParam)
+                : null,
               discountCode,
               streampayConsumerId,
               streampayProductId,

@@ -234,6 +234,7 @@ export default function PaywallPage() {
       const data = await response.json()
 
       if (data.success && data.paymentUrl) {
+        try { sessionStorage.setItem('sp_userData', '{}') } catch {}
         window.location.href = data.paymentUrl
       } else {
         setPaymentError(data.error || 'حدث خطأ في إنشاء رابط الدفع')

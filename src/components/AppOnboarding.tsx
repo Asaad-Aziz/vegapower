@@ -595,7 +595,41 @@ export default function AppOnboarding() {
       const data = await response.json()
 
       if (data.success && data.paymentUrl) {
-        // Redirect to StreamPay checkout
+        // Store userData in sessionStorage so the success page can read it
+        // (keeps the StreamPay redirect URL under the 2000 char limit)
+        try {
+          sessionStorage.setItem('sp_userData', JSON.stringify({
+            gender: userData.gender,
+            activityLevel: userData.activityLevel,
+            fitnessLevel: userData.fitnessLevel,
+            workoutLocation: userData.workoutLocation,
+            height: userData.height,
+            weight: userData.weight,
+            birthYear: userData.birthYear,
+            age: userData.age,
+            fitnessGoal: userData.fitnessGoal,
+            targetWeight: userData.targetWeight,
+            daysPerWeek: userData.daysPerWeek,
+            splitPreference: userData.splitPreference,
+            trainingStyle: userData.trainingStyle,
+            priorityMuscles: userData.priorityMuscles,
+            injuries: userData.injuries,
+            cardioPreference: userData.cardioPreference,
+            targetSpeed: userData.targetSpeed,
+            challenges: userData.challenges,
+            accomplishments: userData.accomplishments,
+            calculatedCalories: userData.calculatedCalories,
+            proteinGrams: userData.proteinGrams,
+            carbsGrams: userData.carbsGrams,
+            fatGrams: userData.fatGrams,
+            proteinPercentage: userData.proteinPercentage,
+            carbsPercentage: userData.carbsPercentage,
+            fatPercentage: userData.fatPercentage,
+            programName: userData.programName,
+          }))
+        } catch (e) {
+          console.warn('Failed to store userData in sessionStorage:', e)
+        }
         window.location.href = data.paymentUrl
       } else {
         setPaymentError(data.error || 'حدث خطأ في إنشاء رابط الدفع')

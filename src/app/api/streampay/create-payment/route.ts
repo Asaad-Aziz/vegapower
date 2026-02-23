@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       : selectedPlan.price)
 
     // Get base URL for redirects
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vegapowerstore.com'
+    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://vegapowerstore.com').replace(/\/+$/, '')
 
     // Create a session ID to track this payment
     const sessionId = `sp_${Date.now()}_${Math.random().toString(36).substring(7)}`
@@ -109,10 +109,8 @@ export async function POST(request: NextRequest) {
     successUrlWithParams.searchParams.set('plan', plan)
     successUrlWithParams.searchParams.set('amount', String(price))
     
-    // Encode user data for the success page
-    if (userData) {
-      successUrlWithParams.searchParams.set('userData', encodeURIComponent(JSON.stringify(userData)))
-    }
+    // userData is now stored in sessionStorage on the client to keep the URL short
+    // (StreamPay has a 2000 char limit on redirect URLs)
     if (discountCode) {
       successUrlWithParams.searchParams.set('discountCode', discountCode)
     }
