@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
+import Script from 'next/script'
 import { initiateCheckout } from '@/lib/meta-pixel'
 import { signInWithApple, checkAppleSignInRedirect } from '@/lib/firebase-client'
 
@@ -41,9 +42,7 @@ interface UserData {
 }
 
 const plans = {
-  monthly: { price: 45, period: 'شهر', productId: 'moyasar_monthly', savings: null, days: 30 },
-  quarterly: { price: 92, period: '3 أشهر', productId: 'moyasar_3months', savings: 'وفر 23 ريال', days: 90 },
-  yearly: { price: 155, period: 'سنة', productId: 'moyasar_yearly', savings: 'وفر 293 ريال', days: 365 }, // Special New Year offer - was 448
+  yearly: { price: 187, period: 'سنة', productId: 'myfatoorah_yearly', savings: null, days: 365 },
 }
 
 // Discount codes configuration
@@ -124,7 +123,7 @@ function EmailInput({ value, onChange }: { value: string; onChange: (v: string) 
   )
 }
 
-type PlanType = 'monthly' | 'quarterly' | 'yearly'
+type PlanType = 'yearly'
 
 // Activity level mappings
 const activityLevels = [
@@ -235,6 +234,11 @@ export default function AppOnboarding() {
   const [discountError, setDiscountError] = useState('')
   const [discountValidating, setDiscountValidating] = useState(false)
   const [streampayCouponId, setStreampayCouponId] = useState<string | null>(null)
+  const [mfScriptLoaded, setMfScriptLoaded] = useState(false)
+  const [mfInitialized, setMfInitialized] = useState(false)
+  const [mfEncryptionKey, setMfEncryptionKey] = useState('')
+  const [mfSessionLoading, setMfSessionLoading] = useState(false)
+  const mfContainerRef = useRef<HTMLDivElement>(null)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [paymentError, setPaymentError] = useState('')
   const [paymentRecoveryStatus, setPaymentRecoveryStatus] = useState<'idle' | 'checking' | 'success' | 'failed'>('idle')
@@ -526,21 +530,21 @@ export default function AppOnboarding() {
     }
   }
 
-  // Handle StreamPay payment
-  const handlePayment = async () => {
+  // Initialize MyFatoorah embedded payment form
+  const initMyFatoorahPayment = async () => {
     if (!validateEmail(userData.email)) {
       setPaymentError('يرجى إدخال بريد إلكتروني صحيح')
       return
     }
+    if (mfInitialized || mfSessionLoading) return
 
-    setIsProcessingPayment(true)
+    setMfSessionLoading(true)
     setPaymentError('')
 
-    const finalPrice = getFinalPrice(plans[selectedPlan].price)
+    const finalPrice = getFinalPrice(plans.yearly.price)
 
-    // Track InitiateCheckout event for Meta Pixel
     initiateCheckout({
-      content_ids: [plans[selectedPlan].productId],
+      content_ids: [plans.yearly.productId],
       content_type: 'product',
       value: finalPrice,
       currency: 'SAR',
@@ -548,97 +552,119 @@ export default function AppOnboarding() {
     })
 
     try {
-      const response = await fetch('/api/streampay/create-payment', {
+      const response = await fetch('/api/myfatoorah/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          plan: selectedPlan,
+          amount: finalPrice,
           email: userData.email,
-          authMethod: authMethod,
-          appleFirebaseUid: authMethod === 'apple' ? appleFirebaseUid : undefined,
-          discountCode: appliedDiscount ? discountCode : null,
-          discountPercent: appliedDiscount?.percent || 0,
-          streampayCouponId: appliedDiscount ? streampayCouponId : null,
-          finalPrice,
-          userData: {
-            gender: userData.gender,
-            activityLevel: userData.activityLevel,
-            fitnessLevel: userData.fitnessLevel,
-            workoutLocation: userData.workoutLocation,
-            height: userData.height,
-            weight: userData.weight,
-            birthYear: userData.birthYear,
-            age: userData.age,
-            fitnessGoal: userData.fitnessGoal,
-            targetWeight: userData.targetWeight,
-            daysPerWeek: userData.daysPerWeek,
-            splitPreference: userData.splitPreference,
-            trainingStyle: userData.trainingStyle,
-            priorityMuscles: userData.priorityMuscles,
-            injuries: userData.injuries,
-            cardioPreference: userData.cardioPreference,
-            targetSpeed: userData.targetSpeed,
-            challenges: userData.challenges,
-            accomplishments: userData.accomplishments,
-            calculatedCalories: userData.calculatedCalories,
-            proteinGrams: userData.proteinGrams,
-            carbsGrams: userData.carbsGrams,
-            fatGrams: userData.fatGrams,
-            proteinPercentage: userData.proteinPercentage,
-            carbsPercentage: userData.carbsPercentage,
-            fatPercentage: userData.fatPercentage,
-            programName: userData.programName,
-          },
+          productId: 'app_yearly',
         }),
       })
-
       const data = await response.json()
-
-      if (data.success && data.paymentUrl) {
-        // Store userData in sessionStorage so the success page can read it
-        // (keeps the StreamPay redirect URL under the 2000 char limit)
-        try {
-          sessionStorage.setItem('sp_userData', JSON.stringify({
-            gender: userData.gender,
-            activityLevel: userData.activityLevel,
-            fitnessLevel: userData.fitnessLevel,
-            workoutLocation: userData.workoutLocation,
-            height: userData.height,
-            weight: userData.weight,
-            birthYear: userData.birthYear,
-            age: userData.age,
-            fitnessGoal: userData.fitnessGoal,
-            targetWeight: userData.targetWeight,
-            daysPerWeek: userData.daysPerWeek,
-            splitPreference: userData.splitPreference,
-            trainingStyle: userData.trainingStyle,
-            priorityMuscles: userData.priorityMuscles,
-            injuries: userData.injuries,
-            cardioPreference: userData.cardioPreference,
-            targetSpeed: userData.targetSpeed,
-            challenges: userData.challenges,
-            accomplishments: userData.accomplishments,
-            calculatedCalories: userData.calculatedCalories,
-            proteinGrams: userData.proteinGrams,
-            carbsGrams: userData.carbsGrams,
-            fatGrams: userData.fatGrams,
-            proteinPercentage: userData.proteinPercentage,
-            carbsPercentage: userData.carbsPercentage,
-            fatPercentage: userData.fatPercentage,
-            programName: userData.programName,
-          }))
-        } catch (e) {
-          console.warn('Failed to store userData in sessionStorage:', e)
-        }
-        window.location.href = data.paymentUrl
-      } else {
-        setPaymentError(data.error || 'حدث خطأ في إنشاء رابط الدفع')
-        setIsProcessingPayment(false)
+      if (!data.success) {
+        setPaymentError('فشل في إنشاء جلسة الدفع. يرجى المحاولة مرة أخرى.')
+        setMfSessionLoading(false)
+        return
       }
-    } catch (error) {
-      console.error('Payment error:', error)
-      setPaymentError('حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.')
-      setIsProcessingPayment(false)
+
+      setMfEncryptionKey(data.encryptionKey)
+
+      if (mfContainerRef.current) mfContainerRef.current.innerHTML = ''
+
+      setTimeout(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const myfatoorah = (window as any).myfatoorah
+        if (!myfatoorah) {
+          setPaymentError('حدث خطأ في تحميل نموذج الدفع. يرجى تحديث الصفحة.')
+          setMfSessionLoading(false)
+          return
+        }
+
+        myfatoorah.init({
+          sessionId: data.sessionId,
+          containerId: 'mf-app-form',
+          shouldHandlePaymentUrl: true,
+          callback: async (paymentResponse: {
+            isSuccess: boolean
+            sessionId: string
+            paymentCompleted: boolean
+            paymentData?: string
+            redirectionUrl?: string
+          }) => {
+            if (paymentResponse.isSuccess && paymentResponse.paymentCompleted && paymentResponse.paymentData) {
+              setIsProcessingPayment(true)
+              try {
+                const verifyRes = await fetch('/api/myfatoorah/verify-app', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    paymentData: paymentResponse.paymentData,
+                    encryptionKey: data.encryptionKey,
+                    email: userData.email,
+                    plan: 'yearly',
+                    amount: finalPrice,
+                    discountCode: appliedDiscount ? discountCode : null,
+                    authMethod: authMethod || 'email',
+                    appleFirebaseUid: authMethod === 'apple' ? appleFirebaseUid : undefined,
+                    userData: JSON.stringify({
+                      gender: userData.gender,
+                      activityLevel: userData.activityLevel,
+                      fitnessLevel: userData.fitnessLevel,
+                      workoutLocation: userData.workoutLocation,
+                      height: userData.height,
+                      weight: userData.weight,
+                      birthYear: userData.birthYear,
+                      age: userData.age,
+                      fitnessGoal: userData.fitnessGoal,
+                      targetWeight: userData.targetWeight,
+                      daysPerWeek: userData.daysPerWeek,
+                      splitPreference: userData.splitPreference,
+                      trainingStyle: userData.trainingStyle,
+                      priorityMuscles: userData.priorityMuscles,
+                      injuries: userData.injuries,
+                      cardioPreference: userData.cardioPreference,
+                      targetSpeed: userData.targetSpeed,
+                      challenges: userData.challenges,
+                      accomplishments: userData.accomplishments,
+                      calculatedCalories: userData.calculatedCalories,
+                      proteinGrams: userData.proteinGrams,
+                      carbsGrams: userData.carbsGrams,
+                      fatGrams: userData.fatGrams,
+                      proteinPercentage: userData.proteinPercentage,
+                      carbsPercentage: userData.carbsPercentage,
+                      fatPercentage: userData.fatPercentage,
+                      programName: userData.programName,
+                    }),
+                  }),
+                })
+                const result = await verifyRes.json()
+                if (result.success) {
+                  sessionStorage.setItem('mf_payment_result', JSON.stringify({
+                    success: true, email: userData.email, plan: 'yearly', amount: finalPrice,
+                  }))
+                  window.location.href = `/app/success?source=streampay&email=${encodeURIComponent(userData.email)}&plan=yearly&amount=${finalPrice}&session=mf_${Date.now()}&authMethod=${authMethod || 'email'}${discountCode && appliedDiscount ? `&discountCode=${discountCode}` : ''}`
+                } else {
+                  setPaymentError(result.error || 'فشل في التحقق من الدفع')
+                  setIsProcessingPayment(false)
+                }
+              } catch {
+                setPaymentError('حدث خطأ في التحقق من الدفع.')
+                setIsProcessingPayment(false)
+              }
+            } else if (paymentResponse.isSuccess && paymentResponse.redirectionUrl) {
+              // hosted payment method redirect
+            } else if (!paymentResponse.isSuccess) {
+              setPaymentError('فشلت عملية الدفع. يرجى المحاولة مرة أخرى.')
+            }
+          },
+        })
+        setMfInitialized(true)
+        setMfSessionLoading(false)
+      }, 200)
+    } catch {
+      setPaymentError('حدث خطأ. يرجى المحاولة مرة أخرى.')
+      setMfSessionLoading(false)
     }
   }
 
@@ -1863,59 +1889,25 @@ export default function AppOnboarding() {
               )}
             </div>
 
-            {/* New Year Special Offer Banner */}
-            <div className="p-3 rounded-xl bg-vp-navy text-white mb-3 text-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvc3ZnPg==')] opacity-50"></div>
-              <div className="relative">
-                <p className="text-xs font-bold mb-1">🎊 عرض السنة الجديدة 2026 🎊</p>
-                <p className="text-lg font-black">سنة كاملة بـ <span className="line-through opacity-60">448</span> 155 ريال فقط!</p>
-                <p className="text-[10px] opacity-80 mt-1">⏰ عرض محدود - لأول 100 مشترك فقط</p>
+            {/* Single Plan Display */}
+            <div className="p-4 rounded-2xl bg-vp-navy text-white mb-3 text-center">
+              <p className="text-xs opacity-70 mb-1">اشتراك سنة كاملة</p>
+              <div className="flex items-baseline justify-center gap-1">
+                {appliedDiscount ? (
+                  <>
+                    <span className="text-lg line-through opacity-50">{plans.yearly.price}</span>
+                    <span className="text-3xl font-black">{getFinalPrice(plans.yearly.price)}</span>
+                  </>
+                ) : (
+                  <span className="text-3xl font-black">{plans.yearly.price}</span>
+                )}
+                <span className="text-sm opacity-70">ريال</span>
               </div>
-            </div>
-
-            {/* Plan Selection - Colorful Cards with Daily Cost */}
-            <div className="flex gap-2 mb-3">
-              {[
-                { key: 'monthly' as PlanType, label: 'شهر', price: plans.monthly.price, days: plans.monthly.days, savings: null },
-                { key: 'yearly' as PlanType, label: 'سنة', price: plans.yearly.price, days: plans.yearly.days, savings: plans.yearly.savings },
-              ].map((plan) => {
-                const finalPrice = getFinalPrice(plan.price)
-                const dailyCost = getDailyCost(finalPrice, plan.days)
-                return (
-                  <button
-                    key={plan.key}
-                    onClick={() => setSelectedPlan(plan.key)}
-                    className={`flex-1 p-3 rounded-xl text-center transition-all relative overflow-hidden ${
-                      selectedPlan === plan.key
-                        ? 'bg-vp-navy text-white scale-[1.02] shadow-lg'
-                        : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                    }`}
-                  >
-                    {plan.savings && (
-                      <div className={`absolute -top-0.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap ${
-                        selectedPlan === plan.key ? 'bg-white/30 text-white' : 'bg-vp-navy text-white'
-                      }`}>
-                        {plan.savings}
-                      </div>
-                    )}
-                    <div className={`text-[10px] mb-0.5 mt-2 ${selectedPlan === plan.key ? 'opacity-80' : 'text-muted-foreground'}`}>{plan.label}</div>
-                    {appliedDiscount && finalPrice !== plan.price ? (
-                      <>
-                        <div className="text-sm line-through opacity-50">{plan.price}</div>
-                        <div className="text-xl font-bold">{finalPrice}</div>
-                      </>
-                    ) : (
-                      <div className="text-xl font-bold">{plan.price}</div>
-                    )}
-                    <div className={`text-[10px] ${selectedPlan === plan.key ? 'opacity-80' : 'text-muted-foreground'}`}>ريال</div>
-                    <div className={`text-[9px] mt-1 px-2 py-0.5 rounded-full ${
-                      selectedPlan === plan.key ? 'bg-white/20' : 'bg-neutral-200 dark:bg-neutral-700'
-                    }`}>
-                      {dailyCost} ر.س/يوم
-                    </div>
-                  </button>
-                )
-              })}
+              <p className="text-[10px] opacity-60 mt-1">{getDailyCost(getFinalPrice(plans.yearly.price), 365)} ر.س/يوم فقط</p>
+              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/20 text-green-300 text-[11px]">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                دفعة واحدة — بدون تجديد تلقائي
+              </div>
             </div>
 
             {/* Discount Code Input */}
@@ -1966,14 +1958,6 @@ export default function AppOnboarding() {
               )}
             </div>
 
-            {/* No Auto-Renewal */}
-            <div className="flex items-center justify-center gap-2 p-2 bg-green-500/10 rounded-lg mb-3">
-              <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-              </svg>
-              <span className="text-xs text-green-700 dark:text-green-400">يمكنك إيقاف وإالغاء الإشتراك متى ما تشاء  بسهولة</span>
-            </div>
-
             {/* Payment Error Message */}
             {paymentError && (
               <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-3">
@@ -1981,26 +1965,42 @@ export default function AppOnboarding() {
               </div>
             )}
 
-            {/* Payment Button */}
-            <button
-              onClick={handlePayment}
-              disabled={!validateEmail(userData.email) || isProcessingPayment}
-              className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg disabled:opacity-50 shadow-lg flex items-center justify-center gap-2"
-            >
-              {isProcessingPayment ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>جاري التحويل للدفع...</span>
-                </>
-              ) : appliedDiscount ? (
-                <>🚀 ابدأ الآن - <span className="line-through opacity-60 mx-1">{plans[selectedPlan].price}</span> {getFinalPrice(plans[selectedPlan].price)} ريال</>
-              ) : (
-                <>🚀 ابدأ الآن - {plans[selectedPlan].price} ريال</>
-              )}
-            </button>
+            {/* MyFatoorah Embedded Payment Form */}
+            {!mfInitialized && !isProcessingPayment && (
+              <button
+                onClick={initMyFatoorahPayment}
+                disabled={!validateEmail(userData.email) || mfSessionLoading}
+                className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg disabled:opacity-50 shadow-lg flex items-center justify-center gap-2 mb-3"
+              >
+                {mfSessionLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>جاري تحميل نموذج الدفع...</span>
+                  </>
+                ) : appliedDiscount ? (
+                  <>🚀 ادفع الآن - <span className="line-through opacity-60 mx-1">{plans.yearly.price}</span> {getFinalPrice(plans.yearly.price)} ريال</>
+                ) : (
+                  <>🚀 ادفع الآن - {plans.yearly.price} ريال</>
+                )}
+              </button>
+            )}
+
+            {isProcessingPayment && (
+              <div className="flex items-center justify-center gap-2 py-4 mb-3">
+                <div className="w-5 h-5 border-2 border-vp-navy/30 border-t-vp-navy rounded-full animate-spin"></div>
+                <span className="text-sm text-muted-foreground">جاري التحقق من الدفع...</span>
+              </div>
+            )}
+
+            <div id="mf-app-form" ref={mfContainerRef} className={mfInitialized ? 'mb-4' : 'hidden'}></div>
+
+            <Script
+              src={process.env.NEXT_PUBLIC_MYFATOORAH_JS_URL || 'https://sa.myfatoorah.com/sessions/v1/session.js'}
+              onLoad={() => setMfScriptLoaded(true)}
+            />
 
             {/* Payment Methods */}
-            <div className="mt-3 flex items-center justify-center gap-3">
+            <div className="mt-2 flex items-center justify-center gap-3">
               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <span>💳</span> Visa
               </div>
@@ -2011,13 +2011,13 @@ export default function AppOnboarding() {
                 <span>💳</span> مدى
               </div>
               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <span>🏦</span> تحويل بنكي
+                <span>🍎</span> Apple Pay
               </div>
             </div>
 
             {/* Footer */}
             <div className="mt-3 text-center">
-              <p className="text-[10px] text-muted-foreground">🔒 دفع آمن ومشفر عبر StreamPay</p>
+              <p className="text-[10px] text-muted-foreground">🔒 دفع آمن ومشفر • دفعة واحدة بدون تجديد تلقائي</p>
             </div>
           </div>
         )}
