@@ -2175,7 +2175,7 @@ export default function AppOnboarding() {
                   onClick={nextStep}
                   className="w-full py-4 rounded-2xl bg-vp-navy text-white font-bold text-lg shadow-xl shadow-vp-navy/25 active:scale-[0.98] transition-transform"
                 >
-                  يلا نبدأ — مجاناً 🚀
+                  يلا نبدأ 🚀
                 </button>
                 <p className="text-[10px] text-muted-foreground text-center mt-2">يأخذ أقل من دقيقتين • بدون التزام</p>
               </>

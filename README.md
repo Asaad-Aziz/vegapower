@@ -170,7 +170,7 @@ Edit `src/lib/email.ts` to customize the purchase confirmation email.
 
 Edit `src/components/CheckoutForm.tsx` - modify the `methods` array in Moyasar config.
 
-## License
+## Licenser
 
 MIT
 
