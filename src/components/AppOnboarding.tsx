@@ -241,6 +241,7 @@ export default function AppOnboarding() {
   const mfContainerRef = useRef<HTMLDivElement>(null)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [paymentError, setPaymentError] = useState('')
+  const [tamaraLoading, setTamaraLoading] = useState(false)
   const [paymentRecoveryStatus, setPaymentRecoveryStatus] = useState<'idle' | 'checking' | 'success' | 'failed'>('idle')
   const [recoveryEmail, setRecoveryEmail] = useState('')
   const [authMethod, setAuthMethod] = useState<'email' | 'apple' | ''>('')
@@ -665,6 +666,82 @@ export default function AppOnboarding() {
     } catch {
       setPaymentError('حدث خطأ. يرجى المحاولة مرة أخرى.')
       setMfSessionLoading(false)
+    }
+  }
+
+  const handleTamaraCheckout = async () => {
+    if (!validateEmail(userData.email)) {
+      setPaymentError('يرجى إدخال بريد إلكتروني صحيح')
+      return
+    }
+    setTamaraLoading(true)
+    setPaymentError('')
+
+    const finalPrice = getFinalPrice(plans.yearly.price)
+
+    initiateCheckout({
+      content_ids: [plans.yearly.productId],
+      content_type: 'product',
+      value: finalPrice,
+      currency: 'SAR',
+      num_items: 1,
+    })
+
+    try {
+      sessionStorage.setItem('tamara_userData', JSON.stringify({
+        gender: userData.gender,
+        activityLevel: userData.activityLevel,
+        fitnessLevel: userData.fitnessLevel,
+        workoutLocation: userData.workoutLocation,
+        height: userData.height,
+        weight: userData.weight,
+        birthYear: userData.birthYear,
+        age: userData.age,
+        fitnessGoal: userData.fitnessGoal,
+        targetWeight: userData.targetWeight,
+        daysPerWeek: userData.daysPerWeek,
+        splitPreference: userData.splitPreference,
+        trainingStyle: userData.trainingStyle,
+        priorityMuscles: userData.priorityMuscles,
+        injuries: userData.injuries,
+        cardioPreference: userData.cardioPreference,
+        targetSpeed: userData.targetSpeed,
+        challenges: userData.challenges,
+        accomplishments: userData.accomplishments,
+        calculatedCalories: userData.calculatedCalories,
+        proteinGrams: userData.proteinGrams,
+        carbsGrams: userData.carbsGrams,
+        fatGrams: userData.fatGrams,
+        proteinPercentage: userData.proteinPercentage,
+        carbsPercentage: userData.carbsPercentage,
+        fatPercentage: userData.fatPercentage,
+        programName: userData.programName,
+      }))
+
+      const response = await fetch('/api/tamara/app-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userData.email,
+          amount: finalPrice,
+          plan: 'yearly',
+          discountCode: appliedDiscount ? discountCode : null,
+          authMethod: authMethod || 'email',
+          appleFirebaseUid: authMethod === 'apple' ? appleFirebaseUid : undefined,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl
+      } else {
+        setPaymentError(data.error || 'فشل في إنشاء جلسة تمارا. يرجى المحاولة مرة أخرى.')
+        setTamaraLoading(false)
+      }
+    } catch {
+      setPaymentError('حدث خطأ. يرجى المحاولة مرة أخرى.')
+      setTamaraLoading(false)
     }
   }
 
@@ -1999,6 +2076,41 @@ export default function AppOnboarding() {
               onLoad={() => setMfScriptLoaded(true)}
             />
 
+            {/* Divider */}
+            {!isProcessingPayment && (
+              <div className="flex items-center gap-3 my-3">
+                <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700"></div>
+                <span className="text-[11px] text-muted-foreground">أو</span>
+                <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700"></div>
+              </div>
+            )}
+
+            {/* Tamara BNPL Option */}
+            {!isProcessingPayment && (
+              <button
+                onClick={handleTamaraCheckout}
+                disabled={!validateEmail(userData.email) || tamaraLoading}
+                className="w-full p-3.5 bg-gradient-to-r from-[#FFB88C]/10 via-[#DE6FA1]/10 to-[#8B5CF6]/10 border-2 border-[#DE6FA1]/30 rounded-2xl hover:shadow-lg hover:border-[#DE6FA1]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Image src="/tamara.png" alt="Tamara" width={70} height={24} className="h-6 w-auto object-contain" />
+                    <div className="text-right">
+                      <p className="text-sm font-semibold">قسّمها على 4 دفعات</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {Math.ceil(getFinalPrice(plans.yearly.price) / 4)} ر.س × 4 دفعات بدون فوائد
+                      </p>
+                    </div>
+                  </div>
+                  {tamaraLoading ? (
+                    <div className="w-5 h-5 border-2 border-[#DE6FA1]/50 border-t-[#DE6FA1] rounded-full animate-spin"></div>
+                  ) : (
+                    <svg className="w-5 h-5 text-[#DE6FA1] rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  )}
+                </div>
+              </button>
+            )}
+
             {/* Payment Methods */}
             <div className="mt-2 flex items-center justify-center gap-3">
               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
@@ -2013,6 +2125,7 @@ export default function AppOnboarding() {
               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <span>🍎</span> Apple Pay
               </div>
+              <Image src="/tamara.png" alt="Tamara" width={36} height={14} className="h-3.5 w-auto object-contain opacity-60" />
             </div>
 
             {/* Footer */}

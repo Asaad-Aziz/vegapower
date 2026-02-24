@@ -92,6 +92,13 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'Failed to get order' }, { status: 500 })
         }
 
+        // App subscription orders (vp-app- prefix) are handled by verify-app on redirect
+        const isAppOrder = payload.order_reference_id?.startsWith('vp-app-')
+        if (isAppOrder) {
+          console.log(`[Tamara Webhook ${timestamp}] App subscription order — handled on redirect, skipping product fulfillment`)
+          break
+        }
+
         // Check if order already exists and is paid
         const { data: existingOrder } = await supabase
           .from('orders')

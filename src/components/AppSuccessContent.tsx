@@ -118,6 +118,83 @@ function AppSuccessInner() {
         }
         return
       }
+
+      // Tamara flow - call verification endpoint to create account
+      if (source === 'tamara') {
+        const emailParam = searchParams.get('email')
+        const plan = searchParams.get('plan') || 'yearly'
+        const amount = searchParams.get('amount')
+        const orderRef = searchParams.get('order_ref')
+        const discountCode = searchParams.get('discountCode')
+        const authMethodParam = searchParams.get('authMethod') || 'email'
+        const appleFirebaseUid = searchParams.get('appleFirebaseUid')
+
+        let userDataParam: string | null = null
+        try {
+          const stored = sessionStorage.getItem('tamara_userData')
+          if (stored) {
+            userDataParam = stored
+            sessionStorage.removeItem('tamara_userData')
+          }
+        } catch {}
+
+        if (!emailParam || !orderRef) {
+          setStatus('error')
+          setError('معلومات الدفع غير مكتملة')
+          return
+        }
+
+        try {
+          const response = await fetch('/api/tamara/verify-app', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderReferenceId: orderRef,
+              email: emailParam,
+              plan,
+              amount,
+              authMethod: authMethodParam,
+              appleFirebaseUid: authMethodParam === 'apple' ? appleFirebaseUid : undefined,
+              userData: userDataParam || null,
+              discountCode,
+            }),
+          })
+
+          const data = await response.json()
+
+          if (data.success) {
+            setEmail(emailParam)
+            setUserAuthMethod(data.authMethod || authMethodParam || 'email')
+            setStatus('success')
+
+            if (!hasTrackedPurchase && !data.alreadyProcessed) {
+              const purchaseValue = amount ? parseFloat(amount) : 187
+              purchase({
+                content_name: 'Vega Power App - سنوي (تمارا)',
+                content_ids: ['tamara_yearly'],
+                content_type: 'product',
+                value: purchaseValue,
+                currency: 'SAR',
+                num_items: 1,
+              })
+              snapPurchase({
+                price: purchaseValue,
+                currency: 'SAR',
+                item_ids: ['tamara_yearly'],
+                transaction_id: orderRef,
+              })
+              setHasTrackedPurchase(true)
+            }
+          } else {
+            setStatus('error')
+            setError(data.error || 'حدث خطأ أثناء إنشاء الحساب')
+          }
+        } catch {
+          setStatus('error')
+          setError('حدث خطأ في الاتصال')
+        }
+        return
+      }
       
       // Legacy Moyasar flow
       const paymentId = searchParams.get('id')
