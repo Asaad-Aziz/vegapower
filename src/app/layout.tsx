@@ -13,10 +13,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Vega Power | رياضتك أسهل بين يدك",
   description: "علامة لياقة بسيطة وواضحة — برامج جاهزة للتحميل وتطبيق مع مجتمع ودعم.",
-  icons: {
-    icon: "/Vegapower Logo-05.jpg",
-    apple: "/Vegapower Logo-05.jpg",
-  },
 };
 
 export default function RootLayout({
