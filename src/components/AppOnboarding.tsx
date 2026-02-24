@@ -4,6 +4,14 @@ import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Script from 'next/script'
+import {
+  Dumbbell, Flame, TrendingUp, Bot, Gift, User, Home,
+  Sprout, Trophy, Sparkles, Target, RefreshCw, Cpu, Zap, Shuffle,
+  BarChart3, UtensilsCrossed, Users, CalendarDays, Lightbulb, Leaf,
+  Sun, Award, UserRound, Bone, Hand, CircleSlash, Calendar, CalendarRange,
+  ChevronDown, ChevronUp, Scale, Footprints, CreditCard, Lock, Rocket,
+  ArrowLeft, Heart
+} from 'lucide-react'
 import { initiateCheckout } from '@/lib/meta-pixel'
 import { snapStartCheckout } from '@/lib/snapchat-pixel'
 import { signInWithApple, checkAppleSignInRedirect } from '@/lib/firebase-client'
@@ -129,98 +137,98 @@ type PlanType = 'monthly' | 'yearly'
 
 // Activity level mappings
 const activityLevels = [
-  { id: 'lightlyActive', emoji: '🐢', title: '0-2 تمارين', subtitle: 'نشاط خفيف أو خامل', value: 'نشاط خفيف (تمرين خفيف 1-3 أيام/أسبوع)', multiplier: 1.375 },
-  { id: 'moderatelyActive', emoji: '🚶', title: '3-5 تمارين', subtitle: 'نشاط متوسط', value: 'نشط إلى حد ما (تمرين معتدل 3-5 أيام في الأسبوع)', multiplier: 1.55 },
-  { id: 'veryActive', emoji: '🔥', title: '6+ تمارين', subtitle: 'نشاط عالي / رياضي', value: 'نشيط للغاية (ممارسة التمارين الرياضية الشاقة 6-7 أيام في الأسبوع)', multiplier: 1.725 },
+  { id: 'lightlyActive', icon: Sprout, title: '0-2 تمارين', subtitle: 'نشاط خفيف أو خامل', value: 'نشاط خفيف (تمرين خفيف 1-3 أيام/أسبوع)', multiplier: 1.375 },
+  { id: 'moderatelyActive', icon: Footprints, title: '3-5 تمارين', subtitle: 'نشاط متوسط', value: 'نشط إلى حد ما (تمرين معتدل 3-5 أيام في الأسبوع)', multiplier: 1.55 },
+  { id: 'veryActive', icon: Flame, title: '6+ تمارين', subtitle: 'نشاط عالي / رياضي', value: 'نشيط للغاية (ممارسة التمارين الرياضية الشاقة 6-7 أيام في الأسبوع)', multiplier: 1.725 },
 ]
 
 // Fitness goals
 const fitnessGoals = [
-  { id: 'loseWeight', emoji: '⬇️', title: 'خسارة الوزن', value: 'Lose Fat (Cut)' },
-  { id: 'maintainWeight', emoji: '⚖️', title: 'الحفاظ على الوزن', value: 'Body Recomposition' },
-  { id: 'gainMuscle', emoji: '⬆️', title: 'زيادة الوزن / عضلات', value: 'Build Muscle (Bulk)' },
+  { id: 'loseWeight', icon: ChevronDown, title: 'خسارة الوزن', value: 'Lose Fat (Cut)' },
+  { id: 'maintainWeight', icon: Scale, title: 'الحفاظ على الوزن', value: 'Body Recomposition' },
+  { id: 'gainMuscle', icon: ChevronUp, title: 'زيادة الوزن / عضلات', value: 'Build Muscle (Bulk)' },
 ]
 
 // Challenges
 const challengeOptions = [
-  { id: 'lack_consistency', emoji: '📊', title: 'عدم الاستمرار' },
-  { id: 'unhealthy_habits', emoji: '🍴', title: 'عادات أكل غير صحية' },
-  { id: 'lack_support', emoji: '👥', title: 'قلة الدعم والتشجيع' },
-  { id: 'busy_schedule', emoji: '📅', title: 'جدول مزدحم' },
-  { id: 'meal_inspiration', emoji: '💡', title: 'قلة الأفكار للوجبات' },
+  { id: 'lack_consistency', icon: BarChart3, title: 'عدم الاستمرار' },
+  { id: 'unhealthy_habits', icon: UtensilsCrossed, title: 'عادات أكل غير صحية' },
+  { id: 'lack_support', icon: Users, title: 'قلة الدعم والتشجيع' },
+  { id: 'busy_schedule', icon: CalendarDays, title: 'جدول مزدحم' },
+  { id: 'meal_inspiration', icon: Lightbulb, title: 'قلة الأفكار للوجبات' },
 ]
 
 // Accomplishments
 const accomplishmentOptions = [
-  { id: 'healthier_lifestyle', emoji: '🍃', title: 'أكل وحياة صحية أكثر' },
-  { id: 'boost_energy', emoji: '☀️', title: 'زيادة طاقتي ومزاجي' },
-  { id: 'stay_motivated', emoji: '💪', title: 'البقاء متحفزاً ومستمراً' },
-  { id: 'body_confidence', emoji: '🧍', title: 'الشعور بالرضا عن جسمي' },
+  { id: 'healthier_lifestyle', icon: Leaf, title: 'أكل وحياة صحية أكثر' },
+  { id: 'boost_energy', icon: Sun, title: 'زيادة طاقتي ومزاجي' },
+  { id: 'stay_motivated', icon: Sparkles, title: 'البقاء متحفزاً ومستمراً' },
+  { id: 'body_confidence', icon: UserRound, title: 'الشعور بالرضا عن جسمي' },
 ]
 
 // Fitness levels
 const fitnessLevelOptions = [
-  { id: 'Beginner', emoji: '🌱', title: 'مبتدئ', subtitle: 'جديد على التمارين أو عائد بعد انقطاع طويل' },
-  { id: 'Intermediate', emoji: '💪', title: 'متوسط', subtitle: 'أتمرن بانتظام منذ فترة' },
-  { id: 'Advanced', emoji: '🏆', title: 'متقدم', subtitle: 'خبرة طويلة ومستوى لياقة عالي' },
+  { id: 'Beginner', icon: Sprout, title: 'مبتدئ', subtitle: 'جديد على التمارين أو عائد بعد انقطاع طويل' },
+  { id: 'Intermediate', icon: Sparkles, title: 'متوسط', subtitle: 'أتمرن بانتظام منذ فترة' },
+  { id: 'Advanced', icon: Trophy, title: 'متقدم', subtitle: 'خبرة طويلة ومستوى لياقة عالي' },
 ]
 
 // Workout locations
 const workoutLocationOptions = [
-  { id: 'Gym', emoji: '🏋️', title: 'النادي الرياضي', subtitle: 'أتمرن في الجيم مع المعدات الكاملة' },
-  { id: 'Home', emoji: '🏠', title: 'المنزل', subtitle: 'أتمرن في البيت بأدوات بسيطة أو بدون أدوات' },
+  { id: 'Gym', icon: Dumbbell, title: 'النادي الرياضي', subtitle: 'أتمرن في الجيم مع المعدات الكاملة' },
+  { id: 'Home', icon: Home, title: 'المنزل', subtitle: 'أتمرن في البيت بأدوات بسيطة أو بدون أدوات' },
 ]
 
 // Days per week
 const daysPerWeekOptions = [
-  { id: '3', emoji: '3️⃣', title: '٣ أيام', subtitle: 'مثالي للمبتدئين' },
-  { id: '5', emoji: '5️⃣', title: '٥ أيام', subtitle: 'الخيار الأكثر شيوعاً' },
-  { id: '7', emoji: '7️⃣', title: '٧ أيام', subtitle: 'للرياضيين المتقدمين' },
+  { id: '3', label: '3', title: '٣ أيام', subtitle: 'مثالي للمبتدئين' },
+  { id: '5', label: '5', title: '٥ أيام', subtitle: 'الخيار الأكثر شيوعاً' },
+  { id: '7', label: '7', title: '٧ أيام', subtitle: 'للرياضيين المتقدمين' },
 ]
 
 // Split preference
 const splitPreferenceOptions = [
-  { id: 'full_body', emoji: '🏋️', title: 'جسم كامل', subtitle: 'تمرين جميع العضلات في كل جلسة' },
-  { id: 'upper_lower', emoji: '🔄', title: 'علوي / سفلي', subtitle: 'تبديل بين الجزء العلوي والسفلي' },
-  { id: 'push_pull_legs', emoji: '💪', title: 'دفع / سحب / أرجل', subtitle: 'فصل تمارين الدفع والسحب والأرجل' },
-  { id: 'muscle_split', emoji: '🎯', title: 'تقسيم عضلي', subtitle: 'مجموعة عضلية واحدة في اليوم' },
-  { id: 'ai_decide', emoji: '🤖', title: 'دع الذكاء الاصطناعي يقرر', subtitle: 'AI يختار أفضل تقسيم لك' },
+  { id: 'full_body', icon: Dumbbell, title: 'جسم كامل', subtitle: 'تمرين جميع العضلات في كل جلسة' },
+  { id: 'upper_lower', icon: RefreshCw, title: 'علوي / سفلي', subtitle: 'تبديل بين الجزء العلوي والسفلي' },
+  { id: 'push_pull_legs', icon: Sparkles, title: 'دفع / سحب / أرجل', subtitle: 'فصل تمارين الدفع والسحب والأرجل' },
+  { id: 'muscle_split', icon: Target, title: 'تقسيم عضلي', subtitle: 'مجموعة عضلية واحدة في اليوم' },
+  { id: 'ai_decide', icon: Cpu, title: 'دع الذكاء الاصطناعي يقرر', subtitle: 'AI يختار أفضل تقسيم لك' },
 ]
 
 // Training style
 const trainingStyleOptions = [
-  { id: 'strength', emoji: '🏋️', title: 'قوة وطاقة', subtitle: 'أوزان ثقيلة، تكرارات قليلة' },
-  { id: 'hypertrophy', emoji: '💪', title: 'بناء العضلات', subtitle: 'أوزان متوسطة، تكرارات أكثر' },
-  { id: 'functional', emoji: '🤸', title: 'لياقة وظيفية', subtitle: 'وزن الجسم، مرونة، حركات رياضية' },
-  { id: 'mixed', emoji: '🔀', title: 'مزيج من كل شيء', subtitle: 'تنوع في جميع أنماط التمرين' },
+  { id: 'strength', icon: Dumbbell, title: 'قوة وطاقة', subtitle: 'أوزان ثقيلة، تكرارات قليلة' },
+  { id: 'hypertrophy', icon: Sparkles, title: 'بناء العضلات', subtitle: 'أوزان متوسطة، تكرارات أكثر' },
+  { id: 'functional', icon: Zap, title: 'لياقة وظيفية', subtitle: 'وزن الجسم، مرونة، حركات رياضية' },
+  { id: 'mixed', icon: Shuffle, title: 'مزيج من كل شيء', subtitle: 'تنوع في جميع أنماط التمرين' },
 ]
 
 // Priority muscles
 const priorityMuscleOptions = [
-  { id: 'chest', emoji: '🫁', title: 'الصدر' },
-  { id: 'back', emoji: '🔙', title: 'الظهر' },
-  { id: 'shoulders', emoji: '🤷', title: 'الأكتاف' },
-  { id: 'arms', emoji: '💪', title: 'الذراعين' },
-  { id: 'legs', emoji: '🦵', title: 'الأرجل' },
-  { id: 'glutes', emoji: '🍑', title: 'المؤخرة' },
-  { id: 'abs', emoji: '🎯', title: 'البطن' },
+  { id: 'chest', icon: Heart, title: 'الصدر' },
+  { id: 'back', icon: ArrowLeft, title: 'الظهر' },
+  { id: 'shoulders', icon: Award, title: 'الأكتاف' },
+  { id: 'arms', icon: Dumbbell, title: 'الذراعين' },
+  { id: 'legs', icon: Footprints, title: 'الأرجل' },
+  { id: 'glutes', icon: Flame, title: 'المؤخرة' },
+  { id: 'abs', icon: Target, title: 'البطن' },
 ]
 
 // Injuries
 const injuryOptions = [
-  { id: 'knee', emoji: '🦵', title: 'الركبة' },
-  { id: 'shoulder', emoji: '🤷', title: 'الكتف' },
-  { id: 'lower_back', emoji: '🔙', title: 'أسفل الظهر' },
-  { id: 'wrist', emoji: '✋', title: 'المعصم' },
-  { id: 'hip', emoji: '🦴', title: 'الورك' },
+  { id: 'knee', icon: Footprints, title: 'الركبة' },
+  { id: 'shoulder', icon: Award, title: 'الكتف' },
+  { id: 'lower_back', icon: ArrowLeft, title: 'أسفل الظهر' },
+  { id: 'wrist', icon: Hand, title: 'المعصم' },
+  { id: 'hip', icon: Bone, title: 'الورك' },
 ]
 
 // Cardio preference
 const cardioPreferenceOptions = [
-  { id: 'every_session', emoji: '🏃', title: 'في كل جلسة تمرين', subtitle: '١٠-١٥ دقيقة كارديو بعد كل تمرين' },
-  { id: '2_3_times', emoji: '📅', title: '٢-٣ مرات في الأسبوع', subtitle: 'كارديو مضاف لبعض أيام التمرين' },
-  { id: 'separate_days', emoji: '🗓️', title: 'أيام كارديو منفصلة', subtitle: 'أيام مخصصة للكارديو فقط في الخطة' },
-  { id: 'no_cardio', emoji: '🚫', title: 'بدون كارديو', subtitle: 'التركيز على الأوزان فقط' },
+  { id: 'every_session', icon: Flame, title: 'في كل جلسة تمرين', subtitle: '١٠-١٥ دقيقة كارديو بعد كل تمرين' },
+  { id: '2_3_times', icon: Calendar, title: '٢-٣ مرات في الأسبوع', subtitle: 'كارديو مضاف لبعض أيام التمرين' },
+  { id: 'separate_days', icon: CalendarRange, title: 'أيام كارديو منفصلة', subtitle: 'أيام مخصصة للكارديو فقط في الخطة' },
+  { id: 'no_cardio', icon: CircleSlash, title: 'بدون كارديو', subtitle: 'التركيز على الأوزان فقط' },
 ]
 
 export default function AppOnboarding() {
@@ -424,9 +432,9 @@ export default function AppOnboarding() {
   const getProgramName = () => {
     const goalData = fitnessGoals.find(g => g.value === userData.fitnessGoal)
     switch (goalData?.id) {
-      case 'loseWeight': return 'Vega Shred 🔥'
-      case 'gainMuscle': return 'Vega Gainz 💪'
-      default: return 'Vega Balance ⚖️'
+      case 'loseWeight': return 'Vega Shred'
+      case 'gainMuscle': return 'Vega Gainz'
+      default: return 'Vega Balance'
     }
   }
 
@@ -898,10 +906,10 @@ export default function AppOnboarding() {
             <div className="space-y-2.5 mb-5">
               <p className="text-xs font-semibold text-vp-navy text-center mb-1">خلال دقيقتين بنجهز لك:</p>
               {[
-                { icon: '🏋️', text: 'جدول تمارين مصمم لهدفك بالذكاء الاصطناعي', highlight: true },
-                { icon: '🔥', text: 'حساب سعراتك وماكروز بدقة حسب جسمك', highlight: true },
-                { icon: '📈', text: 'خطة واضحة توصلك لهدفك بأسرع طريقة', highlight: false },
-                { icon: '🤖', text: 'مدرب ذكي يتكيف معك كل أسبوع', highlight: false },
+                { Icon: Dumbbell, text: 'جدول تمارين مصمم لهدفك بالذكاء الاصطناعي', highlight: true },
+                { Icon: Flame, text: 'حساب سعراتك وماكروز بدقة حسب جسمك', highlight: true },
+                { Icon: TrendingUp, text: 'خطة واضحة توصلك لهدفك بأسرع طريقة', highlight: false },
+                { Icon: Bot, text: 'مدرب ذكي يتكيف معك كل أسبوع', highlight: false },
               ].map((item) => (
                 <div
                   key={item.text}
@@ -911,7 +919,9 @@ export default function AppOnboarding() {
                       : 'bg-neutral-50 dark:bg-neutral-800/50'
                   }`}
                 >
-                  <span className="text-xl shrink-0">{item.icon}</span>
+                  <div className="shrink-0 w-8 h-8 rounded-lg bg-vp-navy/10 flex items-center justify-center">
+                    <item.Icon className="size-5 text-vp-navy" />
+                  </div>
                   <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">{item.text}</p>
                 </div>
               ))}
@@ -937,7 +947,7 @@ export default function AppOnboarding() {
             {/* FOMO offer hint */}
             <div className="bg-gradient-to-l from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200/60 dark:border-amber-700/40 rounded-2xl p-3.5 mb-5 text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <span className="text-base">🎁</span>
+                <Gift className="size-5 text-amber-700 dark:text-amber-300" />
                 <p className="text-sm font-bold text-amber-800 dark:text-amber-300">عرض خاص ينتظرك في النهاية</p>
               </div>
               <p className="text-[11px] text-amber-700/80 dark:text-amber-400/80">أكمل الأسئلة واحصل على خصم حصري على الاشتراك السنوي</p>
@@ -955,8 +965,8 @@ export default function AppOnboarding() {
             </div>
             <div className="flex-1 flex flex-col gap-4 justify-center">
               {[
-                { id: 'male', emoji: '👨', label: 'ذكر' },
-                { id: 'female', emoji: '👩', label: 'أنثى' },
+                { id: 'male', label: 'ذكر' },
+                { id: 'female', label: 'أنثى' },
               ].map((g) => (
                 <button
                   key={g.id}
@@ -974,7 +984,9 @@ export default function AppOnboarding() {
                       </svg>
                     </div>
                   )}
-                  <span className="text-4xl mb-2 block">{g.emoji}</span>
+                  <div className="flex justify-center mb-2">
+                    <User className="size-10 text-vp-navy" />
+                  </div>
                   <span className="text-xl font-semibold">{g.label}</span>
                 </button>
               ))}
@@ -1000,14 +1012,14 @@ export default function AppOnboarding() {
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
                     userData.activityLevel === level.value ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
                   }`}>
                     {userData.activityLevel === level.value ? (
                       <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                       </svg>
-                    ) : level.emoji}
+                    ) : <level.icon className="size-6" />}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{level.title}</h3>
@@ -1037,14 +1049,14 @@ export default function AppOnboarding() {
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
                     userData.fitnessLevel === level.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
                   }`}>
                     {userData.fitnessLevel === level.id ? (
                       <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                       </svg>
-                    ) : level.emoji}
+                    ) : <level.icon className="size-6" />}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{level.title}</h3>
@@ -1074,14 +1086,14 @@ export default function AppOnboarding() {
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-3xl transition-colors duration-300 ${
+                  <div className={`w-16 h-16 rounded-xl flex items-center justify-center transition-colors duration-300 ${
                     userData.workoutLocation === location.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
                   }`}>
                     {userData.workoutLocation === location.id ? (
                       <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                       </svg>
-                    ) : location.emoji}
+                    ) : <location.icon className="size-7" />}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{location.title}</h3>
@@ -1178,14 +1190,14 @@ export default function AppOnboarding() {
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
                     userData.fitnessGoal === goal.value ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
                   }`}>
                     {userData.fitnessGoal === goal.value ? (
                       <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                       </svg>
-                    ) : goal.emoji}
+                    ) : <goal.icon className="size-6" />}
                   </div>
                   <h3 className="font-semibold text-lg">{goal.title}</h3>
                 </button>
@@ -1236,14 +1248,14 @@ export default function AppOnboarding() {
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold transition-colors duration-300 ${
                     userData.daysPerWeek === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
                   }`}>
                     {userData.daysPerWeek === option.id ? (
                       <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                       </svg>
-                    ) : option.emoji}
+                    ) : option.label}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{option.title}</h3>
@@ -1273,14 +1285,14 @@ export default function AppOnboarding() {
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
                     userData.splitPreference === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
                   }`}>
                     {userData.splitPreference === option.id ? (
                       <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                       </svg>
-                    ) : option.emoji}
+                    ) : <option.icon className="size-6" />}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{option.title}</h3>
@@ -1310,14 +1322,14 @@ export default function AppOnboarding() {
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
                     userData.trainingStyle === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
                   }`}>
                     {userData.trainingStyle === option.id ? (
                       <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                       </svg>
-                    ) : option.emoji}
+                    ) : <option.icon className="size-6" />}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{option.title}</h3>
@@ -1356,8 +1368,8 @@ export default function AppOnboarding() {
                         : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xl">
-                    {muscle.emoji}
+                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
+                    <muscle.icon className="size-5" />
                   </div>
                   <span className="font-medium">{muscle.title}</span>
                   {userData.priorityMuscles.includes(muscle.id) && (
@@ -1399,8 +1411,8 @@ export default function AppOnboarding() {
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xl">
-                    {injury.emoji}
+                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
+                    <injury.icon className="size-5" />
                   </div>
                   <span className="font-medium">{injury.title}</span>
                   {userData.injuries.includes(injury.id) && (
@@ -1432,14 +1444,14 @@ export default function AppOnboarding() {
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-colors duration-300 ${
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
                     userData.cardioPreference === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
                   }`}>
                     {userData.cardioPreference === option.id ? (
                       <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                       </svg>
-                    ) : option.emoji}
+                    ) : <option.icon className="size-6" />}
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{option.title}</h3>
@@ -1460,10 +1472,19 @@ export default function AppOnboarding() {
             </div>
             <div className="flex-1 flex flex-col justify-center">
               <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
-                <div className="flex justify-center gap-4 mb-4">
-                  <span className={`text-3xl transition-opacity ${userData.targetSpeed < 0.5 ? 'opacity-100' : 'opacity-30'}`}>🐢</span>
-                  <span className={`text-3xl transition-opacity ${userData.targetSpeed >= 0.5 && userData.targetSpeed < 1 ? 'opacity-100' : 'opacity-30'}`}>🐰</span>
-                  <span className={`text-3xl transition-opacity ${userData.targetSpeed >= 1 ? 'opacity-100' : 'opacity-30'}`}>🔥</span>
+                <div className="flex justify-center gap-6 mb-4">
+                  <div className={`flex flex-col items-center gap-1 transition-opacity ${userData.targetSpeed < 0.5 ? 'opacity-100' : 'opacity-30'}`}>
+                    <Sprout className="size-7" />
+                    <span className="text-[10px] font-medium">بطيء</span>
+                  </div>
+                  <div className={`flex flex-col items-center gap-1 transition-opacity ${userData.targetSpeed >= 0.5 && userData.targetSpeed < 1 ? 'opacity-100' : 'opacity-30'}`}>
+                    <Zap className="size-7" />
+                    <span className="text-[10px] font-medium">متوسط</span>
+                  </div>
+                  <div className={`flex flex-col items-center gap-1 transition-opacity ${userData.targetSpeed >= 1 ? 'opacity-100' : 'opacity-30'}`}>
+                    <Flame className="size-7" />
+                    <span className="text-[10px] font-medium">سريع</span>
+                  </div>
                 </div>
                 <span className="text-4xl font-bold block mb-2">{userData.targetSpeed.toFixed(1)}</span>
                 <span className="text-muted-foreground">كجم في الأسبوع</span>
@@ -1510,8 +1531,8 @@ export default function AppOnboarding() {
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xl">
-                    {ch.emoji}
+                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
+                    <ch.icon className="size-5" />
                   </div>
                   <span className="font-medium">{ch.title}</span>
                   {userData.challenges.includes(ch.id) && (
@@ -1548,8 +1569,8 @@ export default function AppOnboarding() {
                       : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xl">
-                    {acc.emoji}
+                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
+                    <acc.icon className="size-5" />
                   </div>
                   <span className="font-medium">{acc.title}</span>
                   {userData.accomplishments.includes(acc.id) && (
@@ -1567,7 +1588,7 @@ export default function AppOnboarding() {
         {step === 18 && (
           <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-vp-navy/10 flex items-center justify-center">
-              <span className="text-4xl">💪</span>
+              <Trophy className="size-10 text-vp-navy" />
             </div>
             <h2 className="text-2xl font-bold mb-2">
               {isLosingWeight ? 'خسارة' : 'اكتساب'} {weightDiff} كجم هو هدف واقعي جداً!
@@ -1577,7 +1598,7 @@ export default function AppOnboarding() {
               90% من المستخدمين يقولون أن التغيير واضح جداً بعد استخدام Vega Power...
             </p>
             <div className="p-4 rounded-2xl bg-vp-navy/5 border border-vp-navy/15">
-              <p className="text-sm">📈 يعزز الثقة: أنا أستطيع فعلها</p>
+              <p className="text-sm flex items-center justify-center gap-1.5"><TrendingUp className="size-4 text-vp-navy inline" /> يعزز الثقة: أنا أستطيع فعلها</p>
               <p className="text-xs text-muted-foreground mt-1">يقلل من خطر الاستسلام</p>
             </div>
           </div>
@@ -1598,7 +1619,7 @@ export default function AppOnboarding() {
                 <div className="flex justify-center gap-6 mb-4">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-vp-navy" />
-                    <span className="text-xs font-medium">مع Vega Power 🚀</span>
+                    <span className="text-xs font-medium">مع Vega Power</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-neutral-400" />
@@ -1696,9 +1717,11 @@ export default function AppOnboarding() {
                       x="310" y="12"
                       textAnchor="middle"
                       fontSize="12"
+                      fill="#1e3a5f"
+                      fontWeight="bold"
                       opacity={graphAnimated ? 1 : 0}
                       style={{ transition: 'opacity 0.5s ease-out 2.6s' }}
-                    >🎯</text>
+                    >&#x2605;</text>
 
                     {/* Stagnant dot at end of flat line */}
                     <circle
@@ -1747,7 +1770,7 @@ export default function AppOnboarding() {
                 }}
               >
                 <p className="text-sm font-semibold">لا تضيع وقتك بدون خطة واضحة</p>
-                <p className="text-xs opacity-80 mt-1">خلّ الذكاء الاصطناعي يبني لك الطريق 🚀</p>
+                <p className="text-xs opacity-80 mt-1">خلّ الذكاء الاصطناعي يبني لك الطريق</p>
               </div>
             </div>
           </div>
@@ -1807,43 +1830,28 @@ export default function AppOnboarding() {
                 />
               </div>
               <h2 className="text-2xl font-bold mb-1">اشترك في VegaPower</h2>
-              <p className="text-muted-foreground text-sm">التطبيق الوحيد اللي تحتاجه لتحقيق أهدافك 💪</p>
+              <p className="text-muted-foreground text-sm">التطبيق الوحيد اللي تحتاجه لتحقيق أهدافك</p>
             </div>
 
             {/* Encouraging Message */}
             <div className="p-3 rounded-xl bg-vp-navy/5 border border-vp-navy/15 mb-4 text-center">
-              <p className="text-sm font-medium text-vp-navy dark:text-vp-beige">
-                🏆 انضم لآلاف المستخدمين اللي شافوا نتائج حقيقية
+              <p className="text-sm font-medium text-vp-navy dark:text-vp-beige flex items-center justify-center gap-1.5">
+                <Trophy className="size-4" /> انضم لآلاف المستخدمين اللي شافوا نتائج حقيقية
               </p>
-            </div>
-
-            {/* Features Grid */}
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              {[
-                { emoji: '🏋️', text: 'برامج تدريب متكاملة', color: 'from-blue-500/20 to-blue-600/20' },
-                { emoji: '📸', text: 'صوّر أكلك واعرف السعرات بالذكاء الاصطناعي', color: 'from-green-500/20 to-green-600/20' },
-                { emoji: '📊', text: 'تتبع تقدمك يومياً', color: 'from-purple-500/20 to-purple-600/20' },
-                { emoji: '🎯', text: 'أهداف واقعية ومحفزة', color: 'from-orange-500/20 to-orange-600/20' },
-              ].map((feature, i) => (
-                <div key={i} className={`p-3 rounded-xl bg-gradient-to-br ${feature.color} flex items-center gap-2`}>
-                  <span className="text-xl">{feature.emoji}</span>
-                  <span className="text-xs font-medium">{feature.text}</span>
-                </div>
-              ))}
             </div>
 
             {/* Reviews */}
             <div className="mb-4 -mx-2 overflow-x-auto scrollbar-hide">
               <div className="flex gap-2 px-2" style={{ width: 'max-content' }}>
                 {[
-                  { name: 'سارة', text: 'خسرت 8 كيلو في شهرين! 🔥', rating: 5 },
-                  { name: 'محمد', text: 'أفضل استثمار في صحتي 💪', rating: 5 },
-                  { name: 'نورة', text: 'التطبيق غير حياتي! ⭐', rating: 5 },
+                  { name: 'سارة', text: 'خسرت 8 كيلو في شهرين!', rating: 5 },
+                  { name: 'محمد', text: 'أفضل استثمار في صحتي', rating: 5 },
+                  { name: 'نورة', text: 'التطبيق غير حياتي!', rating: 5 },
                 ].map((review, i) => (
                   <div key={i} className="w-[160px] p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex-shrink-0">
                     <div className="flex gap-0.5 mb-1">
                       {[...Array(review.rating)].map((_, s) => (
-                        <span key={s} className="text-[10px] text-amber-500">⭐</span>
+                        <svg key={s} className="w-3 h-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                       ))}
                     </div>
                     <p className="text-xs mb-1">"{review.text}"</p>
@@ -1864,7 +1872,7 @@ export default function AppOnboarding() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-[10px] opacity-70">برنامجك جاهز! ✨</p>
+                    <p className="text-[10px] opacity-70">برنامجك جاهز!</p>
                     <p className="font-bold text-lg">{userData.programName}</p>
                   </div>
                 </div>
@@ -1908,27 +1916,27 @@ export default function AppOnboarding() {
                   <div className="flex flex-wrap gap-2">
                     {userData.challenges.includes('lack_consistency') && (
                       <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-orange-500/20 text-orange-300 text-[10px]">
-                        <span>📊</span> تذكيرات يومية للاستمرار
+                        <BarChart3 className="size-3" /> تذكيرات يومية للاستمرار
                       </div>
                     )}
                     {userData.challenges.includes('unhealthy_habits') && (
                       <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-300 text-[10px]">
-                        <span>🍴</span> وجبات صحية بديلة
+                        <UtensilsCrossed className="size-3" /> وجبات صحية بديلة
                       </div>
                     )}
                     {userData.challenges.includes('lack_support') && (
                       <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-500/20 text-blue-300 text-[10px]">
-                        <span>👥</span> مجتمع داعم ومحفز
+                        <Users className="size-3" /> مجتمع داعم ومحفز
                       </div>
                     )}
                     {userData.challenges.includes('busy_schedule') && (
                       <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 text-[10px]">
-                        <span>📅</span> تمارين سريعة (15-30 دقيقة)
+                        <CalendarDays className="size-3" /> تمارين سريعة (15-30 دقيقة)
                       </div>
                     )}
                     {userData.challenges.includes('meal_inspiration') && (
                       <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-pink-500/20 text-pink-300 text-[10px]">
-                        <span>💡</span> +500 وصفة صحية
+                        <Lightbulb className="size-3" /> +500 وصفة صحية
                       </div>
                     )}
                   </div>
@@ -1968,7 +1976,7 @@ export default function AppOnboarding() {
               <div className="p-4 bg-white/10">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
-                    <span className="text-xl">🚀</span>
+                    <Rocket className="size-5" />
                   </div>
                   <div>
                     <p className="font-semibold text-sm">برنامجك جاهز وينتظرك!</p>
@@ -2008,7 +2016,7 @@ export default function AppOnboarding() {
                   >
                     {key === 'yearly' && (
                       <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-amber-400 text-[9px] font-bold px-2.5 py-0.5 rounded-full text-amber-900 whitespace-nowrap">
-                        الأوفر 🔥
+                        الأوفر
                       </div>
                     )}
                     <p className={`text-[11px] mb-1 ${isSelected ? 'text-white/70' : 'text-neutral-400'}`}>{plan.label}</p>
@@ -2058,7 +2066,7 @@ export default function AppOnboarding() {
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                   </svg>
                   <span className="text-xs text-green-700 dark:text-green-400">
-                    تم تطبيق خصم {appliedDiscount.label}! 🎉
+                    تم تطبيق خصم {appliedDiscount.label}!
                   </span>
                   <button
                     onClick={() => {
@@ -2095,9 +2103,9 @@ export default function AppOnboarding() {
                     <span>جاري تحميل نموذج الدفع...</span>
                   </>
                 ) : appliedDiscount ? (
-                  <>🚀 ادفع الآن - <span className="line-through opacity-60 mx-1">{plans[selectedPlan].price}</span> {getFinalPrice(plans[selectedPlan].price)} ريال</>
+                  <>ادفع الآن - <span className="line-through opacity-60 mx-1">{plans[selectedPlan].price}</span> {getFinalPrice(plans[selectedPlan].price)} ريال</>
                 ) : (
-                  <>🚀 ادفع الآن - {plans[selectedPlan].price} ريال</>
+                  <>ادفع الآن - {plans[selectedPlan].price} ريال</>
                 )}
               </button>
             )}
@@ -2154,23 +2162,23 @@ export default function AppOnboarding() {
             {/* Payment Methods */}
             <div className="mt-2 flex items-center justify-center gap-3">
               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <span>💳</span> Visa
+                <CreditCard className="size-3" /> Visa
               </div>
               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <span>💳</span> Mastercard
+                <CreditCard className="size-3" /> Mastercard
               </div>
               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <span>💳</span> مدى
+                <CreditCard className="size-3" /> مدى
               </div>
               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <span>🍎</span> Apple Pay
+                Apple Pay
               </div>
               <Image src="/tamara.png" alt="Tamara" width={36} height={14} className="h-3.5 w-auto object-contain opacity-60" />
             </div>
 
             {/* Footer */}
             <div className="mt-3 text-center">
-              <p className="text-[10px] text-muted-foreground">🔒 دفع آمن ومشفر • دفعة واحدة بدون تجديد تلقائي</p>
+              <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1"><Lock className="size-3" /> دفع آمن ومشفر • دفعة واحدة بدون تجديد تلقائي</p>
             </div>
           </div>
         )}
@@ -2186,7 +2194,7 @@ export default function AppOnboarding() {
                   onClick={nextStep}
                   className="w-full py-4 rounded-2xl bg-vp-navy text-white font-bold text-lg shadow-xl shadow-vp-navy/25 active:scale-[0.98] transition-transform"
                 >
-                  يلا نبدأ 🚀
+                  يلا نبدأ
                 </button>
                 <p className="text-[10px] text-muted-foreground text-center mt-2">يأخذ أقل من دقيقتين • بدون التزام</p>
               </>

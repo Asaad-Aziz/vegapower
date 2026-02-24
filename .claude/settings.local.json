@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(head:*)",
+      "Bash(cd /c/Users/Admin/Desktop/vpstan && npx tsc --noEmit 2>&1)"
+    ]
+  }
+}
