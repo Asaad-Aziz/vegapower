@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Script from 'next/script'
 import { initiateCheckout } from '@/lib/meta-pixel'
+import { snapStartCheckout } from '@/lib/snapchat-pixel'
 import { signInWithApple, checkAppleSignInRedirect } from '@/lib/firebase-client'
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21
@@ -552,6 +553,11 @@ export default function AppOnboarding() {
       currency: 'SAR',
       num_items: 1,
     })
+    snapStartCheckout({
+      price: finalPrice,
+      currency: 'SAR',
+      item_ids: [plans[selectedPlan].productId],
+    })
 
     try {
       const response = await fetch('/api/myfatoorah/session', {
@@ -686,6 +692,11 @@ export default function AppOnboarding() {
       value: finalPrice,
       currency: 'SAR',
       num_items: 1,
+    })
+    snapStartCheckout({
+      price: finalPrice,
+      currency: 'SAR',
+      item_ids: [plans[selectedPlan].productId],
     })
 
     try {

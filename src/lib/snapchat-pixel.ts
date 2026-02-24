@@ -18,6 +18,36 @@ export const snapPageView = () => {
   }
 }
 
+export const snapStartCheckout = (params: {
+  price: number
+  currency: string
+  item_ids?: string[]
+}) => {
+  if (typeof window !== 'undefined' && window.snaptr) {
+    window.snaptr('track', 'START_CHECKOUT', {
+      price: params.price,
+      currency: params.currency,
+      ...(params.item_ids ? { item_ids: params.item_ids } : {}),
+    })
+    console.log('Snapchat Pixel: START_CHECKOUT event fired', params)
+  }
+}
+
+export const snapAddCart = (params: {
+  price: number
+  currency: string
+  item_ids?: string[]
+}) => {
+  if (typeof window !== 'undefined' && window.snaptr) {
+    window.snaptr('track', 'ADD_CART', {
+      price: params.price,
+      currency: params.currency,
+      ...(params.item_ids ? { item_ids: params.item_ids } : {}),
+    })
+    console.log('Snapchat Pixel: ADD_CART event fired', params)
+  }
+}
+
 export const snapPurchase = (params: {
   price: number
   currency: string
