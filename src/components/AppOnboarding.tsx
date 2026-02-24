@@ -42,7 +42,8 @@ interface UserData {
 }
 
 const plans = {
-  yearly: { price: 187, period: 'سنة', productId: 'myfatoorah_yearly', savings: null, days: 365 },
+  monthly: { price: 45, period: 'شهر', productId: 'myfatoorah_monthly', savings: null, days: 30, label: 'شهري' },
+  yearly: { price: 187, period: 'سنة', productId: 'myfatoorah_yearly', savings: null, days: 365, label: 'سنوي' },
 }
 
 // Discount codes configuration
@@ -123,7 +124,7 @@ function EmailInput({ value, onChange }: { value: string; onChange: (v: string) 
   )
 }
 
-type PlanType = 'yearly'
+type PlanType = 'monthly' | 'yearly'
 
 // Activity level mappings
 const activityLevels = [
@@ -542,10 +543,10 @@ export default function AppOnboarding() {
     setMfSessionLoading(true)
     setPaymentError('')
 
-    const finalPrice = getFinalPrice(plans.yearly.price)
+    const finalPrice = getFinalPrice(plans[selectedPlan].price)
 
     initiateCheckout({
-      content_ids: [plans.yearly.productId],
+      content_ids: [plans[selectedPlan].productId],
       content_type: 'product',
       value: finalPrice,
       currency: 'SAR',
@@ -559,7 +560,7 @@ export default function AppOnboarding() {
         body: JSON.stringify({
           amount: finalPrice,
           email: userData.email,
-          productId: 'app_yearly',
+          productId: `app_${selectedPlan}`,
         }),
       })
       const data = await response.json()
@@ -603,7 +604,7 @@ export default function AppOnboarding() {
                     paymentData: paymentResponse.paymentData,
                     encryptionKey: data.encryptionKey,
                     email: userData.email,
-                    plan: 'yearly',
+                    plan: selectedPlan,
                     amount: finalPrice,
                     discountCode: appliedDiscount ? discountCode : null,
                     authMethod: authMethod || 'email',
@@ -642,9 +643,9 @@ export default function AppOnboarding() {
                 const result = await verifyRes.json()
                 if (result.success) {
                   sessionStorage.setItem('mf_payment_result', JSON.stringify({
-                    success: true, email: userData.email, plan: 'yearly', amount: finalPrice,
+                    success: true, email: userData.email, plan: selectedPlan, amount: finalPrice,
                   }))
-                  window.location.href = `/app/success?source=streampay&email=${encodeURIComponent(userData.email)}&plan=yearly&amount=${finalPrice}&session=mf_${Date.now()}&authMethod=${authMethod || 'email'}${discountCode && appliedDiscount ? `&discountCode=${discountCode}` : ''}`
+                  window.location.href = `/app/success?source=streampay&email=${encodeURIComponent(userData.email)}&plan=${selectedPlan}&amount=${finalPrice}&session=mf_${Date.now()}&authMethod=${authMethod || 'email'}${discountCode && appliedDiscount ? `&discountCode=${discountCode}` : ''}`
                 } else {
                   setPaymentError(result.error || 'فشل في التحقق من الدفع')
                   setIsProcessingPayment(false)
@@ -677,10 +678,10 @@ export default function AppOnboarding() {
     setTamaraLoading(true)
     setPaymentError('')
 
-    const finalPrice = getFinalPrice(plans.yearly.price)
+    const finalPrice = getFinalPrice(plans[selectedPlan].price)
 
     initiateCheckout({
-      content_ids: [plans.yearly.productId],
+      content_ids: [plans[selectedPlan].productId],
       content_type: 'product',
       value: finalPrice,
       currency: 'SAR',
@@ -724,7 +725,7 @@ export default function AppOnboarding() {
         body: JSON.stringify({
           email: userData.email,
           amount: finalPrice,
-          plan: 'yearly',
+          plan: selectedPlan,
           discountCode: appliedDiscount ? discountCode : null,
           authMethod: authMethod || 'email',
           appleFirebaseUid: authMethod === 'apple' ? appleFirebaseUid : undefined,
@@ -1966,25 +1967,41 @@ export default function AppOnboarding() {
               )}
             </div>
 
-            {/* Single Plan Display */}
-            <div className="p-4 rounded-2xl bg-vp-navy text-white mb-3 text-center">
-              <p className="text-xs opacity-70 mb-1">اشتراك سنة كاملة</p>
-              <div className="flex items-baseline justify-center gap-1">
-                {appliedDiscount ? (
-                  <>
-                    <span className="text-lg line-through opacity-50">{plans.yearly.price}</span>
-                    <span className="text-3xl font-black">{getFinalPrice(plans.yearly.price)}</span>
-                  </>
-                ) : (
-                  <span className="text-3xl font-black">{plans.yearly.price}</span>
-                )}
-                <span className="text-sm opacity-70">ريال</span>
-              </div>
-              <p className="text-[10px] opacity-60 mt-1">{getDailyCost(getFinalPrice(plans.yearly.price), 365)} ر.س/يوم فقط</p>
-              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/20 text-green-300 text-[11px]">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                دفعة واحدة — بدون تجديد تلقائي
-              </div>
+            {/* Plan Selection */}
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              {(Object.entries(plans) as [PlanType, typeof plans[PlanType]][]).map(([key, plan]) => {
+                const price = getFinalPrice(plan.price)
+                const daily = getDailyCost(price, plan.days)
+                const isSelected = selectedPlan === key
+                return (
+                  <button
+                    key={key}
+                    onClick={() => { setSelectedPlan(key); setMfInitialized(false) }}
+                    className={`relative rounded-2xl p-3.5 text-center transition-all duration-200 border-2 ${
+                      isSelected
+                        ? 'bg-vp-navy text-white border-vp-navy shadow-lg shadow-vp-navy/20 scale-[1.02]'
+                        : 'bg-white text-neutral-800 border-neutral-200 hover:border-vp-navy/30'
+                    }`}
+                  >
+                    {key === 'yearly' && (
+                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-amber-400 text-[9px] font-bold px-2.5 py-0.5 rounded-full text-amber-900 whitespace-nowrap">
+                        الأوفر 🔥
+                      </div>
+                    )}
+                    <p className={`text-[11px] mb-1 ${isSelected ? 'text-white/70' : 'text-neutral-400'}`}>{plan.label}</p>
+                    <p className="text-xl font-black leading-tight">{price}</p>
+                    <p className={`text-[10px] ${isSelected ? 'text-white/60' : 'text-neutral-400'}`}>ريال</p>
+                    <div className={`mt-2 pt-2 border-t ${isSelected ? 'border-white/20' : 'border-neutral-100'}`}>
+                      <p className={`text-[10px] ${isSelected ? 'text-white/70' : 'text-neutral-400'}`}>{daily} ر.س/يوم</p>
+                    </div>
+                    {appliedDiscount && (
+                      <p className={`text-[10px] mt-1 line-through ${isSelected ? 'text-white/40' : 'text-neutral-300'}`}>
+                        {plan.price} ريال
+                      </p>
+                    )}
+                  </button>
+                )
+              })}
             </div>
 
             {/* Discount Code Input */}
@@ -2055,9 +2072,9 @@ export default function AppOnboarding() {
                     <span>جاري تحميل نموذج الدفع...</span>
                   </>
                 ) : appliedDiscount ? (
-                  <>🚀 ادفع الآن - <span className="line-through opacity-60 mx-1">{plans.yearly.price}</span> {getFinalPrice(plans.yearly.price)} ريال</>
+                  <>🚀 ادفع الآن - <span className="line-through opacity-60 mx-1">{plans[selectedPlan].price}</span> {getFinalPrice(plans[selectedPlan].price)} ريال</>
                 ) : (
-                  <>🚀 ادفع الآن - {plans.yearly.price} ريال</>
+                  <>🚀 ادفع الآن - {plans[selectedPlan].price} ريال</>
                 )}
               </button>
             )}
@@ -2098,7 +2115,7 @@ export default function AppOnboarding() {
                     <div className="text-right">
                       <p className="text-sm font-semibold">قسّمها على 4 دفعات</p>
                       <p className="text-[11px] text-muted-foreground">
-                        {Math.ceil(getFinalPrice(plans.yearly.price) / 4)} ر.س × 4 دفعات بدون فوائد
+                        {Math.ceil(getFinalPrice(plans[selectedPlan].price) / 4)} ر.س × 4 دفعات بدون فوائد
                       </p>
                     </div>
                   </div>
