@@ -862,23 +862,83 @@ export default function AppOnboarding() {
 
         {/* Step 0: Welcome */}
         {step === 0 && (
-          <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
-            <div className="w-28 h-28 mx-auto mb-8 rounded-3xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-xl overflow-hidden">
-              <Image
-                src="/Vegapower Logo-05.jpg"
-                alt="Vega Power"
-                width={112}
-                height={112}
-                className="w-full h-full object-contain"
-              />
+          <div className="flex-1 flex flex-col animate-fade-in">
+            {/* Logo + headline */}
+            <div className="text-center pt-6 mb-5">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-lg overflow-hidden">
+                <Image
+                  src="/Vegapower Logo-05.jpg"
+                  alt="Vega Power"
+                  width={80}
+                  height={80}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <h1 className="text-2xl font-black text-vp-navy mb-1.5">هدفك أقرب مما تتخيل</h1>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                كل اللي تحتاجه في مكان واحد — تمارين، تغذية، ومتابعة
+              </p>
             </div>
-            <h1 className="text-3xl font-bold mb-4">أهلاً بك في Vega Power</h1>
-            <p className="text-muted-foreground mb-12 leading-relaxed">
-              دعنا نخصص لك خطة تدريبية وغذائية تناسب احتياجات جسمك 100%
-            </p>
-            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg shadow-lg">
-              ابدأ الآن
-            </button>
+
+            {/* What we'll build for you */}
+            <div className="space-y-2.5 mb-5">
+              <p className="text-xs font-semibold text-vp-navy text-center mb-1">خلال دقيقتين بنجهز لك:</p>
+              {[
+                { icon: '🏋️', text: 'جدول تمارين مصمم لهدفك بالذكاء الاصطناعي', highlight: true },
+                { icon: '🔥', text: 'حساب سعراتك وماكروز بدقة حسب جسمك', highlight: true },
+                { icon: '📈', text: 'خطة واضحة توصلك لهدفك بأسرع طريقة', highlight: false },
+                { icon: '🤖', text: 'مدرب ذكي يتكيف معك كل أسبوع', highlight: false },
+              ].map((item) => (
+                <div
+                  key={item.text}
+                  className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                    item.highlight
+                      ? 'bg-vp-navy/5 border border-vp-navy/10'
+                      : 'bg-neutral-50 dark:bg-neutral-800/50'
+                  }`}
+                >
+                  <span className="text-xl shrink-0">{item.icon}</span>
+                  <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">{item.text}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Social proof strip */}
+            <div className="flex items-center justify-center gap-1.5 mb-4">
+              <div className="flex -space-x-2 rtl:space-x-reverse">
+                {['س', 'م', 'ن', 'ع'].map((letter, i) => (
+                  <div
+                    key={i}
+                    className="w-7 h-7 rounded-full bg-vp-navy/10 border-2 border-white dark:border-neutral-900 flex items-center justify-center text-[10px] font-bold text-vp-navy"
+                  >
+                    {letter}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mr-1">
+                <span className="font-bold text-vp-navy">+28,900</span> شخص بدأوا رحلتهم معنا
+              </p>
+            </div>
+
+            {/* FOMO offer hint */}
+            <div className="bg-gradient-to-l from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200/60 dark:border-amber-700/40 rounded-2xl p-3.5 mb-5 text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <span className="text-base">🎁</span>
+                <p className="text-sm font-bold text-amber-800 dark:text-amber-300">عرض خاص ينتظرك في النهاية</p>
+              </div>
+              <p className="text-[11px] text-amber-700/80 dark:text-amber-400/80">أكمل الأسئلة واحصل على خصم حصري على الاشتراك السنوي</p>
+            </div>
+
+            {/* CTA */}
+            <div className="mt-auto">
+              <button
+                onClick={nextStep}
+                className="w-full py-4 rounded-2xl bg-vp-navy text-white font-bold text-lg shadow-xl shadow-vp-navy/25 active:scale-[0.98] transition-transform"
+              >
+                يلا نبدأ — مجاناً 🚀
+              </button>
+              <p className="text-[10px] text-muted-foreground text-center mt-2">يأخذ أقل من دقيقتين • بدون التزام</p>
+            </div>
           </div>
         )}
 
