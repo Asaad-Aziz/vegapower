@@ -858,7 +858,10 @@ export default function AppOnboarding() {
         </button>
       )}
 
-      <div className="max-w-md mx-auto px-6 py-16 min-h-screen flex flex-col">
+      <div className="max-w-md mx-auto px-6 h-[100dvh] flex flex-col">
+
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto pt-16 pb-4 scrollbar-hide">
 
         {/* Step 0: Welcome */}
         {step === 0 && (
@@ -929,16 +932,6 @@ export default function AppOnboarding() {
               <p className="text-[11px] text-amber-700/80 dark:text-amber-400/80">أكمل الأسئلة واحصل على خصم حصري على الاشتراك السنوي</p>
             </div>
 
-            {/* CTA */}
-            <div className="mt-auto">
-              <button
-                onClick={nextStep}
-                className="w-full py-4 rounded-2xl bg-vp-navy text-white font-bold text-lg shadow-xl shadow-vp-navy/25 active:scale-[0.98] transition-transform"
-              >
-                يلا نبدأ — مجاناً 🚀
-              </button>
-              <p className="text-[10px] text-muted-foreground text-center mt-2">يأخذ أقل من دقيقتين • بدون التزام</p>
-            </div>
           </div>
         )}
 
@@ -1126,9 +1119,6 @@ export default function AppOnboarding() {
                 </div>
               </div>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
-              التالي
-            </button>
           </div>
         )}
 
@@ -1156,9 +1146,6 @@ export default function AppOnboarding() {
                 <p className="text-muted-foreground mt-4">العمر: {userData.age} سنة</p>
               </div>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
-              التالي
-            </button>
           </div>
         )}
 
@@ -1217,9 +1204,6 @@ export default function AppOnboarding() {
                 />
               </div>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
-              التالي
-            </button>
           </div>
         )}
 
@@ -1378,9 +1362,6 @@ export default function AppOnboarding() {
                 تم اختيار {userData.priorityMuscles.length} من 2
               </p>
             )}
-            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
-              {userData.priorityMuscles.length === 0 ? 'تخطي' : 'التالي'}
-            </button>
           </div>
         )}
 
@@ -1418,19 +1399,6 @@ export default function AppOnboarding() {
                   )}
                 </button>
               ))}
-            </div>
-            <div className="mt-4 space-y-3">
-              {userData.injuries.length > 0 && (
-                <button
-                  onClick={() => setUserData({ ...userData, injuries: [] })}
-                  className="w-full py-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-muted-foreground font-medium text-sm"
-                >
-                  لا إصابات (مسح الاختيار)
-                </button>
-              )}
-              <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
-                {userData.injuries.length === 0 ? 'لا إصابات' : 'التالي'}
-              </button>
             </div>
           </div>
         )}
@@ -1505,9 +1473,6 @@ export default function AppOnboarding() {
                 </button>
               </div>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
-              التالي
-            </button>
           </div>
         )}
 
@@ -1546,9 +1511,6 @@ export default function AppOnboarding() {
                 </button>
               ))}
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
-              التالي
-            </button>
           </div>
         )}
 
@@ -1587,9 +1549,6 @@ export default function AppOnboarding() {
                 </button>
               ))}
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
-              التالي
-            </button>
           </div>
         )}
 
@@ -1610,9 +1569,6 @@ export default function AppOnboarding() {
               <p className="text-sm">📈 يعزز الثقة: أنا أستطيع فعلها</p>
               <p className="text-xs text-muted-foreground mt-1">يقلل من خطر الاستسلام</p>
             </div>
-            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-auto">
-              التالي
-            </button>
           </div>
         )}
 
@@ -1783,10 +1739,6 @@ export default function AppOnboarding() {
                 <p className="text-xs opacity-80 mt-1">خلّ الذكاء الاصطناعي يبني لك الطريق 🚀</p>
               </div>
             </div>
-
-            <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg mt-6">
-              التالي
-            </button>
           </div>
         )}
 
@@ -2211,6 +2163,56 @@ export default function AppOnboarding() {
             </div>
           </div>
         )}
+
+        </div>{/* end scrollable content area */}
+
+        {/* Fixed bottom button bar */}
+        {[0, 5, 6, 8, 12, 13, 15, 16, 17, 18, 19].includes(step) && (
+          <div className="shrink-0 pb-6 pt-3 bg-background">
+            {step === 0 && (
+              <>
+                <button
+                  onClick={nextStep}
+                  className="w-full py-4 rounded-2xl bg-vp-navy text-white font-bold text-lg shadow-xl shadow-vp-navy/25 active:scale-[0.98] transition-transform"
+                >
+                  يلا نبدأ — مجاناً 🚀
+                </button>
+                <p className="text-[10px] text-muted-foreground text-center mt-2">يأخذ أقل من دقيقتين • بدون التزام</p>
+              </>
+            )}
+            {(step === 5 || step === 6 || step === 8 || step === 15 || step === 18 || step === 19) && (
+              <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
+                التالي
+              </button>
+            )}
+            {step === 12 && (
+              <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
+                {userData.priorityMuscles.length === 0 ? 'تخطي' : 'التالي'}
+              </button>
+            )}
+            {step === 13 && (
+              <div className="space-y-3">
+                {userData.injuries.length > 0 && (
+                  <button
+                    onClick={() => setUserData({ ...userData, injuries: [] })}
+                    className="w-full py-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-muted-foreground font-medium text-sm"
+                  >
+                    لا إصابات (مسح الاختيار)
+                  </button>
+                )}
+                <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
+                  {userData.injuries.length === 0 ? 'لا إصابات' : 'التالي'}
+                </button>
+              </div>
+            )}
+            {(step === 16 || step === 17) && (
+              <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
+                التالي
+              </button>
+            )}
+          </div>
+        )}
+
       </div>
     </div>
   )
