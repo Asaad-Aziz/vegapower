@@ -235,7 +235,7 @@ export default function AppOnboarding() {
   const searchParams = useSearchParams()
   const router = useRouter()
   
-  const [step, setStep] = useState<Step>(0)
+  const [step, setStep] = useState<Step>(1)
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly')
   const [processingProgress, setProcessingProgress] = useState(0)
   const [completedChecks, setCompletedChecks] = useState<number[]>([])
