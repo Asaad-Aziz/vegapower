@@ -956,8 +956,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 1: Gender */}
-        {step === 1 && (
+        {/* Step 1: Fitness Goal (swapped with Gender) */}
+        {step === 7 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما هو جنسك؟</h2>
@@ -1172,8 +1172,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 7: Fitness Goal */}
-        {step === 7 && (
+        {/* Step 7: Gender (swapped with Fitness Goal) */}
+        {step === 1 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما هو هدفك؟</h2>
