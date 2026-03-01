@@ -2035,6 +2035,8 @@ export default function AppOnboarding() {
               })}
             </div>
 
+            <p className="text-center text-[11px] text-neutral-400 -mt-1 mb-2">بدون تجديد تلقائي — تدفع مرة واحدة فقط</p>
+
             {/* Discount Code Input */}
             <div className="mb-3">
               <div className="flex gap-2">
