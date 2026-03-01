@@ -2000,7 +2000,7 @@ export default function AppOnboarding() {
 
             {/* Plan Selection */}
             <div className="grid grid-cols-2 gap-3 mb-3">
-              {(Object.entries(plans) as [PlanType, typeof plans[PlanType]][]).filter(([key]) => key !== 'monthly').map(([key, plan]) => {
+              {(Object.entries(plans) as [PlanType, typeof plans[PlanType]][]).map(([key, plan]) => {
                 const price = getFinalPrice(plan.price)
                 const daily = getDailyCost(price, plan.days)
                 const isSelected = selectedPlan === key
