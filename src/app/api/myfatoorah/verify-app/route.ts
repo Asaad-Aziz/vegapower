@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 import { decryptPaymentData } from '@/lib/myfatoorah'
-import { createFirebaseUser, saveUserDataToFirestore } from '@/lib/firebase-admin'
+import { createFirebaseUser, saveUserDataToFirestore, getFirebaseUidByEmail } from '@/lib/firebase-admin'
 
 function generatePassword(length = 12): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
@@ -68,6 +68,10 @@ export async function POST(request: NextRequest) {
     }
 
     const isAppleSignIn = authMethod === 'apple' && appleFirebaseUid
+
+    // Check if Firebase user already exists to avoid overwriting password and re-sending email on refresh
+    const existingFirebaseUser = !isAppleSignIn ? !!(await getFirebaseUidByEmail(email)) : false
+
     const tempPassword = isAppleSignIn ? '' : generatePassword()
 
     const now = new Date()
@@ -91,7 +95,7 @@ export async function POST(request: NextRequest) {
     if (isAppleSignIn) {
       firebaseUid = appleFirebaseUid
     } else {
-      firebaseUid = await createFirebaseUser(email, tempPassword, true)
+      firebaseUid = await createFirebaseUser(email, tempPassword, !existingFirebaseUser)
     }
 
     const firebaseUserData = {
@@ -171,7 +175,7 @@ export async function POST(request: NextRequest) {
     }
 
     const resendApiKey = process.env.RESEND_API_KEY
-    if (resendApiKey && firebaseUid) {
+    if (resendApiKey && firebaseUid && !existingFirebaseUser) {
       try {
         const emailSubject = isAppleSignIn
           ? 'مرحباً بك في Vega Power - تم تفعيل اشتراكك 🎉'
