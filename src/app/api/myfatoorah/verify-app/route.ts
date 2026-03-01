@@ -72,7 +72,11 @@ export async function POST(request: NextRequest) {
 
     const now = new Date()
     const expirationDate = new Date(now)
-    expirationDate.setFullYear(expirationDate.getFullYear() + 1)
+    if (plan === 'monthly') {
+      expirationDate.setDate(expirationDate.getDate() + 30)
+    } else {
+      expirationDate.setFullYear(expirationDate.getFullYear() + 1)
+    }
 
     let userDataParsed = null
     if (userData) {
@@ -120,7 +124,7 @@ export async function POST(request: NextRequest) {
       programName: userDataParsed?.programName || 'Vega Power',
       subscription: {
         isActive: true,
-        productId: 'myfatoorah_yearly',
+        productId: plan === 'monthly' ? 'myfatoorah_monthly' : 'myfatoorah_yearly',
         expirationDate,
         startDate: now,
         planType: plan || 'yearly',
