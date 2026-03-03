@@ -1,8 +1,8 @@
 import { createServerClient } from '@/lib/supabase'
 import StoreWrapper from '@/components/StoreWrapper'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic'
+// Revalidate every 60 seconds (ISR)
+export const revalidate = 60
 
 async function getData() {
   try {

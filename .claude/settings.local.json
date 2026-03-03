@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(head:*)",
-      "Bash(cd /c/Users/Admin/Desktop/vpstan && npx tsc --noEmit 2>&1)"
+      "Bash(cd /c/Users/Admin/Desktop/vpstan && npx tsc --noEmit 2>&1)",
+      "Bash(npm run:*)"
     ]
   }
 }

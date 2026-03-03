@@ -164,7 +164,7 @@ export default function LandingPage({
                 <div className="rounded-xl overflow-hidden border border-primary-foreground/20 bg-primary-foreground/5 shadow-md aspect-[9/19]">
                   <Image
                     src={src}
-                    alt=""
+                    alt={`لقطة شاشة من تطبيق Vega Power ${src.replace('/', '').replace('.png', '')}`}
                     width={200}
                     height={422}
                     sizes="(max-width: 640px) 50vw, (max-width: 768px) 35vw, 200px"
