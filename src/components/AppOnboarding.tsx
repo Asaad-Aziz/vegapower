@@ -16,7 +16,22 @@ import { initiateCheckout } from '@/lib/meta-pixel'
 import { snapStartCheckout } from '@/lib/snapchat-pixel'
 import { signInWithApple, checkAppleSignInRedirect } from '@/lib/firebase-client'
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19
+
+const INSIGHT_BREAK_STEPS = new Set([4, 9, 14, 18])
+const INPUT_STEP_COUNT = 16
+
+const getProgressIndex = (s: number): number => {
+  if (s <= 3) return s
+  if (s === 4) return 3
+  if (s >= 5 && s <= 8) return s - 1
+  if (s === 9) return 7
+  if (s >= 10 && s <= 13) return s - 2
+  if (s === 14) return 11
+  if (s >= 15 && s <= 17) return s - 3
+  if (s === 18) return 14
+  return 15
+}
 
 interface UserData {
   gender: 'male' | 'female' | ''
@@ -37,7 +52,7 @@ interface UserData {
   cardioPreference: string
   targetSpeed: number
   challenges: string[]
-  accomplishments: string[]
+  motivation: string
   email: string
   // Calculated values
   calculatedCalories: number
@@ -158,13 +173,38 @@ const challengeOptions = [
   { id: 'meal_inspiration', icon: Lightbulb, title: 'قلة الأفكار للوجبات' },
 ]
 
-// Accomplishments
-const accomplishmentOptions = [
+// Motivation (single-select, replaces old accomplishments multi-select)
+const motivationOptions = [
   { id: 'healthier_lifestyle', icon: Leaf, title: 'أكل وحياة صحية أكثر' },
   { id: 'boost_energy', icon: Sun, title: 'زيادة طاقتي ومزاجي' },
   { id: 'stay_motivated', icon: Sparkles, title: 'البقاء متحفزاً ومستمراً' },
   { id: 'body_confidence', icon: UserRound, title: 'الشعور بالرضا عن جسمي' },
 ]
+
+// Day names for weekly calendar
+const dayNamesAr = ['سبت', 'أحد', 'إثن', 'ثلا', 'أرب', 'خمي', 'جمع']
+
+const getWeekSchedule = (split: string, days: number): (string | null)[] => {
+  const labels: string[] = []
+  for (let i = 0; i < days; i++) {
+    switch (split) {
+      case 'full_body': labels.push('كامل'); break
+      case 'upper_lower': labels.push(i % 2 === 0 ? 'علوي' : 'سفلي'); break
+      case 'push_pull_legs': labels.push(['دفع', 'سحب', 'أرجل'][i % 3]); break
+      case 'muscle_split': labels.push(['صدر', 'ظهر', 'كتف', 'ذراع', 'رجل', 'بطن', 'مؤخرة'][i % 7]); break
+      default: labels.push('AI'); break
+    }
+  }
+  const week: (string | null)[] = Array(7).fill(null)
+  if (days === 3) {
+    [0, 2, 4].forEach((d, i) => week[d] = labels[i])
+  } else if (days === 5) {
+    [0, 1, 2, 3, 4].forEach((d, i) => week[d] = labels[i])
+  } else if (days === 7) {
+    labels.forEach((l, i) => week[i] = l)
+  }
+  return week
+}
 
 // Fitness levels
 const fitnessLevelOptions = [
@@ -259,6 +299,7 @@ export default function AppOnboarding() {
   const [appleSignInLoading, setAppleSignInLoading] = useState(false)
   const [appleSignInError, setAppleSignInError] = useState('')
   const [graphAnimated, setGraphAnimated] = useState(false)
+  const [revealReady, setRevealReady] = useState(false)
 
   // Handle StreamPay false-negative: payment succeeded but redirected to failure URL
   useEffect(() => {
@@ -320,7 +361,7 @@ export default function AppOnboarding() {
           setAuthMethod('apple')
           setAppleFirebaseUid(result.uid)
           // Go to payment page
-          setStep(21 as Step)
+          setStep(19 as Step)
         }
       } catch (error) {
         console.error('Apple redirect check error:', error)
@@ -348,7 +389,7 @@ export default function AppOnboarding() {
     cardioPreference: '',
     targetSpeed: 0.5,
     challenges: [],
-    accomplishments: [],
+    motivation: '',
     email: '',
     calculatedCalories: 0,
     proteinGrams: 0,
@@ -360,11 +401,10 @@ export default function AppOnboarding() {
     programName: '',
   })
 
-  const totalSteps = 22
-  const progress = (step / (totalSteps - 1)) * 100
+  const progress = (getProgressIndex(step) / (INPUT_STEP_COUNT - 1)) * 100
 
   const nextStep = () => {
-    if (step < 21) setStep((step + 1) as Step)
+    if (step < 19) setStep((step + 1) as Step)
   }
 
   // Select and advance immediately
@@ -374,10 +414,7 @@ export default function AppOnboarding() {
   }
 
   const prevStep = () => {
-    if (step === 21) {
-      // Skip processing step (20), go back to graph (19)
-      setStep(19 as Step)
-    } else if (step > 0) {
+    if (step > 0) {
       setStep((step - 1) as Step)
     }
   }
@@ -438,9 +475,9 @@ export default function AppOnboarding() {
     }
   }
 
-  // Calculate all values when reaching step 20 (Processing)
+  // IB4 (step 18): Calculate all values and run processing animation, then reveal
   useEffect(() => {
-    if (step === 20) {
+    if (step === 18) {
       const calories = calculateCalories()
       const macros = getMacroPercentages()
       const programName = getProgramName()
@@ -461,41 +498,31 @@ export default function AppOnboarding() {
         programName,
       }))
 
-      // Animate progress
-      let progress = 0
+      // Processing animation → reveal
+      setRevealReady(false)
+      setGraphAnimated(false)
+      setProcessingProgress(0)
+      setCompletedChecks([])
+      let prog = 0
       const interval = setInterval(() => {
-        progress += 2
-        setProcessingProgress(progress)
+        prog += 2
+        setProcessingProgress(prog)
 
-        if (progress >= 20 && !completedChecks.includes(0)) {
-          setCompletedChecks(prev => [...prev, 0])
-        }
-        if (progress >= 50 && !completedChecks.includes(1)) {
-          setCompletedChecks(prev => [...prev, 1])
-        }
-        if (progress >= 75 && !completedChecks.includes(2)) {
-          setCompletedChecks(prev => [...prev, 2])
-        }
-        if (progress >= 90 && !completedChecks.includes(3)) {
-          setCompletedChecks(prev => [...prev, 3])
-        }
+        if (prog >= 20) setCompletedChecks(prev => prev.includes(0) ? prev : [...prev, 0])
+        if (prog >= 50) setCompletedChecks(prev => prev.includes(1) ? prev : [...prev, 1])
+        if (prog >= 75) setCompletedChecks(prev => prev.includes(2) ? prev : [...prev, 2])
+        if (prog >= 90) setCompletedChecks(prev => prev.includes(3) ? prev : [...prev, 3])
 
-        if (progress >= 100) {
+        if (prog >= 100) {
           clearInterval(interval)
-          setTimeout(() => nextStep(), 500)
+          setTimeout(() => {
+            setRevealReady(true)
+            setTimeout(() => setGraphAnimated(true), 300)
+          }, 500)
         }
       }, 40)
 
       return () => clearInterval(interval)
-    }
-  }, [step])
-
-  // Trigger graph animation when reaching step 19
-  useEffect(() => {
-    if (step === 19) {
-      setGraphAnimated(false)
-      const timer = setTimeout(() => setGraphAnimated(true), 300)
-      return () => clearTimeout(timer)
     }
   }, [step])
 
@@ -515,7 +542,7 @@ export default function AppOnboarding() {
         setAppleFirebaseUid(result.uid)
         // Auto-advance to payment page after short delay
         setTimeout(() => {
-          setStep(21 as Step)
+          setStep(19 as Step)
         }, 800)
       } else {
         // Apple might hide the email (private relay)
@@ -642,7 +669,8 @@ export default function AppOnboarding() {
                       cardioPreference: userData.cardioPreference,
                       targetSpeed: userData.targetSpeed,
                       challenges: userData.challenges,
-                      accomplishments: userData.accomplishments,
+                      motivation: userData.motivation,
+                      accomplishments: [userData.motivation],
                       calculatedCalories: userData.calculatedCalories,
                       proteinGrams: userData.proteinGrams,
                       carbsGrams: userData.carbsGrams,
@@ -727,7 +755,8 @@ export default function AppOnboarding() {
         cardioPreference: userData.cardioPreference,
         targetSpeed: userData.targetSpeed,
         challenges: userData.challenges,
-        accomplishments: userData.accomplishments,
+        motivation: userData.motivation,
+        accomplishments: [userData.motivation],
         calculatedCalories: userData.calculatedCalories,
         proteinGrams: userData.proteinGrams,
         carbsGrams: userData.carbsGrams,
@@ -854,10 +883,10 @@ export default function AppOnboarding() {
       )}
       
       {/* Progress Bar */}
-      {step > 0 && step < 21 && (
+      {step > 0 && step < 19 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
           <div className="w-[200px] h-1.5 bg-vp-beige/50 dark:bg-neutral-700 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-vp-navy transition-all duration-500 rounded-full"
               style={{ width: `${progress}%` }}
             />
@@ -866,7 +895,7 @@ export default function AppOnboarding() {
       )}
 
       {/* Back Button */}
-      {(step > 0 && step < 20 || step === 21) && (
+      {step > 0 && (
         <button
           onClick={prevStep}
           className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center"
@@ -885,24 +914,13 @@ export default function AppOnboarding() {
         {/* Step 0: Welcome */}
         {step === 0 && (
           <div className="flex-1 flex flex-col animate-fade-in">
-            {/* Logo + headline */}
             <div className="text-center pt-6 mb-5">
               <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-lg overflow-hidden">
-                <Image
-                  src="/Vegapower Logo-05.jpg"
-                  alt="Vega Power"
-                  width={80}
-                  height={80}
-                  className="w-full h-full object-contain"
-                />
+                <Image src="/Vegapower Logo-05.jpg" alt="Vega Power" width={80} height={80} className="w-full h-full object-contain" />
               </div>
               <h1 className="text-2xl font-black text-vp-navy mb-1.5">هدفك أقرب مما تتخيل</h1>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                كل اللي تحتاجه في مكان واحد — تمارين، تغذية، ومتابعة
-              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">كل اللي تحتاجه في مكان واحد — تمارين، تغذية، ومتابعة</p>
             </div>
-
-            {/* What we'll build for you */}
             <div className="space-y-2.5 mb-5">
               <p className="text-xs font-semibold text-vp-navy text-center mb-1">خلال دقيقتين بنجهز لك:</p>
               {[
@@ -911,40 +929,20 @@ export default function AppOnboarding() {
                 { Icon: TrendingUp, text: 'خطة واضحة توصلك لهدفك بأسرع طريقة', highlight: false },
                 { Icon: Bot, text: 'مدرب ذكي يتكيف معك كل أسبوع', highlight: false },
               ].map((item) => (
-                <div
-                  key={item.text}
-                  className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
-                    item.highlight
-                      ? 'bg-vp-navy/5 border border-vp-navy/10'
-                      : 'bg-neutral-50 dark:bg-neutral-800/50'
-                  }`}
-                >
-                  <div className="shrink-0 w-8 h-8 rounded-lg bg-vp-navy/10 flex items-center justify-center">
-                    <item.Icon className="size-5 text-vp-navy" />
-                  </div>
+                <div key={item.text} className={`flex items-center gap-3 p-3 rounded-xl transition-all ${item.highlight ? 'bg-vp-navy/5 border border-vp-navy/10' : 'bg-neutral-50 dark:bg-neutral-800/50'}`}>
+                  <div className="shrink-0 w-8 h-8 rounded-lg bg-vp-navy/10 flex items-center justify-center"><item.Icon className="size-5 text-vp-navy" /></div>
                   <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">{item.text}</p>
                 </div>
               ))}
             </div>
-
-            {/* Social proof strip */}
             <div className="flex items-center justify-center gap-1.5 mb-4">
               <div className="flex -space-x-2 rtl:space-x-reverse">
                 {['س', 'م', 'ن', 'ع'].map((letter, i) => (
-                  <div
-                    key={i}
-                    className="w-7 h-7 rounded-full bg-vp-navy/10 border-2 border-white dark:border-neutral-900 flex items-center justify-center text-[10px] font-bold text-vp-navy"
-                  >
-                    {letter}
-                  </div>
+                  <div key={i} className="w-7 h-7 rounded-full bg-vp-navy/10 border-2 border-white dark:border-neutral-900 flex items-center justify-center text-[10px] font-bold text-vp-navy">{letter}</div>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground mr-1">
-                <span className="font-bold text-vp-navy">+28,900</span> شخص بدأوا رحلتهم معنا
-              </p>
+              <p className="text-xs text-muted-foreground mr-1"><span className="font-bold text-vp-navy">+28,900</span> شخص بدأوا رحلتهم معنا</p>
             </div>
-
-            {/* FOMO offer hint */}
             <div className="bg-gradient-to-l from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200/60 dark:border-amber-700/40 rounded-2xl p-3.5 mb-5 text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Gift className="size-5 text-amber-700 dark:text-amber-300" />
@@ -952,12 +950,149 @@ export default function AppOnboarding() {
               </div>
               <p className="text-[11px] text-amber-700/80 dark:text-amber-400/80">أكمل الأسئلة واحصل على خصم حصري على الاشتراك السنوي</p>
             </div>
-
           </div>
         )}
 
-        {/* Step 1: Fitness Goal (swapped with Gender) */}
-        {step === 7 && (
+        {/* Step 1: Fitness Goal (auto-advance) */}
+        {step === 1 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">ما هو هدفك؟</h2>
+              <p className="text-muted-foreground">اختر الهدف الرئيسي لنبني الخطة عليه.</p>
+            </div>
+            <div className="flex-1 space-y-3">
+              {fitnessGoals.map((goal) => (
+                <button
+                  key={goal.id}
+                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, fitnessGoal: goal.value, targetWeight: userData.weight }))}
+                  className={`w-full p-5 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
+                    userData.fitnessGoal === goal.value ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]' : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
+                >
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
+                    userData.fitnessGoal === goal.value ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                  }`}>
+                    {userData.fitnessGoal === goal.value ? (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                    ) : <goal.icon className="size-6" />}
+                  </div>
+                  <h3 className="font-semibold text-lg">{goal.title}</h3>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Target Weight + Speed (MERGED) — button advance */}
+        {step === 2 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-6 pt-8">
+              <h2 className="text-2xl font-bold mb-2">ما هو وزنك المثالي؟</h2>
+              <p className="text-muted-foreground">الهدف الذي تسعى للوصول إليه.</p>
+            </div>
+            <div className="flex-1 space-y-6">
+              {/* Target Weight Slider */}
+              <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
+                <span className="text-5xl font-bold block mb-2">{userData.targetWeight}</span>
+                <span className="text-muted-foreground">كجم</span>
+                <input type="range" min="30" max="200" value={userData.targetWeight} onChange={(e) => setUserData({ ...userData, targetWeight: Number(e.target.value) })} className="w-full accent-vp-navy mt-4" />
+              </div>
+              {/* Speed Slider — hidden for Body Recomposition */}
+              {userData.fitnessGoal !== 'Body Recomposition' && (
+                <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
+                  <label className="block text-sm text-muted-foreground mb-3">سرعة التغيير أسبوعياً</label>
+                  <div className="flex justify-center gap-6 mb-3">
+                    <div className={`flex flex-col items-center gap-1 transition-opacity ${userData.targetSpeed < 0.5 ? 'opacity-100' : 'opacity-30'}`}>
+                      <Sprout className="size-6" /><span className="text-[10px] font-medium">بطيء</span>
+                    </div>
+                    <div className={`flex flex-col items-center gap-1 transition-opacity ${userData.targetSpeed >= 0.5 && userData.targetSpeed < 1 ? 'opacity-100' : 'opacity-30'}`}>
+                      <Zap className="size-6" /><span className="text-[10px] font-medium">متوسط</span>
+                    </div>
+                    <div className={`flex flex-col items-center gap-1 transition-opacity ${userData.targetSpeed >= 1 ? 'opacity-100' : 'opacity-30'}`}>
+                      <Flame className="size-6" /><span className="text-[10px] font-medium">سريع</span>
+                    </div>
+                  </div>
+                  <span className="text-3xl font-bold block mb-1">{userData.targetSpeed.toFixed(1)}</span>
+                  <span className="text-muted-foreground text-sm">كجم/أسبوع</span>
+                  <input type="range" min="0.1" max="1.5" step="0.1" value={userData.targetSpeed} onChange={(e) => setUserData({ ...userData, targetSpeed: Number(e.target.value) })} className="w-full accent-vp-navy mt-4" />
+                  <button onClick={() => setUserData({ ...userData, targetSpeed: 0.5 })} className="mt-3 px-4 py-2 rounded-full bg-vp-navy/10 text-vp-navy font-medium text-sm">السرعة المستحسنة (0.5 كجم)</button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Days Per Week (auto-advance) */}
+        {step === 3 && (
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="text-center mb-8 pt-8">
+              <h2 className="text-2xl font-bold mb-2">كم يوم تتمرن في الأسبوع؟</h2>
+              <p className="text-muted-foreground">سنبني خطتك التدريبية بناءً على جدولك.</p>
+            </div>
+            <div className="flex-1 space-y-3">
+              {daysPerWeekOptions.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, daysPerWeek: option.id }))}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
+                    userData.daysPerWeek === option.id ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]' : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}
+                >
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold transition-colors duration-300 ${
+                    userData.daysPerWeek === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                  }`}>
+                    {userData.daysPerWeek === option.id ? (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                    ) : option.label}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">{option.title}</h3>
+                    <p className="text-sm text-muted-foreground">{option.subtitle}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: IB1 — Goal Timeline Insight */}
+        {step === 4 && (
+          <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-vp-navy/10 flex items-center justify-center">
+              <Target className="size-10 text-vp-navy" />
+            </div>
+            {userData.fitnessGoal === 'Body Recomposition' ? (
+              <>
+                <h2 className="text-2xl font-bold mb-2">هدفك هو الحفاظ على وزنك الحالي</h2>
+                <p className="text-muted-foreground mb-6">مع تحسين تكوين جسمك — حرق دهون وبناء عضلات</p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold mb-2">
+                  مع {userData.daysPerWeek} أيام/أسبوع، ستصل لهدفك خلال ~{Math.max(1, Math.round(Math.abs(userData.weight - userData.targetWeight) / userData.targetSpeed))} أسابيع
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  {isLosingWeight ? 'خسارة' : 'اكتساب'} {weightDiff} كجم هو هدف واقعي جداً!
+                </p>
+              </>
+            )}
+            {/* Mini SVG progress curve */}
+            <div className="mx-auto w-64 h-24 mb-4">
+              <svg viewBox="0 0 200 80" className="w-full h-full">
+                <path d="M10,60 Q50,55 100,35 T190,10" fill="none" stroke="#1e3a5f" strokeWidth="3" strokeLinecap="round" strokeDasharray="300" strokeDashoffset="0" className="animate-[dash_1.5s_ease-out_forwards]" />
+                <circle cx="190" cy="10" r="5" fill="#1e3a5f" className="animate-pulse" />
+                <text x="190" y="8" textAnchor="middle" fontSize="10" fill="#1e3a5f" fontWeight="bold">&#x2605;</text>
+              </svg>
+            </div>
+            <div className="p-4 rounded-2xl bg-vp-navy/5 border border-vp-navy/15">
+              <p className="text-sm flex items-center justify-center gap-1.5"><TrendingUp className="size-4 text-vp-navy inline" /> يعزز الثقة: أنا أستطيع فعلها</p>
+              <p className="text-xs text-muted-foreground mt-1">يقلل من خطر الاستسلام</p>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Gender (auto-advance) */}
+        {step === 5 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما هو جنسك؟</h2>
@@ -972,21 +1107,15 @@ export default function AppOnboarding() {
                   key={g.id}
                   onClick={() => selectAndAdvance(() => setUserData({ ...userData, gender: g.id as 'male' | 'female' }))}
                   className={`p-6 rounded-2xl text-center transition-all duration-300 relative ${
-                    userData.gender === g.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.03]'
-                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                    userData.gender === g.id ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.03]' : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}
                 >
                   {userData.gender === g.id && (
                     <div className="absolute top-3 left-3 w-6 h-6 rounded-full bg-vp-navy flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                      </svg>
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
                     </div>
                   )}
-                  <div className="flex justify-center mb-2">
-                    <User className="size-10 text-vp-navy" />
-                  </div>
+                  <div className="flex justify-center mb-2"><User className="size-10 text-vp-navy" /></div>
                   <span className="text-xl font-semibold">{g.label}</span>
                 </button>
               ))}
@@ -994,158 +1123,7 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 2: Activity Level */}
-        {step === 2 && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">كم مرة تتمرن أسبوعياً؟</h2>
-              <p className="text-muted-foreground">يساعدنا هذا في تحديد مستوى نشاطك الحالي.</p>
-            </div>
-            <div className="flex-1 space-y-3">
-              {activityLevels.map((level) => (
-                <button
-                  key={level.id}
-                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, activityLevel: level.value }))}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
-                    userData.activityLevel === level.value
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
-                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                  }`}
-                >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
-                    userData.activityLevel === level.value ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
-                  }`}>
-                    {userData.activityLevel === level.value ? (
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                      </svg>
-                    ) : <level.icon className="size-6" />}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{level.title}</h3>
-                    <p className="text-sm text-muted-foreground">{level.subtitle}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Fitness Level */}
-        {step === 3 && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">ما هو مستوى لياقتك الحالي؟</h2>
-              <p className="text-muted-foreground">سيساعدنا هذا في تخصيص التمارين المناسبة لك.</p>
-            </div>
-            <div className="flex-1 space-y-3">
-              {fitnessLevelOptions.map((level) => (
-                <button
-                  key={level.id}
-                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, fitnessLevel: level.id }))}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
-                    userData.fitnessLevel === level.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
-                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                  }`}
-                >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
-                    userData.fitnessLevel === level.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
-                  }`}>
-                    {userData.fitnessLevel === level.id ? (
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                      </svg>
-                    ) : <level.icon className="size-6" />}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{level.title}</h3>
-                    <p className="text-sm text-muted-foreground">{level.subtitle}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 4: Workout Location */}
-        {step === 4 && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">أين تفضل التمرين؟</h2>
-              <p className="text-muted-foreground">سنخصص التمارين حسب المكان والأدوات المتاحة لديك.</p>
-            </div>
-            <div className="flex-1 flex flex-col gap-4 justify-center">
-              {workoutLocationOptions.map((location) => (
-                <button
-                  key={location.id}
-                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, workoutLocation: location.id }))}
-                  className={`w-full p-5 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
-                    userData.workoutLocation === location.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
-                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                  }`}
-                >
-                  <div className={`w-16 h-16 rounded-xl flex items-center justify-center transition-colors duration-300 ${
-                    userData.workoutLocation === location.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
-                  }`}>
-                    {userData.workoutLocation === location.id ? (
-                      <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                      </svg>
-                    ) : <location.icon className="size-7" />}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{location.title}</h3>
-                    <p className="text-sm text-muted-foreground">{location.subtitle}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 5: Height & Weight */}
-        {step === 5 && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">الطول والوزن</h2>
-              <p className="text-muted-foreground">بيانات أساسية لحساب مؤشر كتلة الجسم (BMI).</p>
-            </div>
-            <div className="flex-1 space-y-6">
-              <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800">
-                <label className="block text-sm text-muted-foreground mb-2">الطول (سم)</label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min="100"
-                    max="250"
-                    value={userData.height}
-                    onChange={(e) => setUserData({ ...userData, height: Number(e.target.value) })}
-                    className="flex-1 accent-vp-navy"
-                  />
-                  <span className="text-2xl font-bold w-16 text-center">{userData.height}</span>
-                </div>
-              </div>
-              <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800">
-                <label className="block text-sm text-muted-foreground mb-2">الوزن (كجم)</label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min="30"
-                    max="200"
-                    value={userData.weight}
-                    onChange={(e) => setUserData({ ...userData, weight: Number(e.target.value) })}
-                    className="flex-1 accent-vp-navy"
-                  />
-                  <span className="text-2xl font-bold w-16 text-center">{userData.weight}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 6: Birth Year */}
+        {/* Step 6: Birth Year (button advance) */}
         {step === 6 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
@@ -1155,188 +1133,206 @@ export default function AppOnboarding() {
             <div className="flex-1 flex flex-col justify-center">
               <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
                 <span className="text-5xl font-bold block mb-4">{userData.birthYear}</span>
-                <input
-                  type="range"
-                  min="1950"
-                  max="2015"
-                  value={userData.birthYear}
-                  onChange={(e) => {
-                    const year = Number(e.target.value)
-                    setUserData({ ...userData, birthYear: year, age: new Date().getFullYear() - year })
-                  }}
-                  className="w-full accent-vp-navy"
-                />
+                <input type="range" min="1950" max="2015" value={userData.birthYear} onChange={(e) => { const year = Number(e.target.value); setUserData({ ...userData, birthYear: year, age: new Date().getFullYear() - year }) }} className="w-full accent-vp-navy" />
                 <p className="text-muted-foreground mt-4">العمر: {userData.age} سنة</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 7: Gender (swapped with Fitness Goal) */}
-        {step === 1 && (
+        {/* Step 7: Height & Weight (button advance) */}
+        {step === 7 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">ما هو هدفك؟</h2>
-              <p className="text-muted-foreground">اختر الهدف الرئيسي لنبني الخطة عليه.</p>
+              <h2 className="text-2xl font-bold mb-2">الطول والوزن</h2>
+              <p className="text-muted-foreground">بيانات أساسية لحساب مؤشر كتلة الجسم (BMI).</p>
             </div>
-            <div className="flex-1 space-y-3">
-              {fitnessGoals.map((goal) => (
-                <button
-                  key={goal.id}
-                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, fitnessGoal: goal.value, targetWeight: userData.weight }))}
-                  className={`w-full p-5 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
-                    userData.fitnessGoal === goal.value
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
-                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                  }`}
-                >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
-                    userData.fitnessGoal === goal.value ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
-                  }`}>
-                    {userData.fitnessGoal === goal.value ? (
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                      </svg>
-                    ) : <goal.icon className="size-6" />}
-                  </div>
-                  <h3 className="font-semibold text-lg">{goal.title}</h3>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 8: Target Weight */}
-        {step === 8 && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">ما هو وزنك المثالي؟</h2>
-              <p className="text-muted-foreground">الهدف الذي تسعى للوصول إليه.</p>
-            </div>
-            <div className="flex-1 flex flex-col justify-center">
-              <div className="p-8 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
-                <span className="text-6xl font-bold block mb-2">{userData.targetWeight}</span>
-                <span className="text-muted-foreground">كجم</span>
-                <input
-                  type="range"
-                  min="30"
-                  max="200"
-                  value={userData.targetWeight}
-                  onChange={(e) => setUserData({ ...userData, targetWeight: Number(e.target.value) })}
-                  className="w-full accent-vp-navy mt-6"
-                />
+            <div className="flex-1 space-y-6">
+              <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800">
+                <label className="block text-sm text-muted-foreground mb-2">الطول (سم)</label>
+                <div className="flex items-center gap-4">
+                  <input type="range" min="100" max="250" value={userData.height} onChange={(e) => setUserData({ ...userData, height: Number(e.target.value) })} className="flex-1 accent-vp-navy" />
+                  <span className="text-2xl font-bold w-16 text-center">{userData.height}</span>
+                </div>
+              </div>
+              <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800">
+                <label className="block text-sm text-muted-foreground mb-2">الوزن (كجم)</label>
+                <div className="flex items-center gap-4">
+                  <input type="range" min="30" max="200" value={userData.weight} onChange={(e) => setUserData({ ...userData, weight: Number(e.target.value) })} className="flex-1 accent-vp-navy" />
+                  <span className="text-2xl font-bold w-16 text-center">{userData.weight}</span>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 9: Days Per Week */}
-        {step === 9 && (
+        {/* Step 8: Activity Level + Fitness Level (MERGED) — button advance, disabled until both selected */}
+        {step === 8 && (
           <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">كم يوم تتمرن في الأسبوع؟</h2>
-              <p className="text-muted-foreground">سنبني خطتك التدريبية بناءً على جدولك.</p>
+            <div className="text-center mb-6 pt-8">
+              <h2 className="text-2xl font-bold mb-2">مستوى النشاط واللياقة</h2>
+              <p className="text-muted-foreground">سنستخدم هذه البيانات لحساب احتياجاتك.</p>
             </div>
-            <div className="flex-1 space-y-3">
-              {daysPerWeekOptions.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, daysPerWeek: option.id }))}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
-                    userData.daysPerWeek === option.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
-                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                  }`}
-                >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold transition-colors duration-300 ${
-                    userData.daysPerWeek === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
-                  }`}>
-                    {userData.daysPerWeek === option.id ? (
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                      </svg>
-                    ) : option.label}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{option.title}</h3>
-                    <p className="text-sm text-muted-foreground">{option.subtitle}</p>
-                  </div>
-                </button>
-              ))}
+            <div className="flex-1 space-y-5 overflow-y-auto">
+              {/* Activity Level */}
+              <div>
+                <h3 className="text-sm font-semibold text-vp-navy mb-2">كم مرة تتمرن أسبوعياً؟</h3>
+                <div className="space-y-2">
+                  {activityLevels.map((level) => (
+                    <button key={level.id} onClick={() => setUserData({ ...userData, activityLevel: level.value })}
+                      className={`w-full p-3 rounded-2xl text-right flex items-center gap-3 transition-all duration-300 ${
+                        userData.activityLevel === level.value ? 'bg-vp-navy/10 border-2 border-vp-navy' : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                      }`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300 ${
+                        userData.activityLevel === level.value ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                      }`}>
+                        {userData.activityLevel === level.value ? (
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                        ) : <level.icon className="size-5" />}
+                      </div>
+                      <div><h4 className="font-semibold">{level.title}</h4><p className="text-xs text-muted-foreground">{level.subtitle}</p></div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Fitness Level */}
+              <div>
+                <h3 className="text-sm font-semibold text-vp-navy mb-2">ما مستوى لياقتك الحالي؟</h3>
+                <div className="space-y-2">
+                  {fitnessLevelOptions.map((level) => (
+                    <button key={level.id} onClick={() => setUserData({ ...userData, fitnessLevel: level.id })}
+                      className={`w-full p-3 rounded-2xl text-right flex items-center gap-3 transition-all duration-300 ${
+                        userData.fitnessLevel === level.id ? 'bg-vp-navy/10 border-2 border-vp-navy' : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                      }`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300 ${
+                        userData.fitnessLevel === level.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                      }`}>
+                        {userData.fitnessLevel === level.id ? (
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                        ) : <level.icon className="size-5" />}
+                      </div>
+                      <div><h4 className="font-semibold">{level.title}</h4><p className="text-xs text-muted-foreground">{level.subtitle}</p></div>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Step 10: Split Preference */}
+        {/* Step 9: IB2 — Body Stats (TDEE / BMI card) */}
+        {step === 9 && (() => {
+          const s = userData.gender === 'male' ? 5 : -161
+          const bmr = (10 * userData.weight) + (6.25 * userData.height) - (5 * userData.age) + s
+          const activityData = activityLevels.find(a => a.value === userData.activityLevel)
+          const multiplier = activityData?.multiplier || 1.55
+          const tdee = Math.round(bmr * multiplier)
+          const bmi = (userData.weight / ((userData.height / 100) ** 2)).toFixed(1)
+          const bmiNum = parseFloat(bmi)
+          const bmiCategory = bmiNum < 18.5 ? 'نحيف' : bmiNum < 25 ? 'طبيعي' : bmiNum < 30 ? 'وزن زائد' : 'سمنة'
+          const fitnessLabel = fitnessLevelOptions.find(f => f.id === userData.fitnessLevel)?.title || ''
+          return (
+            <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-vp-navy/10 flex items-center justify-center">
+                <Flame className="size-10 text-vp-navy" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">إحصائيات جسمك</h2>
+              <p className="text-muted-foreground mb-6">احتياجك اليومي من الطاقة ~{tdee} سعرة</p>
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="p-4 rounded-2xl bg-vp-navy/5 border border-vp-navy/15 text-center">
+                  <p className="text-2xl font-bold text-vp-navy">{tdee}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">TDEE سعرة/يوم</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-vp-navy/5 border border-vp-navy/15 text-center">
+                  <p className="text-2xl font-bold text-vp-navy">{bmi}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">BMI — {bmiCategory}</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-vp-navy/5 border border-vp-navy/15 text-center">
+                  <p className="text-2xl font-bold text-vp-navy">{fitnessLabel}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">مستوى اللياقة</p>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* Step 10: Workout Location (auto-advance) */}
         {step === 10 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">كيف تفضل تقسيم تمارينك؟</h2>
-              <p className="text-muted-foreground">نظام التقسيم يحدد توزيع العضلات على الأيام.</p>
+              <h2 className="text-2xl font-bold mb-2">أين تفضل التمرين؟</h2>
+              <p className="text-muted-foreground">سنخصص التمارين حسب المكان والأدوات المتاحة لديك.</p>
             </div>
-            <div className="flex-1 space-y-3">
-              {splitPreferenceOptions.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, splitPreference: option.id }))}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
-                    userData.splitPreference === option.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
-                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                  }`}
-                >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
-                    userData.splitPreference === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+            <div className="flex-1 flex flex-col gap-4 justify-center">
+              {workoutLocationOptions.map((location) => (
+                <button key={location.id} onClick={() => selectAndAdvance(() => setUserData({ ...userData, workoutLocation: location.id }))}
+                  className={`w-full p-5 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
+                    userData.workoutLocation === location.id ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]' : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
                   }`}>
-                    {userData.splitPreference === option.id ? (
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                      </svg>
-                    ) : <option.icon className="size-6" />}
+                  <div className={`w-16 h-16 rounded-xl flex items-center justify-center transition-colors duration-300 ${
+                    userData.workoutLocation === location.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                  }`}>
+                    {userData.workoutLocation === location.id ? (
+                      <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                    ) : <location.icon className="size-7" />}
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{option.title}</h3>
-                    <p className="text-sm text-muted-foreground">{option.subtitle}</p>
-                  </div>
+                  <div><h3 className="font-semibold text-lg">{location.title}</h3><p className="text-sm text-muted-foreground">{location.subtitle}</p></div>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Step 11: Training Style */}
+        {/* Step 11: Split + Training Style (MERGED) — button advance, disabled until both selected */}
         {step === 11 && (
           <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">ما أسلوب التمرين المفضل؟</h2>
-              <p className="text-muted-foreground">سنخصص نوع التمارين حسب أسلوبك.</p>
+            <div className="text-center mb-6 pt-8">
+              <h2 className="text-2xl font-bold mb-2">تقسيم التمارين وأسلوبك</h2>
+              <p className="text-muted-foreground">اختر نظام التقسيم وأسلوب التمرين.</p>
             </div>
-            <div className="flex-1 space-y-3">
-              {trainingStyleOptions.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, trainingStyle: option.id }))}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
-                    userData.trainingStyle === option.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
-                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                  }`}
-                >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
-                    userData.trainingStyle === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
-                  }`}>
-                    {userData.trainingStyle === option.id ? (
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                      </svg>
-                    ) : <option.icon className="size-6" />}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{option.title}</h3>
-                    <p className="text-sm text-muted-foreground">{option.subtitle}</p>
-                  </div>
-                </button>
-              ))}
+            <div className="flex-1 space-y-5 overflow-y-auto">
+              {/* Split Preference */}
+              <div>
+                <h3 className="text-sm font-semibold text-vp-navy mb-2">كيف تفضل تقسيم تمارينك؟</h3>
+                <div className="space-y-2">
+                  {splitPreferenceOptions.map((option) => (
+                    <button key={option.id} onClick={() => setUserData({ ...userData, splitPreference: option.id })}
+                      className={`w-full p-3 rounded-2xl text-right flex items-center gap-3 transition-all duration-300 ${
+                        userData.splitPreference === option.id ? 'bg-vp-navy/10 border-2 border-vp-navy' : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                      }`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300 ${
+                        userData.splitPreference === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                      }`}>
+                        {userData.splitPreference === option.id ? (
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                        ) : <option.icon className="size-5" />}
+                      </div>
+                      <div><h4 className="font-semibold">{option.title}</h4><p className="text-xs text-muted-foreground">{option.subtitle}</p></div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Training Style */}
+              <div>
+                <h3 className="text-sm font-semibold text-vp-navy mb-2">ما أسلوب التمرين المفضل؟</h3>
+                <div className="space-y-2">
+                  {trainingStyleOptions.map((option) => (
+                    <button key={option.id} onClick={() => setUserData({ ...userData, trainingStyle: option.id })}
+                      className={`w-full p-3 rounded-2xl text-right flex items-center gap-3 transition-all duration-300 ${
+                        userData.trainingStyle === option.id ? 'bg-vp-navy/10 border-2 border-vp-navy' : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                      }`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300 ${
+                        userData.trainingStyle === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                      }`}>
+                        {userData.trainingStyle === option.id ? (
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                        ) : <option.icon className="size-5" />}
+                      </div>
+                      <div><h4 className="font-semibold">{option.title}</h4><p className="text-xs text-muted-foreground">{option.subtitle}</p></div>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -1426,8 +1422,52 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 14: Cardio Preference */}
-        {step === 14 && (
+        {/* Step 14: IB3 — Training Preview */}
+        {step === 14 && (() => {
+          const daysNum = Number(userData.daysPerWeek) || 3
+          const weekSchedule = getWeekSchedule(userData.splitPreference || 'ai_decide', daysNum)
+          const splitLabel = splitPreferenceOptions.find(s => s.id === userData.splitPreference)?.title || 'AI يختار'
+          return (
+            <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-vp-navy/10 flex items-center justify-center">
+                <Dumbbell className="size-10 text-vp-navy" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">خطة تمرينك الأسبوعية</h2>
+              <p className="text-muted-foreground mb-6">{daysNum} أيام/أسبوع — {splitLabel}</p>
+              {/* Weekly calendar */}
+              <div className="flex justify-center gap-2 mb-6">
+                {weekSchedule.map((label, i) => (
+                  <div key={i} className={`flex flex-col items-center gap-1 ${label ? '' : 'opacity-30'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                      label ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                    }`}>
+                      {label || 'راحة'}
+                    </div>
+                    <span className="text-[9px] text-muted-foreground">{dayNamesAr[i]}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Priority muscles + injuries */}
+              {(userData.priorityMuscles.length > 0 || userData.injuries.length > 0) && (
+                <div className="space-y-2">
+                  {userData.priorityMuscles.length > 0 && (
+                    <div className="p-3 rounded-xl bg-vp-navy/5 border border-vp-navy/15">
+                      <p className="text-xs"><Target className="size-3 inline text-vp-navy ml-1" /> تركيز إضافي على: {userData.priorityMuscles.map(m => priorityMuscleOptions.find(p => p.id === m)?.title).join('، ')}</p>
+                    </div>
+                  )}
+                  {userData.injuries.length > 0 && (
+                    <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/15">
+                      <p className="text-xs text-amber-700 dark:text-amber-400">تم مراعاة إصاباتك: {userData.injuries.map(inj => injuryOptions.find(io => io.id === inj)?.title).join('، ')}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })()}
+
+        {/* Step 15: Cardio Preference (auto-advance) */}
+        {step === 15 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">هل تريد كارديو في خطتك؟</h2>
@@ -1435,80 +1475,25 @@ export default function AppOnboarding() {
             </div>
             <div className="flex-1 space-y-3">
               {cardioPreferenceOptions.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => selectAndAdvance(() => setUserData({ ...userData, cardioPreference: option.id }))}
+                <button key={option.id} onClick={() => selectAndAdvance(() => setUserData({ ...userData, cardioPreference: option.id }))}
                   className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
-                    userData.cardioPreference === option.id
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]'
-                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                  }`}
-                >
+                    userData.cardioPreference === option.id ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]' : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}>
                   <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
                     userData.cardioPreference === option.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
                   }`}>
                     {userData.cardioPreference === option.id ? (
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                      </svg>
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
                     ) : <option.icon className="size-6" />}
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{option.title}</h3>
-                    <p className="text-sm text-muted-foreground">{option.subtitle}</p>
-                  </div>
+                  <div><h3 className="font-semibold text-lg">{option.title}</h3><p className="text-sm text-muted-foreground">{option.subtitle}</p></div>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Step 15: Speed */}
-        {step === 15 && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">ما مدى سرعة تحقيق هدفك؟</h2>
-              <p className="text-muted-foreground">تحكم في وتيرة خسارة أو زيادة الوزن أسبوعياً.</p>
-            </div>
-            <div className="flex-1 flex flex-col justify-center">
-              <div className="p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center">
-                <div className="flex justify-center gap-6 mb-4">
-                  <div className={`flex flex-col items-center gap-1 transition-opacity ${userData.targetSpeed < 0.5 ? 'opacity-100' : 'opacity-30'}`}>
-                    <Sprout className="size-7" />
-                    <span className="text-[10px] font-medium">بطيء</span>
-                  </div>
-                  <div className={`flex flex-col items-center gap-1 transition-opacity ${userData.targetSpeed >= 0.5 && userData.targetSpeed < 1 ? 'opacity-100' : 'opacity-30'}`}>
-                    <Zap className="size-7" />
-                    <span className="text-[10px] font-medium">متوسط</span>
-                  </div>
-                  <div className={`flex flex-col items-center gap-1 transition-opacity ${userData.targetSpeed >= 1 ? 'opacity-100' : 'opacity-30'}`}>
-                    <Flame className="size-7" />
-                    <span className="text-[10px] font-medium">سريع</span>
-                  </div>
-                </div>
-                <span className="text-4xl font-bold block mb-2">{userData.targetSpeed.toFixed(1)}</span>
-                <span className="text-muted-foreground">كجم في الأسبوع</span>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1.5"
-                  step="0.1"
-                  value={userData.targetSpeed}
-                  onChange={(e) => setUserData({ ...userData, targetSpeed: Number(e.target.value) })}
-                  className="w-full accent-vp-navy mt-6"
-                />
-                <button
-                  onClick={() => setUserData({ ...userData, targetSpeed: 0.5 })}
-                  className="mt-4 px-4 py-2 rounded-full bg-vp-navy/10 text-vp-navy font-medium text-sm"
-                >
-                  السرعة المستحسنة (0.5 كجم)
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 16: Challenges */}
+        {/* Step 16: Challenges (button advance) */}
         {step === 16 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
@@ -1517,28 +1502,17 @@ export default function AppOnboarding() {
             </div>
             <div className="flex-1 space-y-3">
               {challengeOptions.map((ch) => (
-                <button
-                  key={ch.id}
-                  onClick={() => {
-                    const challenges = userData.challenges.includes(ch.id)
-                      ? userData.challenges.filter(c => c !== ch.id)
-                      : [...userData.challenges, ch.id]
-                    setUserData({ ...userData, challenges })
-                  }}
+                <button key={ch.id} onClick={() => {
+                  const challenges = userData.challenges.includes(ch.id) ? userData.challenges.filter(c => c !== ch.id) : [...userData.challenges, ch.id]
+                  setUserData({ ...userData, challenges })
+                }}
                   className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
-                    userData.challenges.includes(ch.id)
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
-                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                  }`}
-                >
-                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
-                    <ch.icon className="size-5" />
-                  </div>
+                    userData.challenges.includes(ch.id) ? 'bg-vp-navy/10 border-2 border-vp-navy' : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}>
+                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center"><ch.icon className="size-5" /></div>
                   <span className="font-medium">{ch.title}</span>
                   {userData.challenges.includes(ch.id) && (
-                    <svg className="w-5 h-5 text-vp-navy mr-auto" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                    </svg>
+                    <svg className="w-5 h-5 text-vp-navy mr-auto" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
                   )}
                 </button>
               ))}
@@ -1546,288 +1520,151 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 17: Accomplishments */}
+        {/* Step 17: Motivation (single-select, auto-advance) */}
         {step === 17 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
-              <h2 className="text-2xl font-bold mb-2">ما الذي تود تحقيقه؟</h2>
-              <p className="text-muted-foreground">سنخصص الخطة لتشمل هذه الجوانب أيضاً.</p>
+              <h2 className="text-2xl font-bold mb-2">ما الذي يحفزك أكثر؟</h2>
+              <p className="text-muted-foreground">سنخصص تجربتك بناءً على دافعك.</p>
             </div>
             <div className="flex-1 space-y-3">
-              {accomplishmentOptions.map((acc) => (
-                <button
-                  key={acc.id}
-                  onClick={() => {
-                    const accomplishments = userData.accomplishments.includes(acc.id)
-                      ? userData.accomplishments.filter(a => a !== acc.id)
-                      : [...userData.accomplishments, acc.id]
-                    setUserData({ ...userData, accomplishments })
-                  }}
-                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all ${
-                    userData.accomplishments.includes(acc.id)
-                      ? 'bg-vp-navy/10 border-2 border-vp-navy'
-                      : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
-                  }`}
-                >
-                  <div className="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
-                    <acc.icon className="size-5" />
+              {motivationOptions.map((opt) => (
+                <button key={opt.id} onClick={() => selectAndAdvance(() => setUserData({ ...userData, motivation: opt.id }))}
+                  className={`w-full p-4 rounded-2xl text-right flex items-center gap-4 transition-all duration-300 ${
+                    userData.motivation === opt.id ? 'bg-vp-navy/10 border-2 border-vp-navy scale-[1.02]' : 'bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent'
+                  }`}>
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 ${
+                    userData.motivation === opt.id ? 'bg-vp-navy text-white' : 'bg-neutral-200 dark:bg-neutral-700'
+                  }`}>
+                    {userData.motivation === opt.id ? (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                    ) : <opt.icon className="size-6" />}
                   </div>
-                  <span className="font-medium">{acc.title}</span>
-                  {userData.accomplishments.includes(acc.id) && (
-                    <svg className="w-5 h-5 text-vp-navy mr-auto" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                    </svg>
-                  )}
+                  <span className="font-medium">{opt.title}</span>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Step 18: Motivation */}
+        {/* Step 18: IB4 — Full Reveal (processing → graph + plan + social proof) */}
         {step === 18 && (
-          <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-vp-navy/10 flex items-center justify-center">
-              <Trophy className="size-10 text-vp-navy" />
-            </div>
-            <h2 className="text-2xl font-bold mb-2">
-              {isLosingWeight ? 'خسارة' : 'اكتساب'} {weightDiff} كجم هو هدف واقعي جداً!
-            </h2>
-            <p className="text-muted-foreground mb-8">ليس صعباً على الإطلاق!</p>
-            <p className="text-neutral-600 dark:text-neutral-300 mb-8 leading-relaxed">
-              90% من المستخدمين يقولون أن التغيير واضح جداً بعد استخدام Vega Power...
-            </p>
-            <div className="p-4 rounded-2xl bg-vp-navy/5 border border-vp-navy/15">
-              <p className="text-sm flex items-center justify-center gap-1.5"><TrendingUp className="size-4 text-vp-navy inline" /> يعزز الثقة: أنا أستطيع فعلها</p>
-              <p className="text-xs text-muted-foreground mt-1">يقلل من خطر الاستسلام</p>
-            </div>
-          </div>
-        )}
-
-        {/* Step 19: Progress Graph */}
-        {step === 19 && (
           <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="text-center mb-6 pt-8">
-              <h2 className="text-2xl font-bold mb-2">رحلتك مع Vega Power</h2>
-              <p className="text-muted-foreground">شوف الفرق بين الاستمرار بدون خطة وبين استخدام التطبيق</p>
-            </div>
+            {!revealReady ? (
+              /* Processing Animation */
+              <div className="flex-1 flex flex-col justify-center text-center">
+                <div className="text-6xl font-bold mb-4 text-vp-navy">{processingProgress}%</div>
+                <h2 className="text-xl font-semibold mb-8">نقوم بتجهيز كل شيء لك</h2>
+                <div className="w-full h-3 bg-vp-beige/50 dark:bg-neutral-700 rounded-full overflow-hidden mb-8">
+                  <div className="h-full bg-vp-navy transition-all duration-300 rounded-full" style={{ width: `${processingProgress}%` }} />
+                </div>
+                <div className="space-y-3 text-right">
+                  {['حساب السعرات الحرارية', 'توزيع الماكروز (بروتين، كارب، دهون)', 'تقدير العمر الأيضي', 'تحليل درجة الصحة'].map((item, i) => (
+                    <div key={i} className={`flex items-center gap-3 transition-opacity ${completedChecks.includes(i) ? 'opacity-100' : 'opacity-30'}`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${completedChecks.includes(i) ? 'bg-vp-navy' : 'bg-vp-beige dark:bg-neutral-600'}`}>
+                        {completedChecks.includes(i) && <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>}
+                      </div>
+                      <span className="text-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              /* Full Reveal Content */
+              <div className="flex-1 flex flex-col overflow-y-auto">
+                <div className="text-center mb-4 pt-4">
+                  <h2 className="text-2xl font-bold mb-1">رحلتك مع Vega Power</h2>
+                  <p className="text-muted-foreground text-sm">شوف الفرق بين الاستمرار بدون خطة وبين استخدام التطبيق</p>
+                </div>
 
-            {/* Animated Graph */}
-            <div className="flex-1 flex flex-col justify-center">
-              <div className="rounded-2xl bg-neutral-100 dark:bg-neutral-800 p-5 relative overflow-hidden">
-                {/* Graph Legend */}
-                <div className="flex justify-center gap-6 mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-vp-navy" />
-                    <span className="text-xs font-medium">مع Vega Power</span>
+                {/* Animated Graph */}
+                <div className="rounded-2xl bg-neutral-100 dark:bg-neutral-800 p-5 relative overflow-hidden">
+                  <div className="flex justify-center gap-6 mb-4">
+                    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-vp-navy" /><span className="text-xs font-medium">مع Vega Power</span></div>
+                    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-neutral-400" /><span className="text-xs font-medium text-muted-foreground">بدون خطة</span></div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-neutral-400" />
-                    <span className="text-xs font-medium text-muted-foreground">بدون خطة</span>
+                  <div className="relative" style={{ height: 220 }}>
+                    <svg viewBox="0 0 320 200" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+                      <defs>
+                        <linearGradient id="successGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.3" />
+                          <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.02" />
+                        </linearGradient>
+                        <filter id="glow"><feGaussianBlur stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                      </defs>
+                      {[0, 1, 2, 3, 4].map((i) => (<line key={`grid-${i}`} x1="40" y1={20 + i * 40} x2="310" y2={20 + i * 40} stroke="currentColor" strokeOpacity="0.08" strokeWidth="1" />))}
+                      <text x="32" y="24" textAnchor="end" className="fill-current text-muted-foreground" fontSize="8" opacity="0.5">هدفك</text>
+                      <text x="32" y="104" textAnchor="end" className="fill-current text-muted-foreground" fontSize="8" opacity="0.5">الآن</text>
+                      <text x="32" y="184" textAnchor="end" className="fill-current text-muted-foreground" fontSize="8" opacity="0.5">بداية</text>
+                      {['اليوم', 'شهر ١', 'شهر ٢', 'شهر ٣', 'شهر ٤', 'شهر ٦'].map((label, i) => (
+                        <text key={`x-${i}`} x={40 + i * 54} y="198" textAnchor="middle" className="fill-current text-muted-foreground" fontSize="7" opacity="0.5">{label}</text>
+                      ))}
+                      <path d="M40,140 C94,135 148,110 202,70 S280,25 310,20 L310,180 L40,180 Z" fill="url(#successGradient)" opacity={graphAnimated ? 1 : 0} style={{ transition: 'opacity 1s ease-out 0.5s' }} />
+                      <path d="M40,140 C94,142 148,145 202,143 S280,146 310,144" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="400" strokeDashoffset={graphAnimated ? 0 : 400} style={{ transition: 'stroke-dashoffset 1.5s ease-out 0.3s' }} />
+                      <path d="M40,140 C94,135 148,110 202,70 S280,25 310,20" fill="none" stroke="#1e3a5f" strokeWidth="3" strokeLinecap="round" filter="url(#glow)" strokeDasharray="400" strokeDashoffset={graphAnimated ? 0 : 400} style={{ transition: 'stroke-dashoffset 2s ease-out 0.6s' }} />
+                      <circle cx="310" cy="20" r="5" fill="#1e3a5f" opacity={graphAnimated ? 1 : 0} style={{ transition: 'opacity 0.3s ease-out 2.4s' }} />
+                      <circle cx="310" cy="20" r="8" fill="#1e3a5f" opacity={graphAnimated ? 0.2 : 0} style={{ transition: 'opacity 0.3s ease-out 2.4s' }}>{graphAnimated && <animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite" />}</circle>
+                      <text x="310" y="12" textAnchor="middle" fontSize="12" fill="#1e3a5f" fontWeight="bold" opacity={graphAnimated ? 1 : 0} style={{ transition: 'opacity 0.5s ease-out 2.6s' }}>&#x2605;</text>
+                      <circle cx="310" cy="144" r="4" fill="#9ca3af" opacity={graphAnimated ? 1 : 0} style={{ transition: 'opacity 0.3s ease-out 1.6s' }} />
+                    </svg>
                   </div>
                 </div>
 
-                {/* SVG Chart */}
-                <div className="relative" style={{ height: 220 }}>
-                  <svg viewBox="0 0 320 200" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
-                    <defs>
-                      {/* Gradient for the success line area fill */}
-                      <linearGradient id="successGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.3" />
-                        <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.02" />
-                      </linearGradient>
-                      {/* Glow filter for the success line */}
-                      <filter id="glow">
-                        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                        <feMerge>
-                          <feMergeNode in="coloredBlur"/>
-                          <feMergeNode in="SourceGraphic"/>
-                        </feMerge>
-                      </filter>
-                    </defs>
-
-                    {/* Grid lines */}
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <line key={`grid-${i}`} x1="40" y1={20 + i * 40} x2="310" y2={20 + i * 40} stroke="currentColor" strokeOpacity="0.08" strokeWidth="1" />
-                    ))}
-
-                    {/* Y-axis labels */}
-                    <text x="32" y="24" textAnchor="end" className="fill-current text-muted-foreground" fontSize="8" opacity="0.5">هدفك</text>
-                    <text x="32" y="104" textAnchor="end" className="fill-current text-muted-foreground" fontSize="8" opacity="0.5">الآن</text>
-                    <text x="32" y="184" textAnchor="end" className="fill-current text-muted-foreground" fontSize="8" opacity="0.5">بداية</text>
-
-                    {/* X-axis month labels */}
-                    {['اليوم', 'شهر ١', 'شهر ٢', 'شهر ٣', 'شهر ٤', 'شهر ٦'].map((label, i) => (
-                      <text key={`x-${i}`} x={40 + i * 54} y="198" textAnchor="middle" className="fill-current text-muted-foreground" fontSize="7" opacity="0.5">{label}</text>
-                    ))}
-
-                    {/* Area fill under success line */}
-                    <path
-                      d="M40,140 C94,135 148,110 202,70 S280,25 310,20 L310,180 L40,180 Z"
-                      fill="url(#successGradient)"
-                      opacity={graphAnimated ? 1 : 0}
-                      style={{ transition: 'opacity 1s ease-out 0.5s' }}
-                    />
-
-                    {/* Flat "without" line — stays stagnant with slight wobble */}
-                    <path
-                      d="M40,140 C94,142 148,145 202,143 S280,146 310,144"
-                      fill="none"
-                      stroke="#9ca3af"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeDasharray="400"
-                      strokeDashoffset={graphAnimated ? 0 : 400}
-                      style={{ transition: 'stroke-dashoffset 1.5s ease-out 0.3s' }}
-                    />
-
-                    {/* Success "with Vega Power" line — curves up to goal */}
-                    <path
-                      d="M40,140 C94,135 148,110 202,70 S280,25 310,20"
-                      fill="none"
-                      stroke="#1e3a5f"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      filter="url(#glow)"
-                      strokeDasharray="400"
-                      strokeDashoffset={graphAnimated ? 0 : 400}
-                      style={{ transition: 'stroke-dashoffset 2s ease-out 0.6s' }}
-                    />
-
-                    {/* Animated dot at end of success line */}
-                    <circle
-                      cx="310" cy="20" r="5"
-                      fill="#1e3a5f"
-                      opacity={graphAnimated ? 1 : 0}
-                      style={{ transition: 'opacity 0.3s ease-out 2.4s' }}
-                    />
-                    <circle
-                      cx="310" cy="20" r="8"
-                      fill="#1e3a5f"
-                      opacity={graphAnimated ? 0.2 : 0}
-                      style={{ transition: 'opacity 0.3s ease-out 2.4s' }}
-                    >
-                      {graphAnimated && (
-                        <animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite" />
-                      )}
-                    </circle>
-
-                    {/* Goal star at the top */}
-                    <text
-                      x="310" y="12"
-                      textAnchor="middle"
-                      fontSize="12"
-                      fill="#1e3a5f"
-                      fontWeight="bold"
-                      opacity={graphAnimated ? 1 : 0}
-                      style={{ transition: 'opacity 0.5s ease-out 2.6s' }}
-                    >&#x2605;</text>
-
-                    {/* Stagnant dot at end of flat line */}
-                    <circle
-                      cx="310" cy="144" r="4"
-                      fill="#9ca3af"
-                      opacity={graphAnimated ? 1 : 0}
-                      style={{ transition: 'opacity 0.3s ease-out 1.6s' }}
-                    />
-                  </svg>
+                {/* Stats cards */}
+                <div className="grid grid-cols-3 gap-2 mt-4">
+                  <div className="p-3 rounded-2xl bg-vp-navy/5 border border-vp-navy/15 text-center" style={{ opacity: graphAnimated ? 1 : 0, transform: graphAnimated ? 'translateY(0)' : 'translateY(12px)', transition: 'all 0.5s ease-out 2s' }}>
+                    <p className="text-xl font-bold text-vp-navy mb-1">3x</p>
+                    <p className="text-[10px] text-muted-foreground">نتائج أسرع</p>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-vp-navy/5 border border-vp-navy/15 text-center" style={{ opacity: graphAnimated ? 1 : 0, transform: graphAnimated ? 'translateY(0)' : 'translateY(12px)', transition: 'all 0.5s ease-out 2.2s' }}>
+                    <p className="text-xl font-bold text-vp-navy mb-1">91%</p>
+                    <p className="text-[10px] text-muted-foreground">حققوا أهدافهم</p>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-vp-navy/5 border border-vp-navy/15 text-center" style={{ opacity: graphAnimated ? 1 : 0, transform: graphAnimated ? 'translateY(0)' : 'translateY(12px)', transition: 'all 0.5s ease-out 2.4s' }}>
+                    <p className="text-xl font-bold text-vp-navy mb-1">12%</p>
+                    <p className="text-[10px] text-muted-foreground">أعلى فعالية</p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Stats cards below graph */}
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <div
-                  className="p-4 rounded-2xl bg-vp-navy/5 border border-vp-navy/15 text-center"
-                  style={{
-                    opacity: graphAnimated ? 1 : 0,
-                    transform: graphAnimated ? 'translateY(0)' : 'translateY(12px)',
-                    transition: 'all 0.5s ease-out 2s',
-                  }}
-                >
-                  <p className="text-2xl font-bold text-vp-navy mb-1">3x</p>
-                  <p className="text-xs text-muted-foreground">نتائج أسرع مع خطة مخصصة</p>
-                </div>
-                <div
-                  className="p-4 rounded-2xl bg-vp-navy/5 border border-vp-navy/15 text-center"
-                  style={{
-                    opacity: graphAnimated ? 1 : 0,
-                    transform: graphAnimated ? 'translateY(0)' : 'translateY(12px)',
-                    transition: 'all 0.5s ease-out 2.3s',
-                  }}
-                >
-                  <p className="text-2xl font-bold text-vp-navy mb-1">91%</p>
-                  <p className="text-xs text-muted-foreground">من المستخدمين حققوا أهدافهم</p>
-                </div>
-              </div>
-
-              {/* Motivational text */}
-              <div
-                className="mt-4 p-3 rounded-xl bg-vp-navy text-white text-center"
-                style={{
-                  opacity: graphAnimated ? 1 : 0,
-                  transform: graphAnimated ? 'translateY(0)' : 'translateY(12px)',
-                  transition: 'all 0.5s ease-out 2.6s',
-                }}
-              >
-                <p className="text-sm font-semibold">لا تضيع وقتك بدون خطة واضحة</p>
-                <p className="text-xs opacity-80 mt-1">خلّ الذكاء الاصطناعي يبني لك الطريق</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 20: Processing */}
-        {step === 20 && (
-          <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
-            <div className="text-6xl font-bold mb-4 text-vp-navy">
-              {processingProgress}%
-            </div>
-            <h2 className="text-xl font-semibold mb-8">نقوم بتجهيز كل شيء لك</h2>
-            
-            {/* Progress Bar */}
-            <div className="w-full h-3 bg-vp-beige/50 dark:bg-neutral-700 rounded-full overflow-hidden mb-8">
-              <div 
-                className="h-full bg-vp-navy transition-all duration-300 rounded-full"
-                style={{ width: `${processingProgress}%` }}
-              />
-            </div>
-
-            {/* Checklist */}
-            <div className="space-y-3 text-right">
-              {[
-                'حساب السعرات الحرارية',
-                'توزيع الماكروز (بروتين، كارب، دهون)',
-                'تقدير العمر الأيضي',
-                'تحليل درجة الصحة',
-              ].map((item, i) => (
-                <div key={i} className={`flex items-center gap-3 transition-opacity ${completedChecks.includes(i) ? 'opacity-100' : 'opacity-30'}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${completedChecks.includes(i) ? 'bg-vp-navy' : 'bg-vp-beige dark:bg-neutral-600'}`}>
-                    {completedChecks.includes(i) && (
-                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                      </svg>
+                {/* Program Summary Card */}
+                <div className="rounded-2xl bg-vp-navy text-white mt-4 p-4" style={{ opacity: graphAnimated ? 1 : 0, transform: graphAnimated ? 'translateY(0)' : 'translateY(12px)', transition: 'all 0.5s ease-out 2.6s' }}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center"><Sparkles className="size-5" /></div>
+                    <div><p className="text-[10px] opacity-70">برنامجك</p><p className="font-bold">{userData.programName}</p></div>
+                  </div>
+                  <div className="flex justify-around text-center bg-white/5 rounded-xl p-3 mb-3">
+                    <div><p className="text-lg font-bold text-green-400">{userData.calculatedCalories}</p><p className="text-[9px] opacity-70">سعرة/يوم</p></div>
+                    <div className="border-r border-white/10"></div>
+                    <div><p className="text-lg font-bold text-blue-400">{userData.proteinGrams}g</p><p className="text-[9px] opacity-70">بروتين</p></div>
+                    <div className="border-r border-white/10"></div>
+                    <div><p className="text-lg font-bold text-purple-400">{userData.carbsGrams}g</p><p className="text-[9px] opacity-70">كارب</p></div>
+                  </div>
+                  <div className="flex justify-between text-xs opacity-80">
+                    <span>{userData.daysPerWeek} أيام/أسبوع</span>
+                    <span>{splitPreferenceOptions.find(s => s.id === userData.splitPreference)?.title || 'AI'}</span>
+                    {userData.fitnessGoal !== 'Body Recomposition' && (
+                      <span>~{Math.max(1, Math.round(weightDiff / userData.targetSpeed))} أسبوع للهدف</span>
                     )}
                   </div>
-                  <span className="text-sm">{item}</span>
                 </div>
-              ))}
-            </div>
+
+                {/* Social proof */}
+                <div className="mt-4 p-3 rounded-xl bg-vp-navy text-white text-center" style={{ opacity: graphAnimated ? 1 : 0, transform: graphAnimated ? 'translateY(0)' : 'translateY(12px)', transition: 'all 0.5s ease-out 2.8s' }}>
+                  <p className="text-sm font-semibold">من أعلى 12% الأكثر فعالية لملفك الشخصي</p>
+                  <p className="text-xs opacity-80 mt-1">لا تضيع وقتك بدون خطة واضحة</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Step 21: Payment - Full Featured */}
-        {step === 21 && (
+        {/* Step 19: Payment */}
+        {step === 19 && (
           <div className="flex-1 flex flex-col animate-fade-in overflow-auto -my-8 py-8">
             {/* Header */}
             <div className="text-center mb-4">
               <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-lg overflow-hidden">
-                <Image
-                  src="/Vegapower Logo-05.jpg"
-                  alt="Vega Power"
-                  width={64}
-                  height={64}
-                  className="w-full h-full object-contain"
-                />
+                <Image src="/Vegapower Logo-05.jpg" alt="Vega Power" width={64} height={64} className="w-full h-full object-contain" />
               </div>
               <h2 className="text-2xl font-bold mb-1">اشترك في VegaPower</h2>
               <p className="text-muted-foreground text-sm">التطبيق الوحيد اللي تحتاجه لتحقيق أهدافك</p>
@@ -1854,7 +1691,7 @@ export default function AppOnboarding() {
                         <svg key={s} className="w-3 h-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                       ))}
                     </div>
-                    <p className="text-xs mb-1">"{review.text}"</p>
+                    <p className="text-xs mb-1">&quot;{review.text}&quot;</p>
                     <p className="text-[10px] text-muted-foreground">- {review.name}</p>
                   </div>
                 ))}
@@ -1863,139 +1700,53 @@ export default function AppOnboarding() {
 
             {/* Personalized Program Summary */}
             <div className="rounded-2xl bg-vp-navy text-white mb-4 overflow-hidden">
-              {/* Header with program name and stats */}
               <div className="p-4 border-b border-white/10">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
-                  <div>
-                    <p className="text-[10px] opacity-70">برنامجك جاهز!</p>
-                    <p className="font-bold text-lg">{userData.programName}</p>
-                  </div>
+                  <div><p className="text-[10px] opacity-70">برنامجك جاهز!</p><p className="font-bold text-lg">{userData.programName}</p></div>
                 </div>
                 <div className="flex justify-around text-center bg-white/5 rounded-xl p-3">
-                  <div>
-                    <p className="text-xl font-bold text-green-400">{userData.calculatedCalories}</p>
-                    <p className="text-[10px] opacity-70">سعرة/يوم</p>
-                  </div>
+                  <div><p className="text-xl font-bold text-green-400">{userData.calculatedCalories}</p><p className="text-[10px] opacity-70">سعرة/يوم</p></div>
                   <div className="border-r border-white/10"></div>
-                  <div>
-                    <p className="text-xl font-bold text-blue-400">{userData.proteinGrams}g</p>
-                    <p className="text-[10px] opacity-70">بروتين</p>
-                  </div>
+                  <div><p className="text-xl font-bold text-blue-400">{userData.proteinGrams}g</p><p className="text-[10px] opacity-70">بروتين</p></div>
                   <div className="border-r border-white/10"></div>
-                  <div>
-                    <p className="text-xl font-bold text-purple-400">{userData.carbsGrams}g</p>
-                    <p className="text-[10px] opacity-70">كارب</p>
-                  </div>
+                  <div><p className="text-xl font-bold text-purple-400">{userData.carbsGrams}g</p><p className="text-[10px] opacity-70">كارب</p></div>
                 </div>
               </div>
-
-              {/* Personalized message based on their goal */}
               <div className="p-4 border-b border-white/10">
                 <p className="text-sm leading-relaxed">
-                  {userData.fitnessGoal === 'Lose Fat (Cut)' && (
-                    <>بناءً على بياناتك، صممنا لك خطة لـ<span className="text-green-400 font-semibold"> خسارة {Math.abs(userData.weight - userData.targetWeight)} كجم </span>بطريقة صحية ومستدامة.</>
-                  )}
-                  {userData.fitnessGoal === 'Build Muscle (Bulk)' && (
-                    <>بناءً على بياناتك، صممنا لك خطة لـ<span className="text-blue-400 font-semibold"> بناء العضلات وزيادة {Math.abs(userData.weight - userData.targetWeight)} كجم </span>من الكتلة العضلية.</>
-                  )}
-                  {userData.fitnessGoal === 'Body Recomposition' && (
-                    <>بناءً على بياناتك، صممنا لك خطة لـ<span className="text-purple-400 font-semibold"> تحسين تكوين جسمك </span>وزيادة العضلات مع حرق الدهون.</>
-                  )}
+                  {userData.fitnessGoal === 'Lose Fat (Cut)' && (<>بناءً على بياناتك، صممنا لك خطة لـ<span className="text-green-400 font-semibold"> خسارة {Math.abs(userData.weight - userData.targetWeight)} كجم </span>بطريقة صحية ومستدامة.</>)}
+                  {userData.fitnessGoal === 'Build Muscle (Bulk)' && (<>بناءً على بياناتك، صممنا لك خطة لـ<span className="text-blue-400 font-semibold"> بناء العضلات وزيادة {Math.abs(userData.weight - userData.targetWeight)} كجم </span>من الكتلة العضلية.</>)}
+                  {userData.fitnessGoal === 'Body Recomposition' && (<>بناءً على بياناتك، صممنا لك خطة لـ<span className="text-purple-400 font-semibold"> تحسين تكوين جسمك </span>وزيادة العضلات مع حرق الدهون.</>)}
                 </p>
               </div>
-
-              {/* How we'll help with their challenges */}
               {userData.challenges.length > 0 && (
                 <div className="p-4 border-b border-white/10">
                   <p className="text-[10px] opacity-70 mb-2">سنساعدك في التغلب على:</p>
                   <div className="flex flex-wrap gap-2">
-                    {userData.challenges.includes('lack_consistency') && (
-                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-orange-500/20 text-orange-300 text-[10px]">
-                        <BarChart3 className="size-3" /> تذكيرات يومية للاستمرار
-                      </div>
-                    )}
-                    {userData.challenges.includes('unhealthy_habits') && (
-                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-300 text-[10px]">
-                        <UtensilsCrossed className="size-3" /> وجبات صحية بديلة
-                      </div>
-                    )}
-                    {userData.challenges.includes('lack_support') && (
-                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-500/20 text-blue-300 text-[10px]">
-                        <Users className="size-3" /> مجتمع داعم ومحفز
-                      </div>
-                    )}
-                    {userData.challenges.includes('busy_schedule') && (
-                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 text-[10px]">
-                        <CalendarDays className="size-3" /> تمارين سريعة (15-30 دقيقة)
-                      </div>
-                    )}
-                    {userData.challenges.includes('meal_inspiration') && (
-                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-pink-500/20 text-pink-300 text-[10px]">
-                        <Lightbulb className="size-3" /> +500 وصفة صحية
-                      </div>
-                    )}
+                    {userData.challenges.includes('lack_consistency') && (<div className="flex items-center gap-1 px-2 py-1 rounded-full bg-orange-500/20 text-orange-300 text-[10px]"><BarChart3 className="size-3" /> تذكيرات يومية للاستمرار</div>)}
+                    {userData.challenges.includes('unhealthy_habits') && (<div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-300 text-[10px]"><UtensilsCrossed className="size-3" /> وجبات صحية بديلة</div>)}
+                    {userData.challenges.includes('lack_support') && (<div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-500/20 text-blue-300 text-[10px]"><Users className="size-3" /> مجتمع داعم ومحفز</div>)}
+                    {userData.challenges.includes('busy_schedule') && (<div className="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 text-[10px]"><CalendarDays className="size-3" /> تمارين سريعة (15-30 دقيقة)</div>)}
+                    {userData.challenges.includes('meal_inspiration') && (<div className="flex items-center gap-1 px-2 py-1 rounded-full bg-pink-500/20 text-pink-300 text-[10px]"><Lightbulb className="size-3" /> +500 وصفة صحية</div>)}
                   </div>
                 </div>
               )}
-
-              {/* What they'll achieve */}
-              {userData.accomplishments.length > 0 && (
-                <div className="p-4 border-b border-white/10">
-                  <p className="text-[10px] opacity-70 mb-2">ستحقق معنا:</p>
-                  <div className="space-y-2">
-                    {userData.accomplishments.includes('healthier_lifestyle') && (
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="text-green-400">✓</span> أكل وحياة صحية أكثر
-                      </div>
-                    )}
-                    {userData.accomplishments.includes('boost_energy') && (
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="text-yellow-400">✓</span> زيادة طاقتك ومزاجك
-                      </div>
-                    )}
-                    {userData.accomplishments.includes('stay_motivated') && (
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="text-blue-400">✓</span> البقاء متحفزاً ومستمراً
-                      </div>
-                    )}
-                    {userData.accomplishments.includes('body_confidence') && (
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="text-pink-400">✓</span> الشعور بالرضا عن جسمك
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Call to action */}
               <div className="p-4 bg-white/10">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
-                    <Rocket className="size-5" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">برنامجك جاهز وينتظرك!</p>
-                    <p className="text-[10px] opacity-70">فقط فعّل اشتراكك وسجل دخولك للتطبيق</p>
-                  </div>
+                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center animate-pulse"><Rocket className="size-5" /></div>
+                  <div><p className="font-semibold text-sm">برنامجك جاهز وينتظرك!</p><p className="text-[10px] opacity-70">فقط فعّل اشتراكك وسجل دخولك للتطبيق</p></div>
                 </div>
               </div>
             </div>
 
-            {/* Email Input with domain suggestions */}
+            {/* Email Input */}
             <div className="mb-3">
               <label className="block text-xs text-muted-foreground mb-1.5 text-center">البريد الإلكتروني — سنرسل لك بيانات الدخول</label>
-              <EmailInput
-                value={userData.email}
-                onChange={(val) => setUserData({ ...userData, email: val })}
-              />
-              {userData.email.trim() && !validateEmail(userData.email) && (
-                <p className="text-xs text-red-500 text-center mt-1">أدخل بريداً إلكترونياً صحيحاً</p>
-              )}
+              <EmailInput value={userData.email} onChange={(val) => setUserData({ ...userData, email: val })} />
+              {userData.email.trim() && !validateEmail(userData.email) && (<p className="text-xs text-red-500 text-center mt-1">أدخل بريداً إلكترونياً صحيحاً</p>)}
             </div>
 
             {/* Plan Selection */}
@@ -2005,31 +1756,16 @@ export default function AppOnboarding() {
                 const daily = getDailyCost(price, plan.days)
                 const isSelected = selectedPlan === key
                 return (
-                  <button
-                    key={key}
-                    onClick={() => { setSelectedPlan(key); setMfInitialized(false) }}
-                    className={`relative rounded-2xl p-3.5 text-center transition-all duration-200 border-2 ${
-                      isSelected
-                        ? 'bg-vp-navy text-white border-vp-navy shadow-lg shadow-vp-navy/20 scale-[1.02]'
-                        : 'bg-white text-neutral-800 border-neutral-200 hover:border-vp-navy/30'
-                    }`}
-                  >
-                    {key === 'yearly' && (
-                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-amber-400 text-[9px] font-bold px-2.5 py-0.5 rounded-full text-amber-900 whitespace-nowrap">
-                        الأوفر
-                      </div>
-                    )}
+                  <button key={key} onClick={() => { setSelectedPlan(key); setMfInitialized(false) }}
+                    className={`relative rounded-2xl p-3.5 text-center transition-all duration-200 border-2 ${isSelected ? 'bg-vp-navy text-white border-vp-navy shadow-lg shadow-vp-navy/20 scale-[1.02]' : 'bg-white text-neutral-800 border-neutral-200 hover:border-vp-navy/30'}`}>
+                    {key === 'yearly' && (<div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-amber-400 text-[9px] font-bold px-2.5 py-0.5 rounded-full text-amber-900 whitespace-nowrap">الأوفر</div>)}
                     <p className={`text-[11px] mb-1 ${isSelected ? 'text-white/70' : 'text-neutral-400'}`}>{plan.label}</p>
                     <p className="text-xl font-black leading-tight">{price}</p>
                     <p className={`text-[10px] ${isSelected ? 'text-white/60' : 'text-neutral-400'}`}>ريال</p>
                     <div className={`mt-2 pt-2 border-t ${isSelected ? 'border-white/20' : 'border-neutral-100'}`}>
                       <p className={`text-[10px] ${isSelected ? 'text-white/70' : 'text-neutral-400'}`}>{daily} ر.س/يوم</p>
                     </div>
-                    {appliedDiscount && (
-                      <p className={`text-[10px] mt-1 line-through ${isSelected ? 'text-white/40' : 'text-neutral-300'}`}>
-                        {plan.price} ريال
-                      </p>
-                    )}
+                    {appliedDiscount && (<p className={`text-[10px] mt-1 line-through ${isSelected ? 'text-white/40' : 'text-neutral-300'}`}>{plan.price} ريال</p>)}
                   </button>
                 )
               })}
@@ -2037,78 +1773,34 @@ export default function AppOnboarding() {
 
             <p className="text-center text-[11px] text-neutral-400 -mt-1 mb-2">بدون تجديد تلقائي — تدفع مرة واحدة فقط</p>
 
-            {/* Discount Code Input */}
+            {/* Discount Code */}
             <div className="mb-3">
               <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={discountCode}
-                  onChange={(e) => {
-                    setDiscountCode(e.target.value.toUpperCase())
-                    setDiscountError('')
-                  }}
-                  placeholder="كود الخصم (اختياري)"
-                  className="flex-1 p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-vp-navy/40 outline-none text-sm text-center"
-                  dir="ltr"
-                />
-                <button
-                  onClick={applyDiscountCode}
-                  disabled={!discountCode.trim() || discountValidating}
-                  className="px-4 py-2.5 rounded-xl bg-vp-navy/10 text-vp-navy hover:bg-vp-navy/20 disabled:opacity-50 text-sm font-medium transition-colors"
-                >
-                  {discountValidating ? '...' : 'تطبيق'}
-                </button>
+                <input type="text" value={discountCode} onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError('') }} placeholder="كود الخصم (اختياري)" className="flex-1 p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-vp-navy/40 outline-none text-sm text-center" dir="ltr" />
+                <button onClick={applyDiscountCode} disabled={!discountCode.trim() || discountValidating} className="px-4 py-2.5 rounded-xl bg-vp-navy/10 text-vp-navy hover:bg-vp-navy/20 disabled:opacity-50 text-sm font-medium transition-colors">{discountValidating ? '...' : 'تطبيق'}</button>
               </div>
-              {discountError && (
-                <p className="text-red-500 text-xs mt-1 text-center">{discountError}</p>
-              )}
+              {discountError && (<p className="text-red-500 text-xs mt-1 text-center">{discountError}</p>)}
               {appliedDiscount && (
                 <div className="flex items-center justify-center gap-2 mt-2 p-2 bg-green-500/10 rounded-lg">
-                  <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                  </svg>
-                  <span className="text-xs text-green-700 dark:text-green-400">
-                    تم تطبيق خصم {appliedDiscount.label}!
-                  </span>
-                  <button
-                    onClick={() => {
-                      setAppliedDiscount(null)
-                      setDiscountCode('')
-                    }}
-                    className="text-muted-foreground hover:text-red-500 mr-auto"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                  <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                  <span className="text-xs text-green-700 dark:text-green-400">تم تطبيق خصم {appliedDiscount.label}!</span>
+                  <button onClick={() => { setAppliedDiscount(null); setDiscountCode('') }} className="text-muted-foreground hover:text-red-500 mr-auto">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Payment Error Message */}
-            {paymentError && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-3">
-                <p className="text-sm text-red-600 dark:text-red-400 text-center">{paymentError}</p>
-              </div>
-            )}
+            {/* Payment Error */}
+            {paymentError && (<div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-3"><p className="text-sm text-red-600 dark:text-red-400 text-center">{paymentError}</p></div>)}
 
-            {/* MyFatoorah Embedded Payment Form */}
+            {/* MyFatoorah */}
             {!mfInitialized && !isProcessingPayment && (
-              <button
-                onClick={initMyFatoorahPayment}
-                disabled={!validateEmail(userData.email) || mfSessionLoading}
-                className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg disabled:opacity-50 shadow-lg flex items-center justify-center gap-2 mb-3"
-              >
-                {mfSessionLoading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span>جاري تحميل نموذج الدفع...</span>
-                  </>
-                ) : appliedDiscount ? (
-                  <>ادفع الآن - <span className="line-through opacity-60 mx-1">{plans[selectedPlan].price}</span> {getFinalPrice(plans[selectedPlan].price)} ريال</>
-                ) : (
-                  <>ادفع الآن - {plans[selectedPlan].price} ريال</>
-                )}
+              <button onClick={initMyFatoorahPayment} disabled={!validateEmail(userData.email) || mfSessionLoading}
+                className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg disabled:opacity-50 shadow-lg flex items-center justify-center gap-2 mb-3">
+                {mfSessionLoading ? (<><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div><span>جاري تحميل نموذج الدفع...</span></>) :
+                  appliedDiscount ? (<>ادفع الآن - <span className="line-through opacity-60 mx-1">{plans[selectedPlan].price}</span> {getFinalPrice(plans[selectedPlan].price)} ريال</>) :
+                  (<>ادفع الآن - {plans[selectedPlan].price} ريال</>)}
               </button>
             )}
 
@@ -2120,11 +1812,7 @@ export default function AppOnboarding() {
             )}
 
             <div id="mf-app-form" ref={mfContainerRef} className={mfInitialized ? 'mb-4' : 'hidden'}></div>
-
-            <Script
-              src={process.env.NEXT_PUBLIC_MYFATOORAH_JS_URL || 'https://sa.myfatoorah.com/sessions/v1/session.js'}
-              onLoad={() => setMfScriptLoaded(true)}
-            />
+            <Script src={process.env.NEXT_PUBLIC_MYFATOORAH_JS_URL || 'https://sa.myfatoorah.com/sessions/v1/session.js'} onLoad={() => setMfScriptLoaded(true)} />
 
             {/* Divider */}
             {!isProcessingPayment && (
@@ -2135,21 +1823,16 @@ export default function AppOnboarding() {
               </div>
             )}
 
-            {/* Tamara BNPL Option */}
+            {/* Tamara */}
             {!isProcessingPayment && (
-              <button
-                onClick={handleTamaraCheckout}
-                disabled={!validateEmail(userData.email) || tamaraLoading}
-                className="w-full p-3.5 bg-gradient-to-r from-[#FFB88C]/10 via-[#DE6FA1]/10 to-[#8B5CF6]/10 border-2 border-[#DE6FA1]/30 rounded-2xl hover:shadow-lg hover:border-[#DE6FA1]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-3"
-              >
+              <button onClick={handleTamaraCheckout} disabled={!validateEmail(userData.email) || tamaraLoading}
+                className="w-full p-3.5 bg-gradient-to-r from-[#FFB88C]/10 via-[#DE6FA1]/10 to-[#8B5CF6]/10 border-2 border-[#DE6FA1]/30 rounded-2xl hover:shadow-lg hover:border-[#DE6FA1]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Image src="/tamara.png" alt="Tamara" width={70} height={24} className="h-6 w-auto object-contain" />
                     <div className="text-right">
                       <p className="text-sm font-semibold">قسّمها على 4 دفعات</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {Math.ceil(getFinalPrice(plans[selectedPlan].price) / 4)} ر.س × 4 دفعات بدون فوائد
-                      </p>
+                      <p className="text-[11px] text-muted-foreground">{Math.ceil(getFinalPrice(plans[selectedPlan].price) / 4)} ر.س × 4 دفعات بدون فوائد</p>
                     </div>
                   </div>
                   {tamaraLoading ? (
@@ -2163,18 +1846,10 @@ export default function AppOnboarding() {
 
             {/* Payment Methods */}
             <div className="mt-2 flex items-center justify-center gap-3">
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <CreditCard className="size-3" /> Visa
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <CreditCard className="size-3" /> Mastercard
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <CreditCard className="size-3" /> مدى
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                Apple Pay
-              </div>
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><CreditCard className="size-3" /> Visa</div>
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><CreditCard className="size-3" /> Mastercard</div>
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><CreditCard className="size-3" /> مدى</div>
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">Apple Pay</div>
               <Image src="/tamara.png" alt="Tamara" width={36} height={14} className="h-3.5 w-auto object-contain opacity-60" />
             </div>
 
@@ -2188,21 +1863,30 @@ export default function AppOnboarding() {
         </div>{/* end scrollable content area */}
 
         {/* Fixed bottom button bar */}
-        {[0, 5, 6, 8, 12, 13, 15, 16, 17, 18, 19].includes(step) && (
+        {[0, 2, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 18].includes(step) && (
           <div className="shrink-0 pb-6 pt-3 bg-background">
             {step === 0 && (
               <>
-                <button
-                  onClick={nextStep}
-                  className="w-full py-4 rounded-2xl bg-vp-navy text-white font-bold text-lg shadow-xl shadow-vp-navy/25 active:scale-[0.98] transition-transform"
-                >
+                <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-bold text-lg shadow-xl shadow-vp-navy/25 active:scale-[0.98] transition-transform">
                   يلا نبدأ
                 </button>
                 <p className="text-[10px] text-muted-foreground text-center mt-2">يأخذ أقل من دقيقتين • بدون التزام</p>
               </>
             )}
-            {(step === 5 || step === 6 || step === 8 || step === 15 || step === 18 || step === 19) && (
+            {/* Simple next buttons for sliders and insight breaks */}
+            {(step === 2 || step === 4 || step === 6 || step === 7 || step === 9 || step === 14) && (
               <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
+                التالي
+              </button>
+            )}
+            {/* Merged screens: disabled until both selected */}
+            {step === 8 && (
+              <button onClick={nextStep} disabled={!userData.activityLevel || !userData.fitnessLevel} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg disabled:opacity-50">
+                التالي
+              </button>
+            )}
+            {step === 11 && (
+              <button onClick={nextStep} disabled={!userData.splitPreference || !userData.trainingStyle} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg disabled:opacity-50">
                 التالي
               </button>
             )}
@@ -2214,10 +1898,7 @@ export default function AppOnboarding() {
             {step === 13 && (
               <div className="space-y-3">
                 {userData.injuries.length > 0 && (
-                  <button
-                    onClick={() => setUserData({ ...userData, injuries: [] })}
-                    className="w-full py-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-muted-foreground font-medium text-sm"
-                  >
+                  <button onClick={() => setUserData({ ...userData, injuries: [] })} className="w-full py-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-muted-foreground font-medium text-sm">
                     لا إصابات (مسح الاختيار)
                   </button>
                 )}
@@ -2226,7 +1907,13 @@ export default function AppOnboarding() {
                 </button>
               </div>
             )}
-            {(step === 16 || step === 17) && (
+            {step === 16 && (
+              <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
+                التالي
+              </button>
+            )}
+            {/* IB4: only show button after reveal */}
+            {step === 18 && revealReady && (
               <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
                 التالي
               </button>
