@@ -251,7 +251,9 @@ body {
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.5s ease forwards;
+  animation: fadeIn 0.35s ease-out forwards;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
 }
 
 .animate-delay-100 {
