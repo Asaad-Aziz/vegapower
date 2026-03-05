@@ -4,17 +4,9 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Arabic font - Ara Hamah Alislam */
-@font-face {
-  font-family: 'Ara Hamah Alislam';
-  src: url('/Ara%20Hamah%20Alislam.ttf') format('truetype');
-  font-display: swap;
-}
-
 /* Vega Power branding + shadcn theme */
 :root {
-  --font-arabic: 'Ara Hamah Alislam', sans-serif;
-  --font-combined: var(--font-inter), 'Ara Hamah Alislam', system-ui, -apple-system, sans-serif;
+  --font-combined: var(--font-inter), system-ui, -apple-system, sans-serif;
   --vp-cream: #F1EFEC;
   --vp-beige: #D4C9BE;
   --vp-navy: #123458;
