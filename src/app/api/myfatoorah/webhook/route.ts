@@ -53,6 +53,13 @@ export async function POST(request: NextRequest) {
 
     // Try to find product by CustomerReference (which is the product UUID passed as ExternalIdentifier)
     const customerReference = body?.Data?.CustomerReference
+
+    // Skip app subscription payments — these are handled by /api/myfatoorah/verify-app
+    if (customerReference && customerReference.startsWith('app_')) {
+      console.log(`[MyFatoorah Webhook ${timestamp}] App subscription payment (${customerReference}), skipping — handled by verify-app`)
+      return NextResponse.json({ message: 'App subscription, handled by verify-app' })
+    }
+
     let product = null
 
     if (customerReference) {

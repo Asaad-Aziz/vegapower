@@ -614,12 +614,9 @@ export async function POST(request: NextRequest) {
     let userAlreadyExists = false
     
     if (existingFirebaseUid) {
-      // Check if user has subscription data (means verify-payment already handled it)
-      const existingUserData = await getUserDataFromFirestore(existingFirebaseUid)
-      if (existingUserData?.subscription && existingUserData?.onboardingCompleted) {
-        userAlreadyExists = true
-        console.log('StreamPay webhook: User already exists with subscription, skipping email', email)
-      }
+      // If Firebase user exists, verify-payment already handled account creation and email
+      userAlreadyExists = true
+      console.log('StreamPay webhook: Firebase user already exists, skipping email (verify-payment handled it)', email)
     }
 
     // Generate temporary password
