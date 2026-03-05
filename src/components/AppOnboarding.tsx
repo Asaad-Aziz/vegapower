@@ -68,7 +68,7 @@ interface UserData {
 
 const plans = {
   monthly: { price: 45, period: 'شهر', productId: 'myfatoorah_monthly', savings: null, days: 30, label: 'شهري' },
-  yearly: { price: 187, period: 'سنة', productId: 'myfatoorah_yearly', savings: null, days: 365, label: 'سنوي' },
+  yearly: { price: 216, period: 'سنة', productId: 'myfatoorah_yearly', savings: null, days: 365, label: 'سنوي' },
 }
 
 // Discount codes configuration
@@ -301,6 +301,8 @@ export default function AppOnboarding() {
   const [appleSignInError, setAppleSignInError] = useState('')
   const [graphAnimated, setGraphAnimated] = useState(false)
   const [revealReady, setRevealReady] = useState(false)
+  const [paymentStep, setPaymentStep] = useState<'plan' | 'email' | 'pay'>('plan')
+  const [streamPayLoading, setStreamPayLoading] = useState(false)
 
   // Handle StreamPay false-negative: payment succeeded but redirected to failure URL
   useEffect(() => {
@@ -415,6 +417,10 @@ export default function AppOnboarding() {
   }
 
   const prevStep = () => {
+    if (step === 20) {
+      if (paymentStep === 'pay') { setPaymentStep('email'); return }
+      if (paymentStep === 'email') { setPaymentStep('plan'); return }
+    }
     if (step > 0) {
       setStep((step - 1) as Step)
     }
@@ -795,6 +801,88 @@ export default function AppOnboarding() {
     }
   }
 
+  // StreamPay checkout for monthly plan
+  const handleStreamPayCheckout = async () => {
+    if (!validateEmail(userData.email)) {
+      setPaymentError('يرجى إدخال بريد إلكتروني صحيح')
+      return
+    }
+    setStreamPayLoading(true)
+    setPaymentError('')
+
+    const finalPrice = getFinalPrice(plans.monthly.price)
+
+    initiateCheckout({
+      content_ids: [plans.monthly.productId],
+      content_type: 'product',
+      value: finalPrice,
+      currency: 'SAR',
+      num_items: 1,
+    })
+    snapStartCheckout({
+      price: finalPrice,
+      currency: 'SAR',
+      item_ids: [plans.monthly.productId],
+    })
+
+    try {
+      const response = await fetch('/api/streampay/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: 'monthly',
+          email: userData.email,
+          authMethod: authMethod || 'email',
+          discountCode: appliedDiscount ? discountCode : null,
+          discountPercent: appliedDiscount?.percent || 0,
+          streampayCouponId: appliedDiscount ? streampayCouponId : null,
+          finalPrice,
+          userData: {
+            gender: userData.gender,
+            activityLevel: userData.activityLevel,
+            fitnessLevel: userData.fitnessLevel,
+            workoutLocation: userData.workoutLocation,
+            height: userData.height,
+            weight: userData.weight,
+            birthYear: userData.birthYear,
+            age: userData.age,
+            fitnessGoal: userData.fitnessGoal,
+            targetWeight: userData.targetWeight,
+            daysPerWeek: userData.daysPerWeek,
+            splitPreference: userData.splitPreference,
+            trainingStyle: userData.trainingStyle,
+            priorityMuscles: userData.priorityMuscles,
+            injuries: userData.injuries,
+            cardioPreference: userData.cardioPreference,
+            targetSpeed: userData.targetSpeed,
+            challenges: userData.challenges,
+            accomplishments: [userData.motivation],
+            calculatedCalories: userData.calculatedCalories,
+            proteinGrams: userData.proteinGrams,
+            carbsGrams: userData.carbsGrams,
+            fatGrams: userData.fatGrams,
+            proteinPercentage: userData.proteinPercentage,
+            carbsPercentage: userData.carbsPercentage,
+            fatPercentage: userData.fatPercentage,
+            programName: userData.programName,
+          },
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.paymentUrl) {
+        window.location.href = data.paymentUrl
+      } else {
+        setPaymentError(data.error || 'حدث خطأ في إنشاء رابط الدفع')
+        setStreamPayLoading(false)
+      }
+    } catch {
+      setPaymentError('حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.')
+      setStreamPayLoading(false)
+    }
+  }
+
   // Apply discount code
   const applyDiscountCode = async () => {
     const code = discountCode.toUpperCase().trim()
@@ -948,7 +1036,7 @@ export default function AppOnboarding() {
                 { Icon: Dumbbell, text: 'جدول تمارين مصمم لهدفك بالذكاء الاصطناعي', highlight: true },
                 { Icon: Flame, text: 'حساب سعراتك وماكروز بدقة حسب جسمك', highlight: true },
                 { Icon: TrendingUp, text: 'خطة واضحة توصلك لهدفك بأسرع طريقة', highlight: false },
-                { Icon: Bot, text: 'مدرب ذكي يتكيف معك كل أسبوع', highlight: false },
+                
               ].map((item) => (
                 <div key={item.text} className={`flex items-center gap-3 p-3 rounded-xl transition-all ${item.highlight ? 'bg-vp-navy/5 border border-vp-navy/10' : 'bg-neutral-50 dark:bg-neutral-800/50'}`}>
                   <div className="shrink-0 w-8 h-8 rounded-lg bg-vp-navy/10 flex items-center justify-center"><item.Icon className="size-5 text-vp-navy" /></div>
@@ -1051,7 +1139,7 @@ export default function AppOnboarding() {
                 { Icon: Flame, text: 'حساب عجز السعرات المثالي لحرق الدهون بدون خسارة عضلات' },
                 { Icon: Dumbbell, text: 'جدول تمارين مصمم بالذكاء الاصطناعي يحافظ على كتلتك العضلية' },
                 { Icon: TrendingUp, text: 'متابعة أسبوعية — التطبيق يعدّل خطتك تلقائياً حسب تقدمك' },
-                { Icon: Bot, text: 'مدرب ذكي يجاوب أسئلتك ويحفزك كل يوم' },
+                
               ].map((item) => (
                 <div key={item.text} className="flex items-center gap-3 p-3 rounded-xl bg-vp-navy/5 border border-vp-navy/10">
                   <div className="shrink-0 w-9 h-9 rounded-lg bg-vp-navy/10 flex items-center justify-center"><item.Icon className="size-5 text-vp-navy" /></div>
@@ -1062,7 +1150,7 @@ export default function AppOnboarding() {
                 { Icon: Dumbbell, text: 'برنامج تضخيم مصمم بالذكاء الاصطناعي يزيد قوتك وحجمك' },
                 { Icon: Flame, text: 'حساب فائض السعرات والماكروز المثالي لبناء العضلات' },
                 { Icon: TrendingUp, text: 'تطور تدريجي — التطبيق يرفع الأوزان والتكرارات تلقائياً' },
-                { Icon: Bot, text: 'مدرب ذكي يجاوب أسئلتك ويوجهك خطوة بخطوة' },
+                
               ].map((item) => (
                 <div key={item.text} className="flex items-center gap-3 p-3 rounded-xl bg-vp-navy/5 border border-vp-navy/10">
                   <div className="shrink-0 w-9 h-9 rounded-lg bg-vp-navy/10 flex items-center justify-center"><item.Icon className="size-5 text-vp-navy" /></div>
@@ -1073,7 +1161,7 @@ export default function AppOnboarding() {
                 { Icon: Dumbbell, text: 'خطة متوازنة تحرق الدهون وتبني العضلات في نفس الوقت' },
                 { Icon: Flame, text: 'حساب دقيق للسعرات والماكروز يناسب هدف إعادة التكوين' },
                 { Icon: TrendingUp, text: 'متابعة ذكية — التطبيق يعدّل بين أيام التمرين والراحة' },
-                { Icon: Bot, text: 'مدرب ذكي يساعدك تفهم جسمك وتتقدم بثقة' },
+                
               ].map((item) => (
                 <div key={item.text} className="flex items-center gap-3 p-3 rounded-xl bg-vp-navy/5 border border-vp-navy/10">
                   <div className="shrink-0 w-9 h-9 rounded-lg bg-vp-navy/10 flex items-center justify-center"><item.Icon className="size-5 text-vp-navy" /></div>
@@ -1728,205 +1816,210 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 19: Payment */}
+        {/* Step 20: Payment Flow (3 sub-steps) */}
         {step === 20 && (
           <div className="flex-1 flex flex-col animate-fade-in overflow-auto -my-8 py-8">
-            {/* Header */}
-            <div className="text-center mb-4">
-              <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-lg overflow-hidden">
-                <Image src="/Vegapower Logo-05.jpg" alt="Vega Power" width={64} height={64} className="w-full h-full object-contain" />
-              </div>
-              <h2 className="text-2xl font-bold mb-1">اشترك في VegaPower</h2>
-              <p className="text-muted-foreground text-sm">التطبيق الوحيد اللي تحتاجه لتحقيق أهدافك</p>
-            </div>
 
-            {/* Encouraging Message */}
-            <div className="p-3 rounded-xl bg-vp-navy/5 border border-vp-navy/15 mb-4 text-center">
-              <p className="text-sm font-medium text-vp-navy dark:text-vp-beige flex items-center justify-center gap-1.5">
-                <Trophy className="size-4" /> انضم لآلاف المستخدمين اللي شافوا نتائج حقيقية
-              </p>
-            </div>
+            {/* Sub-step 20a: Plan Selection */}
+            {paymentStep === 'plan' && (
+              <>
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-bold mb-1">اختر الخطة المناسبة لك</h2>
+                  <p className="text-muted-foreground text-sm">برنامجك جاهز — فقط اختر خطتك وابدأ</p>
+                </div>
 
-            {/* Reviews */}
-            <div className="mb-4 -mx-2 overflow-x-auto scrollbar-hide">
-              <div className="flex gap-2 px-2" style={{ width: 'max-content' }}>
-                {[
-                  { name: 'سارة', text: 'خسرت 8 كيلو في شهرين!', rating: 5 },
-                  { name: 'محمد', text: 'أفضل استثمار في صحتي', rating: 5 },
-                  { name: 'نورة', text: 'التطبيق غير حياتي!', rating: 5 },
-                ].map((review, i) => (
-                  <div key={i} className="w-[160px] p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex-shrink-0">
-                    <div className="flex gap-0.5 mb-1">
-                      {[...Array(review.rating)].map((_, s) => (
-                        <svg key={s} className="w-3 h-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                      ))}
+                {/* Yearly Card (highlighted) */}
+                <button
+                  onClick={() => { setSelectedPlan('yearly'); setMfInitialized(false) }}
+                  className={`relative w-full rounded-2xl p-5 text-right transition-all duration-200 border-2 mb-3 ${selectedPlan === 'yearly' ? 'bg-vp-navy text-white border-vp-navy shadow-lg shadow-vp-navy/20' : 'bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 border-neutral-200 dark:border-neutral-700 hover:border-vp-navy/30'}`}
+                >
+                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-amber-400 text-[10px] font-bold px-3 py-0.5 rounded-full text-amber-900 whitespace-nowrap flex items-center gap-1">
+                    ⭐ الأوفر · عرض محدود
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <div>
+                      <p className={`text-sm font-semibold mb-0.5 ${selectedPlan === 'yearly' ? 'text-white' : ''}`}>سنوي</p>
+                      <p className={`text-[11px] ${selectedPlan === 'yearly' ? 'text-white/70' : 'text-muted-foreground'}`}>دفعة واحدة · بدون تجديد تلقائي</p>
                     </div>
-                    <p className="text-xs mb-1">&quot;{review.text}&quot;</p>
-                    <p className="text-[10px] text-muted-foreground">- {review.name}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Personalized Program Summary */}
-            <div className="rounded-2xl bg-vp-navy text-white mb-4 overflow-hidden">
-              <div className="p-4 border-b border-white/10">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  </div>
-                  <div><p className="text-[10px] opacity-70">برنامجك جاهز!</p><p className="font-bold text-lg">{userData.programName}</p></div>
-                </div>
-                <div className="flex justify-around text-center bg-white/5 rounded-xl p-3">
-                  <div><p className="text-xl font-bold text-green-400">{userData.calculatedCalories}</p><p className="text-[10px] opacity-70">سعرة/يوم</p></div>
-                  <div className="border-r border-white/10"></div>
-                  <div><p className="text-xl font-bold text-blue-400">{userData.proteinGrams}g</p><p className="text-[10px] opacity-70">بروتين</p></div>
-                  <div className="border-r border-white/10"></div>
-                  <div><p className="text-xl font-bold text-purple-400">{userData.carbsGrams}g</p><p className="text-[10px] opacity-70">كارب</p></div>
-                </div>
-              </div>
-              <div className="p-4 border-b border-white/10">
-                <p className="text-sm leading-relaxed">
-                  {userData.fitnessGoal === 'Lose Fat (Cut)' && (<>بناءً على بياناتك، صممنا لك خطة لـ<span className="text-green-400 font-semibold"> خسارة {Math.abs(userData.weight - userData.targetWeight)} كجم </span>بطريقة صحية ومستدامة.</>)}
-                  {userData.fitnessGoal === 'Build Muscle (Bulk)' && (<>بناءً على بياناتك، صممنا لك خطة لـ<span className="text-blue-400 font-semibold"> بناء العضلات وزيادة {Math.abs(userData.weight - userData.targetWeight)} كجم </span>من الكتلة العضلية.</>)}
-                  {userData.fitnessGoal === 'Body Recomposition' && (<>بناءً على بياناتك، صممنا لك خطة لـ<span className="text-purple-400 font-semibold"> تحسين تكوين جسمك </span>وزيادة العضلات مع حرق الدهون.</>)}
-                </p>
-              </div>
-              {userData.challenges.length > 0 && (
-                <div className="p-4 border-b border-white/10">
-                  <p className="text-[10px] opacity-70 mb-2">سنساعدك في التغلب على:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {userData.challenges.includes('lack_consistency') && (<div className="flex items-center gap-1 px-2 py-1 rounded-full bg-orange-500/20 text-orange-300 text-[10px]"><BarChart3 className="size-3" /> تذكيرات يومية للاستمرار</div>)}
-                    {userData.challenges.includes('unhealthy_habits') && (<div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-300 text-[10px]"><UtensilsCrossed className="size-3" /> وجبات صحية بديلة</div>)}
-                    {userData.challenges.includes('lack_support') && (<div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-500/20 text-blue-300 text-[10px]"><Users className="size-3" /> مجتمع داعم ومحفز</div>)}
-                    {userData.challenges.includes('busy_schedule') && (<div className="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 text-[10px]"><CalendarDays className="size-3" /> تمارين سريعة (15-30 دقيقة)</div>)}
-                    {userData.challenges.includes('meal_inspiration') && (<div className="flex items-center gap-1 px-2 py-1 rounded-full bg-pink-500/20 text-pink-300 text-[10px]"><Lightbulb className="size-3" /> +500 وصفة صحية</div>)}
-                  </div>
-                </div>
-              )}
-              <div className="p-4 bg-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center animate-pulse"><Rocket className="size-5" /></div>
-                  <div><p className="font-semibold text-sm">برنامجك جاهز وينتظرك!</p><p className="text-[10px] opacity-70">فقط فعّل اشتراكك وسجل دخولك للتطبيق</p></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Email Input */}
-            <div className="mb-3">
-              <label className="block text-xs text-muted-foreground mb-1.5 text-center">البريد الإلكتروني — سنرسل لك بيانات الدخول</label>
-              <EmailInput value={userData.email} onChange={(val) => setUserData({ ...userData, email: val })} />
-              {userData.email.trim() && !validateEmail(userData.email) && (<p className="text-xs text-red-500 text-center mt-1">أدخل بريداً إلكترونياً صحيحاً</p>)}
-            </div>
-
-            {/* Plan Selection */}
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              {(Object.entries(plans) as [PlanType, typeof plans[PlanType]][]).map(([key, plan]) => {
-                const price = getFinalPrice(plan.price)
-                const daily = getDailyCost(price, plan.days)
-                const isSelected = selectedPlan === key
-                return (
-                  <button key={key} onClick={() => { setSelectedPlan(key); setMfInitialized(false) }}
-                    className={`relative rounded-2xl p-3.5 text-center transition-all duration-200 border-2 ${isSelected ? 'bg-vp-navy text-white border-vp-navy shadow-lg shadow-vp-navy/20 scale-[1.02]' : 'bg-white text-neutral-800 border-neutral-200 hover:border-vp-navy/30'}`}>
-                    {key === 'yearly' && (<div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-amber-400 text-[9px] font-bold px-2.5 py-0.5 rounded-full text-amber-900 whitespace-nowrap">الأوفر</div>)}
-                    <p className={`text-[11px] mb-1 ${isSelected ? 'text-white/70' : 'text-neutral-400'}`}>{plan.label}</p>
-                    <p className="text-xl font-black leading-tight">{price}</p>
-                    <p className={`text-[10px] ${isSelected ? 'text-white/60' : 'text-neutral-400'}`}>ريال</p>
-                    <div className={`mt-2 pt-2 border-t ${isSelected ? 'border-white/20' : 'border-neutral-100'}`}>
-                      <p className={`text-[10px] ${isSelected ? 'text-white/70' : 'text-neutral-400'}`}>{daily} ر.س/يوم</p>
-                    </div>
-                    {appliedDiscount && (<p className={`text-[10px] mt-1 line-through ${isSelected ? 'text-white/40' : 'text-neutral-300'}`}>{plan.price} ريال</p>)}
-                  </button>
-                )
-              })}
-            </div>
-
-            <p className="text-center text-[11px] text-neutral-400 -mt-1 mb-2">بدون تجديد تلقائي — تدفع مرة واحدة فقط</p>
-
-            {/* Discount Code */}
-            <div className="mb-3">
-              <div className="flex gap-2">
-                <input type="text" value={discountCode} onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError('') }} placeholder="كود الخصم (اختياري)" className="flex-1 p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-vp-navy/40 outline-none text-sm text-center" dir="ltr" />
-                <button onClick={applyDiscountCode} disabled={!discountCode.trim() || discountValidating} className="px-4 py-2.5 rounded-xl bg-vp-navy/10 text-vp-navy hover:bg-vp-navy/20 disabled:opacity-50 text-sm font-medium transition-colors">{discountValidating ? '...' : 'تطبيق'}</button>
-              </div>
-              {discountError && (<p className="text-red-500 text-xs mt-1 text-center">{discountError}</p>)}
-              {appliedDiscount && (
-                <div className="flex items-center justify-center gap-2 mt-2 p-2 bg-green-500/10 rounded-lg">
-                  <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                  <span className="text-xs text-green-700 dark:text-green-400">تم تطبيق خصم {appliedDiscount.label}!</span>
-                  <button onClick={() => { setAppliedDiscount(null); setDiscountCode('') }} className="text-muted-foreground hover:text-red-500 mr-auto">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Payment Error */}
-            {paymentError && (<div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-3"><p className="text-sm text-red-600 dark:text-red-400 text-center">{paymentError}</p></div>)}
-
-            {/* MyFatoorah */}
-            {!mfInitialized && !isProcessingPayment && (
-              <button onClick={initMyFatoorahPayment} disabled={!validateEmail(userData.email) || mfSessionLoading}
-                className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg disabled:opacity-50 shadow-lg flex items-center justify-center gap-2 mb-3">
-                {mfSessionLoading ? (<><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div><span>جاري تحميل نموذج الدفع...</span></>) :
-                  appliedDiscount ? (<>ادفع الآن - <span className="line-through opacity-60 mx-1">{plans[selectedPlan].price}</span> {getFinalPrice(plans[selectedPlan].price)} ريال</>) :
-                  (<>ادفع الآن - {plans[selectedPlan].price} ريال</>)}
-              </button>
-            )}
-
-            {isProcessingPayment && (
-              <div className="flex items-center justify-center gap-2 py-4 mb-3">
-                <div className="w-5 h-5 border-2 border-vp-navy/30 border-t-vp-navy rounded-full animate-spin"></div>
-                <span className="text-sm text-muted-foreground">جاري التحقق من الدفع...</span>
-              </div>
-            )}
-
-            <div id="mf-app-form" ref={mfContainerRef} className={mfInitialized ? 'mb-4' : 'hidden'}></div>
-            <Script src={process.env.NEXT_PUBLIC_MYFATOORAH_JS_URL || 'https://sa.myfatoorah.com/sessions/v1/session.js'} onLoad={() => setMfScriptLoaded(true)} />
-
-            {/* Divider */}
-            {!isProcessingPayment && (
-              <div className="flex items-center gap-3 my-3">
-                <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700"></div>
-                <span className="text-[11px] text-muted-foreground">أو</span>
-                <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700"></div>
-              </div>
-            )}
-
-            {/* Tamara */}
-            {!isProcessingPayment && (
-              <button onClick={handleTamaraCheckout} disabled={!validateEmail(userData.email) || tamaraLoading}
-                className="w-full p-3.5 bg-gradient-to-r from-[#FFB88C]/10 via-[#DE6FA1]/10 to-[#8B5CF6]/10 border-2 border-[#DE6FA1]/30 rounded-2xl hover:shadow-lg hover:border-[#DE6FA1]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Image src="/tamara.png" alt="Tamara" width={70} height={24} className="h-6 w-auto object-contain" />
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">قسّمها على 4 دفعات</p>
-                      <p className="text-[11px] text-muted-foreground">{Math.ceil(getFinalPrice(plans[selectedPlan].price) / 4)} ر.س × 4 دفعات بدون فوائد</p>
+                    <div className="text-left">
+                      <p className={`text-2xl font-black ${selectedPlan === 'yearly' ? 'text-white' : ''}`}>{getFinalPrice(plans.yearly.price)}<span className="text-sm font-medium mr-1">ر.س</span></p>
+                      <p className={`text-[11px] ${selectedPlan === 'yearly' ? 'text-white/70' : 'text-muted-foreground'}`}>فقط {Math.round(getFinalPrice(plans.yearly.price) / 12)} ر.س/شهر</p>
                     </div>
                   </div>
-                  {tamaraLoading ? (
-                    <div className="w-5 h-5 border-2 border-[#DE6FA1]/50 border-t-[#DE6FA1] rounded-full animate-spin"></div>
-                  ) : (
-                    <svg className="w-5 h-5 text-[#DE6FA1] rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  <div className={`mt-3 pt-3 border-t flex items-center justify-between ${selectedPlan === 'yearly' ? 'border-white/20' : 'border-neutral-100 dark:border-neutral-700'}`}>
+                    <span className={`text-xs line-through ${selectedPlan === 'yearly' ? 'text-white/40' : 'text-neutral-400'}`}>540 ر.س</span>
+                    <span className="text-xs font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">خصم 60%</span>
+                  </div>
+                </button>
+
+                {/* Monthly Card */}
+                <button
+                  onClick={() => { setSelectedPlan('monthly'); setMfInitialized(false) }}
+                  className={`relative w-full rounded-2xl p-5 text-right transition-all duration-200 border-2 mb-4 ${selectedPlan === 'monthly' ? 'bg-vp-navy text-white border-vp-navy shadow-lg shadow-vp-navy/20' : 'bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 border-neutral-200 dark:border-neutral-700 hover:border-vp-navy/30'}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={`text-sm font-semibold mb-0.5 ${selectedPlan === 'monthly' ? 'text-white' : ''}`}>شهري</p>
+                      <p className={`text-[11px] ${selectedPlan === 'monthly' ? 'text-white/70' : 'text-muted-foreground'}`}>يتجدد تلقائياً · إلغاء في أي وقت من التطبيق</p>
+                    </div>
+                    <div className="text-left">
+                      <p className={`text-2xl font-black ${selectedPlan === 'monthly' ? 'text-white' : ''}`}>{getFinalPrice(plans.monthly.price)}<span className="text-sm font-medium mr-1">ر.س</span></p>
+                      <p className={`text-[11px] ${selectedPlan === 'monthly' ? 'text-white/70' : 'text-muted-foreground'}`}>/شهر</p>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Discount Code */}
+                <div className="mb-4">
+                  <div className="flex gap-2">
+                    <input type="text" value={discountCode} onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError('') }} placeholder="كود الخصم (اختياري)" className="flex-1 p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-2 border-transparent focus:border-vp-navy/40 outline-none text-sm text-center" dir="ltr" />
+                    <button onClick={applyDiscountCode} disabled={!discountCode.trim() || discountValidating} className="px-4 py-2.5 rounded-xl bg-vp-navy/10 text-vp-navy hover:bg-vp-navy/20 disabled:opacity-50 text-sm font-medium transition-colors">{discountValidating ? '...' : 'تطبيق'}</button>
+                  </div>
+                  {discountError && (<p className="text-red-500 text-xs mt-1 text-center">{discountError}</p>)}
+                  {appliedDiscount && (
+                    <div className="flex items-center justify-center gap-2 mt-2 p-2 bg-green-500/10 rounded-lg">
+                      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <span className="text-xs text-green-700 dark:text-green-400">تم تطبيق خصم {appliedDiscount.label}!</span>
+                      <button onClick={() => { setAppliedDiscount(null); setDiscountCode('') }} className="text-muted-foreground hover:text-red-500 mr-auto">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
                   )}
                 </div>
-              </button>
+
+                {/* Continue Button */}
+                <button
+                  onClick={() => setPaymentStep('email')}
+                  className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg shadow-lg"
+                >
+                  التالي
+                </button>
+              </>
             )}
 
-            {/* Payment Methods */}
-            <div className="mt-2 flex items-center justify-center gap-3">
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><CreditCard className="size-3" /> Visa</div>
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><CreditCard className="size-3" /> Mastercard</div>
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><CreditCard className="size-3" /> مدى</div>
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">Apple Pay</div>
-              <Image src="/tamara.png" alt="Tamara" width={36} height={14} className="h-3.5 w-auto object-contain opacity-60" />
-            </div>
+            {/* Sub-step 20b: Email Capture */}
+            {paymentStep === 'email' && (
+              <>
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-bold mb-2">وين نرسل لك بيانات الدخول؟</h2>
+                  <p className="text-muted-foreground text-sm">ستستخدم هذا الإيميل لتسجيل الدخول في التطبيق</p>
+                </div>
 
-            {/* Footer */}
-            <div className="mt-3 text-center">
-              <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1"><Lock className="size-3" /> دفع آمن ومشفر • دفعة واحدة بدون تجديد تلقائي</p>
-            </div>
+                <div className="mb-6">
+                  <EmailInput value={userData.email} onChange={(val) => setUserData({ ...userData, email: val })} />
+                  {userData.email.trim() && !validateEmail(userData.email) && (
+                    <p className="text-xs text-red-500 text-center mt-1">أدخل بريداً إلكترونياً صحيحاً</p>
+                  )}
+                </div>
+
+                {/* Continue Button */}
+                <button
+                  onClick={() => { setPaymentError(''); setPaymentStep('pay') }}
+                  disabled={!validateEmail(userData.email)}
+                  className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg shadow-lg disabled:opacity-50"
+                >
+                  التالي
+                </button>
+              </>
+            )}
+
+            {/* Sub-step 20c: Payment */}
+            {paymentStep === 'pay' && (
+              <>
+                {/* Compact summary card */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 mb-4">
+                  <div>
+                    <p className="text-sm font-semibold">{selectedPlan === 'yearly' ? 'سنوي' : 'شهري'} — {getFinalPrice(plans[selectedPlan].price)} ر.س</p>
+                    <p className="text-[11px] text-muted-foreground">{userData.email}</p>
+                  </div>
+                  <button onClick={() => { setPaymentStep('plan'); setMfInitialized(false); setPaymentError('') }} className="text-xs text-vp-navy font-medium hover:underline">[تغيير الخطة]</button>
+                </div>
+
+                {/* Payment Error */}
+                {paymentError && (<div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-3"><p className="text-sm text-red-600 dark:text-red-400 text-center">{paymentError}</p></div>)}
+
+                {/* Yearly: MyFatoorah + Tamara */}
+                {selectedPlan === 'yearly' && (
+                  <>
+                    {!mfInitialized && !isProcessingPayment && (
+                      <button onClick={initMyFatoorahPayment} disabled={mfSessionLoading}
+                        className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg disabled:opacity-50 shadow-lg flex items-center justify-center gap-2 mb-3">
+                        {mfSessionLoading ? (<><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div><span>جاري تحميل نموذج الدفع...</span></>) :
+                          appliedDiscount ? (<>ادفع الآن - <span className="line-through opacity-60 mx-1">{plans.yearly.price}</span> {getFinalPrice(plans.yearly.price)} ريال</>) :
+                          (<>ادفع الآن - {getFinalPrice(plans.yearly.price)} ريال</>)}
+                      </button>
+                    )}
+
+                    {isProcessingPayment && (
+                      <div className="flex items-center justify-center gap-2 py-4 mb-3">
+                        <div className="w-5 h-5 border-2 border-vp-navy/30 border-t-vp-navy rounded-full animate-spin"></div>
+                        <span className="text-sm text-muted-foreground">جاري التحقق من الدفع...</span>
+                      </div>
+                    )}
+
+                    <div id="mf-app-form" ref={mfContainerRef} className={mfInitialized ? 'mb-4' : 'hidden'}></div>
+                    <Script src={process.env.NEXT_PUBLIC_MYFATOORAH_JS_URL || 'https://sa.myfatoorah.com/sessions/v1/session.js'} onLoad={() => setMfScriptLoaded(true)} />
+
+                    {/* Divider */}
+                    {!isProcessingPayment && (
+                      <div className="flex items-center gap-3 my-3">
+                        <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700"></div>
+                        <span className="text-[11px] text-muted-foreground">أو</span>
+                        <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700"></div>
+                      </div>
+                    )}
+
+                    {/* Tamara */}
+                    {!isProcessingPayment && (
+                      <button onClick={handleTamaraCheckout} disabled={tamaraLoading}
+                        className="w-full p-3.5 bg-gradient-to-r from-[#FFB88C]/10 via-[#DE6FA1]/10 to-[#8B5CF6]/10 border-2 border-[#DE6FA1]/30 rounded-2xl hover:shadow-lg hover:border-[#DE6FA1]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Image src="/tamara.png" alt="Tamara" width={70} height={24} className="h-6 w-auto object-contain" />
+                            <div className="text-right">
+                              <p className="text-sm font-semibold">قسّمها على 4 دفعات</p>
+                              <p className="text-[11px] text-muted-foreground">{Math.ceil(getFinalPrice(plans.yearly.price) / 4)} ر.س × 4 دفعات بدون فوائد</p>
+                            </div>
+                          </div>
+                          {tamaraLoading ? (
+                            <div className="w-5 h-5 border-2 border-[#DE6FA1]/50 border-t-[#DE6FA1] rounded-full animate-spin"></div>
+                          ) : (
+                            <svg className="w-5 h-5 text-[#DE6FA1] rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                          )}
+                        </div>
+                      </button>
+                    )}
+                  </>
+                )}
+
+                {/* Monthly: StreamPay */}
+                {selectedPlan === 'monthly' && (
+                  <>
+                    <button onClick={handleStreamPayCheckout} disabled={streamPayLoading}
+                      className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg disabled:opacity-50 shadow-lg flex items-center justify-center gap-2 mb-3">
+                      {streamPayLoading ? (<><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div><span>جاري تحويلك للدفع...</span></>) :
+                        appliedDiscount ? (<>ادفع الآن - <span className="line-through opacity-60 mx-1">{plans.monthly.price}</span> {getFinalPrice(plans.monthly.price)} ر.س/شهر</>) :
+                        (<>ادفع الآن - {getFinalPrice(plans.monthly.price)} ر.س/شهر</>)}
+                    </button>
+                  </>
+                )}
+
+                {/* Payment Methods */}
+                <div className="mt-2 flex items-center justify-center gap-3">
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><CreditCard className="size-3" /> Visa</div>
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><CreditCard className="size-3" /> Mastercard</div>
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><CreditCard className="size-3" /> مدى</div>
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">Apple Pay</div>
+                  {selectedPlan === 'yearly' && <Image src="/tamara.png" alt="Tamara" width={36} height={14} className="h-3.5 w-auto object-contain opacity-60" />}
+                </div>
+
+                {/* Footer */}
+                <div className="mt-3 text-center">
+                  <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1"><Lock className="size-3" /> دفع آمن ومشفر {selectedPlan === 'yearly' ? '• دفعة واحدة بدون تجديد تلقائي' : '• إلغاء في أي وقت'}</p>
+                </div>
+              </>
+            )}
+
           </div>
         )}
 
