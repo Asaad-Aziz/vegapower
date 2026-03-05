@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import MetaPixel from "@/components/MetaPixel";
 import SnapPixel from "@/components/SnapPixel";
+import TikTokPixel from "@/components/TikTokPixel";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -45,6 +46,7 @@ export default function RootLayout({
       <body className="antialiased">
         <MetaPixel />
         <SnapPixel />
+        <TikTokPixel />
         {children}
       </body>
     </html>

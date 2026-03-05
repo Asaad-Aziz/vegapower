@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
-import { 
-  createFirebaseUser, 
+import {
+  createFirebaseUser,
   saveUserDataToFirestore,
   getFirebaseUidByEmail,
   getUserDataFromFirestore,
   updateSubscriptionInFirestore,
   findUserByStreampayConsumerId,
 } from '@/lib/firebase-admin'
+import { ttServerCompletePayment } from '@/lib/tiktok-events-api'
 
 // GET endpoint - Health check and webhook status
 export async function GET() {
@@ -830,6 +831,14 @@ export async function POST(request: NextRequest) {
       plan,
       firebaseUid,
     })
+
+    // TikTok Events API (server-side, non-blocking)
+    ttServerCompletePayment({
+      email,
+      value: amount || (plan === 'yearly' ? 216 : 45),
+      contentId: `streampay_${plan}`,
+      contentName: `Vega Power App - ${plan === 'yearly' ? 'سنوي' : 'شهري'}`,
+    }).catch(() => {})
 
     return NextResponse.json({
       received: true,

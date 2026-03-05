@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { initiateCheckout } from '@/lib/meta-pixel'
 import { snapStartCheckout } from '@/lib/snapchat-pixel'
+import { ttInitiateCheckout } from '@/lib/tiktok-pixel'
 import { signInWithApple, checkAppleSignInRedirect } from '@/lib/firebase-client'
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20
@@ -600,6 +601,12 @@ export default function AppOnboarding() {
       currency: 'SAR',
       item_ids: [plans[selectedPlan].productId],
     })
+    ttInitiateCheckout({
+      content_id: plans[selectedPlan].productId,
+      content_type: 'product',
+      value: finalPrice,
+      currency: 'SAR',
+    })
 
     try {
       const response = await fetch('/api/myfatoorah/session', {
@@ -741,6 +748,12 @@ export default function AppOnboarding() {
       currency: 'SAR',
       item_ids: [plans[selectedPlan].productId],
     })
+    ttInitiateCheckout({
+      content_id: plans[selectedPlan].productId,
+      content_type: 'product',
+      value: finalPrice,
+      currency: 'SAR',
+    })
 
     try {
       sessionStorage.setItem('tamara_userData', JSON.stringify({
@@ -823,6 +836,12 @@ export default function AppOnboarding() {
       price: finalPrice,
       currency: 'SAR',
       item_ids: [plans.monthly.productId],
+    })
+    ttInitiateCheckout({
+      content_id: plans.monthly.productId,
+      content_type: 'product',
+      value: finalPrice,
+      currency: 'SAR',
     })
 
     try {

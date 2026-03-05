@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 import { createFirebaseUser, saveUserDataToFirestore } from '@/lib/firebase-admin'
+import { ttServerCompletePayment } from '@/lib/tiktok-events-api'
 
 function generatePassword(length = 12): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
@@ -209,6 +210,14 @@ export async function POST(request: NextRequest) {
         console.error('Email error:', emailErr)
       }
     }
+
+    // TikTok Events API (server-side, non-blocking)
+    ttServerCompletePayment({
+      email,
+      value: paidAmount,
+      contentId: 'tamara_yearly',
+      contentName: 'Vega Power App - سنوي (تمارا)',
+    }).catch(() => {})
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 import { decryptPaymentData } from '@/lib/myfatoorah'
 import { createFirebaseUser, saveUserDataToFirestore, getFirebaseUidByEmail } from '@/lib/firebase-admin'
+import { ttServerCompletePayment } from '@/lib/tiktok-events-api'
 
 function generatePassword(length = 12): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
@@ -236,6 +237,14 @@ export async function POST(request: NextRequest) {
         console.error('Email error:', emailErr)
       }
     }
+
+    // TikTok Events API (server-side, non-blocking)
+    ttServerCompletePayment({
+      email,
+      value: paidAmount,
+      contentId: plan === 'monthly' ? 'myfatoorah_monthly' : 'myfatoorah_yearly',
+      contentName: `Vega Power App - ${plan === 'monthly' ? 'شهري' : 'سنوي'}`,
+    }).catch(() => {})
 
     return NextResponse.json({
       success: true,

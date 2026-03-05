@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { purchase } from '@/lib/meta-pixel'
 import { snapPurchase } from '@/lib/snapchat-pixel'
+import { ttCompletePayment } from '@/lib/tiktok-pixel'
 
 function AppSuccessInner() {
   const searchParams = useSearchParams()
@@ -105,6 +106,12 @@ function AppSuccessInner() {
                 item_ids: [productId],
                 transaction_id: sessionId || undefined,
               })
+              ttCompletePayment({
+                content_id: productId,
+                content_type: 'product',
+                value: purchaseValue,
+                currency: 'SAR',
+              })
               setHasTrackedPurchase(true)
               console.log('StreamPay purchase tracking:', { productId, amount, plan })
             }
@@ -183,6 +190,12 @@ function AppSuccessInner() {
                 item_ids: ['tamara_yearly'],
                 transaction_id: orderRef,
               })
+              ttCompletePayment({
+                content_id: 'tamara_yearly',
+                content_type: 'product',
+                value: purchaseValue,
+                currency: 'SAR',
+              })
               setHasTrackedPurchase(true)
             }
           } else {
@@ -237,6 +250,12 @@ function AppSuccessInner() {
               currency: 'SAR',
               item_ids: [productId],
               transaction_id: paymentId || undefined,
+            })
+            ttCompletePayment({
+              content_id: productId,
+              content_type: 'product',
+              value: purchaseValue,
+              currency: 'SAR',
             })
             setHasTrackedPurchase(true)
             console.log('Moyasar purchase tracking:', { productId, amount: data.amount, plan: data.plan })
