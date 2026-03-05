@@ -236,7 +236,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
         body: JSON.stringify({ type, message, data }),
       })
     } catch (e) {
-      console.error('Failed to log to server:', e)
+      console.error('Failed to log events to server:', e)
     }
   }
 
