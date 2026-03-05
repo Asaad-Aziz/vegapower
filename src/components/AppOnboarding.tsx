@@ -16,9 +16,9 @@ import { initiateCheckout } from '@/lib/meta-pixel'
 import { snapStartCheckout } from '@/lib/snapchat-pixel'
 import { signInWithApple, checkAppleSignInRedirect } from '@/lib/firebase-client'
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20
 
-const INSIGHT_BREAK_STEPS = new Set([3, 9, 14, 18])
+const INSIGHT_BREAK_STEPS = new Set([3, 9, 10, 15, 19])
 const INPUT_STEP_COUNT = 16
 
 const getProgressIndex = (s: number): number => {
@@ -26,10 +26,11 @@ const getProgressIndex = (s: number): number => {
   if (s === 3) return 2       // IB1 stays at 2
   if (s >= 4 && s <= 8) return s - 1  // 4→3, 5→4, 6→5, 7→6, 8→7
   if (s === 9) return 7       // IB2 stays at 7
-  if (s >= 10 && s <= 13) return s - 2 // 10→8, 11→9, 12→10, 13→11
-  if (s === 14) return 11     // IB3 stays at 11
-  if (s >= 15 && s <= 17) return s - 3 // 15→12, 16→13, 17→14
-  if (s === 18) return 14     // IB4 stays at 14
+  if (s === 10) return 7      // AI scan screen stays at 7
+  if (s >= 11 && s <= 14) return s - 3 // 11→8, 12→9, 13→10, 14→11
+  if (s === 15) return 11     // IB3 stays at 11
+  if (s >= 16 && s <= 18) return s - 4 // 16→12, 17→13, 18→14
+  if (s === 19) return 14     // IB4 stays at 14
   return 15
 }
 
@@ -361,7 +362,7 @@ export default function AppOnboarding() {
           setAuthMethod('apple')
           setAppleFirebaseUid(result.uid)
           // Go to payment page
-          setStep(19 as Step)
+          setStep(20 as Step)
         }
       } catch (error) {
         console.error('Apple redirect check error:', error)
@@ -404,7 +405,7 @@ export default function AppOnboarding() {
   const progress = (getProgressIndex(step) / (INPUT_STEP_COUNT - 1)) * 100
 
   const nextStep = () => {
-    if (step < 19) setStep((step + 1) as Step)
+    if (step < 20) setStep((step + 1) as Step)
   }
 
   // Select and advance immediately
@@ -475,9 +476,9 @@ export default function AppOnboarding() {
     }
   }
 
-  // IB4 (step 18): Calculate all values and run processing animation, then reveal
+  // IB4 (step 19): Calculate all values and run processing animation, then reveal
   useEffect(() => {
-    if (step === 18) {
+    if (step === 19) {
       const calories = calculateCalories()
       const macros = getMacroPercentages()
       const programName = getProgramName()
@@ -542,7 +543,7 @@ export default function AppOnboarding() {
         setAppleFirebaseUid(result.uid)
         // Auto-advance to payment page after short delay
         setTimeout(() => {
-          setStep(19 as Step)
+          setStep(20 as Step)
         }, 800)
       } else {
         // Apple might hide the email (private relay)
@@ -903,7 +904,7 @@ export default function AppOnboarding() {
       )}
       
       {/* Progress Bar */}
-      {step > 0 && step < 19 && (
+      {step > 0 && step < 20 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
           <div className="w-[200px] h-1.5 bg-vp-beige/50 dark:bg-neutral-700 rounded-full overflow-hidden">
             <div
@@ -1268,11 +1269,59 @@ export default function AppOnboarding() {
                   <p className="text-[10px] text-muted-foreground mt-1">مستوى اللياقة</p>
                 </div>
               </div>
+
+              {/* Feature Peek: Nutrition */}
+              <div className="rounded-2xl border border-vp-navy/10 bg-gradient-to-b from-vp-navy/5 to-transparent p-4 animate-fade-in animate-delay-200">
+                <p className="text-sm font-semibold text-vp-navy mb-2">🍽️ نظام غذائي مبني على أرقامك</p>
+                <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                  احصل على سعرات وبروتين وماكروز مضبوطة على جسمك — جاهزة داخل التطبيق لتتبعها يومياً
+                </p>
+                <div className="rounded-xl overflow-hidden border border-vp-navy/10">
+                  <Image src="/6.png" alt="تتبع التغذية" width={600} height={300} className="w-full h-auto" />
+                </div>
+              </div>
             </div>
         )}
 
-        {/* Step 10: Workout Location (auto-advance) */}
+        {/* Step 10: AI Food Scanning Feature Peek */}
         {step === 10 && (
+            <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/10 flex items-center justify-center">
+                <span className="text-4xl">📸</span>
+              </div>
+              <h2 className="text-2xl font-bold mb-2">صوّر أكلك وخلّي الذكاء الاصطناعي يحسبلك</h2>
+              <p className="text-muted-foreground mb-6 leading-relaxed px-2">
+                بس صوّر طبقك أو أي أكل قدامك — والتطبيق يحسب السعرات والبروتين والماكروز تلقائياً. ما تحتاج تدوّر أو تدخل شي يدوي.
+              </p>
+
+              <div className="space-y-3 text-right px-2">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-green-500/5 border border-green-500/15">
+                  <span className="text-2xl">🍽️</span>
+                  <div>
+                    <p className="text-sm font-semibold">تعرف على أي وجبة</p>
+                    <p className="text-xs text-muted-foreground">من مطاعم، بيتي، أو حتى سناكات</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-500/5 border border-blue-500/15">
+                  <span className="text-2xl">⚡</span>
+                  <div>
+                    <p className="text-sm font-semibold">نتائج فورية ودقيقة</p>
+                    <p className="text-xs text-muted-foreground">سعرات، بروتين، كارب، ودهون في ثانية</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-purple-500/5 border border-purple-500/15">
+                  <span className="text-2xl">📊</span>
+                  <div>
+                    <p className="text-sm font-semibold">تتبع مستمر بدون تعب</p>
+                    <p className="text-xs text-muted-foreground">كل شي ينضاف لسجلك اليومي تلقائي</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+        )}
+
+        {/* Step 11: Workout Location (auto-advance) */}
+        {step === 11 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">أين تفضل التمرين؟</h2>
@@ -1298,8 +1347,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 11: Split + Training Style (MERGED) — button advance, disabled until both selected */}
-        {step === 11 && (
+        {/* Step 12: Split + Training Style (MERGED) — button advance, disabled until both selected */}
+        {step === 12 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-6 pt-8">
               <h2 className="text-2xl font-bold mb-2">تقسيم التمارين وأسلوبك</h2>
@@ -1352,8 +1401,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 12: Priority Muscles (multi-select, max 2) */}
-        {step === 12 && (
+        {/* Step 13: Priority Muscles (multi-select, max 2) */}
+        {step === 13 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">هل تريد التركيز على عضلات معينة؟</h2>
@@ -1399,8 +1448,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 13: Injuries (multi-select with clear) */}
-        {step === 13 && (
+        {/* Step 14: Injuries (multi-select with clear) */}
+        {step === 14 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">هل لديك أي إصابات؟</h2>
@@ -1437,8 +1486,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 14: IB3 — Training Preview */}
-        {step === 14 && (
+        {/* Step 15: IB3 — Training Preview */}
+        {step === 15 && (
             <div className="flex-1 flex flex-col justify-center animate-fade-in text-center">
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-vp-navy/10 flex items-center justify-center">
                 <Dumbbell className="size-10 text-vp-navy" />
@@ -1473,11 +1522,22 @@ export default function AppOnboarding() {
                   )}
                 </div>
               )}
+
+              {/* Feature Peek: Workouts */}
+              <div className="rounded-2xl border border-vp-navy/10 bg-gradient-to-b from-vp-navy/5 to-transparent p-4 mt-6 animate-fade-in animate-delay-200">
+                <p className="text-sm font-semibold text-vp-navy mb-2">🏋️ تمارين بفيديو HD ومتابعة لحظية</p>
+                <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                  كل تمرين معاه فيديو توضيحي عالي الجودة وعداد تكرارات مباشر — مثل مدرب شخصي في جيبك
+                </p>
+                <div className="rounded-xl overflow-hidden border border-vp-navy/10">
+                  <Image src="/4.png" alt="تمارين بفيديو" width={600} height={300} className="w-full h-auto" />
+                </div>
+              </div>
             </div>
         )}
 
-        {/* Step 15: Cardio Preference (auto-advance) */}
-        {step === 15 && (
+        {/* Step 16: Cardio Preference (auto-advance) */}
+        {step === 16 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">هل تريد كارديو في خطتك؟</h2>
@@ -1503,8 +1563,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 16: Challenges (button advance) */}
-        {step === 16 && (
+        {/* Step 17: Challenges (button advance) */}
+        {step === 17 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما الذي يمنعك من الوصول لهدفك؟</h2>
@@ -1530,8 +1590,8 @@ export default function AppOnboarding() {
           </div>
         )}
 
-        {/* Step 17: Motivation (single-select, auto-advance) */}
-        {step === 17 && (
+        {/* Step 18: Motivation (single-select, auto-advance) */}
+        {step === 18 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             <div className="text-center mb-8 pt-8">
               <h2 className="text-2xl font-bold mb-2">ما الذي يحفزك أكثر؟</h2>
@@ -1558,7 +1618,7 @@ export default function AppOnboarding() {
         )}
 
         {/* Step 18: IB4 — Full Reveal (processing → graph + plan + social proof) */}
-        {step === 18 && (
+        {step === 19 && (
           <div className="flex-1 flex flex-col animate-fade-in">
             {!revealReady ? (
               /* Processing Animation */
@@ -1669,7 +1729,7 @@ export default function AppOnboarding() {
         )}
 
         {/* Step 19: Payment */}
-        {step === 19 && (
+        {step === 20 && (
           <div className="flex-1 flex flex-col animate-fade-in overflow-auto -my-8 py-8">
             {/* Header */}
             <div className="text-center mb-4">
@@ -1873,7 +1933,7 @@ export default function AppOnboarding() {
         </div>{/* end scrollable content area */}
 
         {/* Fixed bottom button bar */}
-        {[0, 3, 5, 6, 7, 8, 9, 11, 12, 13, 14, 16, 18].includes(step) && (
+        {[0, 3, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 19].includes(step) && (
           <div className="shrink-0 pb-6 pt-3 bg-background">
             {step === 0 && (
               <>
@@ -1884,7 +1944,7 @@ export default function AppOnboarding() {
               </>
             )}
             {/* Simple next buttons for sliders and insight breaks */}
-            {(step === 3 || step === 5 || step === 6 || step === 7 || step === 9 || step === 14) && (
+            {(step === 3 || step === 5 || step === 6 || step === 7 || step === 9 || step === 10 || step === 15) && (
               <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
                 التالي
               </button>
@@ -1895,17 +1955,17 @@ export default function AppOnboarding() {
                 التالي
               </button>
             )}
-            {step === 11 && (
+            {step === 12 && (
               <button onClick={nextStep} disabled={!userData.splitPreference || !userData.trainingStyle} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg disabled:opacity-50">
                 التالي
               </button>
             )}
-            {step === 12 && (
+            {step === 13 && (
               <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
                 {userData.priorityMuscles.length === 0 ? 'تخطي' : 'التالي'}
               </button>
             )}
-            {step === 13 && (
+            {step === 14 && (
               <div className="space-y-3">
                 {userData.injuries.length > 0 && (
                   <button onClick={() => setUserData({ ...userData, injuries: [] })} className="w-full py-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-muted-foreground font-medium text-sm">
@@ -1917,13 +1977,13 @@ export default function AppOnboarding() {
                 </button>
               </div>
             )}
-            {step === 16 && (
+            {step === 17 && (
               <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
                 التالي
               </button>
             )}
             {/* IB4: only show button after reveal */}
-            {step === 18 && revealReady && (
+            {step === 19 && revealReady && (
               <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
                 التالي
               </button>
