@@ -1018,7 +1018,7 @@ export default function AppOnboarding() {
       <div className="max-w-md mx-auto px-6 h-[100dvh] flex flex-col">
 
         {/* Scrollable content area */}
-        <div className="flex-1 overflow-y-auto pt-16 pb-4 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto pt-16 pb-4 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
 
         {/* Step 0: Welcome */}
         {step === 0 && (
@@ -1818,7 +1818,7 @@ export default function AppOnboarding() {
 
         {/* Step 20: Payment Flow (3 sub-steps) */}
         {step === 20 && (
-          <div className="flex-1 flex flex-col animate-fade-in overflow-auto -my-8 py-8">
+          <div className="flex-1 flex flex-col animate-fade-in">
 
             {/* Sub-step 20a: Plan Selection */}
             {paymentStep === 'plan' && (
@@ -1887,13 +1887,6 @@ export default function AppOnboarding() {
                   )}
                 </div>
 
-                {/* Continue Button */}
-                <button
-                  onClick={() => setPaymentStep('email')}
-                  className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg shadow-lg"
-                >
-                  التالي
-                </button>
               </>
             )}
 
@@ -1912,14 +1905,6 @@ export default function AppOnboarding() {
                   )}
                 </div>
 
-                {/* Continue Button */}
-                <button
-                  onClick={() => { setPaymentError(''); setPaymentStep('pay') }}
-                  disabled={!validateEmail(userData.email)}
-                  className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg shadow-lg disabled:opacity-50"
-                >
-                  التالي
-                </button>
               </>
             )}
 
@@ -2026,7 +2011,7 @@ export default function AppOnboarding() {
         </div>{/* end scrollable content area */}
 
         {/* Fixed bottom button bar */}
-        {[0, 3, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 19].includes(step) && (
+        {([0, 3, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 19].includes(step) || (step === 20 && (paymentStep === 'plan' || paymentStep === 'email'))) && (
           <div className="shrink-0 pb-6 pt-3 bg-background">
             {step === 0 && (
               <>
@@ -2078,6 +2063,18 @@ export default function AppOnboarding() {
             {/* IB4: only show button after reveal */}
             {step === 19 && revealReady && (
               <button onClick={nextStep} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg">
+                التالي
+              </button>
+            )}
+            {/* Step 20a: Plan → Email */}
+            {step === 20 && paymentStep === 'plan' && (
+              <button onClick={() => setPaymentStep('email')} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg shadow-lg">
+                التالي
+              </button>
+            )}
+            {/* Step 20b: Email → Pay */}
+            {step === 20 && paymentStep === 'email' && (
+              <button onClick={() => { setPaymentError(''); setPaymentStep('pay') }} disabled={!validateEmail(userData.email)} className="w-full py-4 rounded-2xl bg-vp-navy text-white font-semibold text-lg shadow-lg disabled:opacity-50">
                 التالي
               </button>
             )}
