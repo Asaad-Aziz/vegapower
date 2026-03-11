@@ -431,9 +431,14 @@ export default function AppOnboarding() {
   const calculateCalories = () => {
     const { gender, weight, height, age, activityLevel, fitnessGoal, targetSpeed } = userData
 
+    // Clamp inputs to sane ranges
+    const safeWeight = Math.max(30, Math.min(weight, 250))
+    const safeHeight = Math.max(100, Math.min(height, 230))
+    const safeAge = Math.max(14, Math.min(age, 80))
+
     // BMR using Mifflin-St Jeor
     const s = gender === 'male' ? 5 : -161
-    const bmr = (10 * weight) + (6.25 * height) - (5 * age) + s
+    const bmr = (10 * safeWeight) + (6.25 * safeHeight) - (5 * safeAge) + s
 
     // Get activity multiplier
     const activityData = activityLevels.find(a => a.value === activityLevel)
@@ -442,35 +447,66 @@ export default function AppOnboarding() {
     let tdee = bmr * multiplier
 
     const goalData = fitnessGoals.find(g => g.value === fitnessGoal)
-    
-    if (goalData?.id === 'loseWeight') {
-      // For cutting: 1 kg/week ≈ 1100 kcal/day deficit (more aggressive is OK)
-      const cuttingAdjustment = targetSpeed * 1100
-      tdee -= cuttingAdjustment
-    } else if (goalData?.id === 'gainMuscle') {
-      // For bulking: Use moderate surplus (300-500 kcal) to minimize fat gain
-      // Realistic muscle gain is 0.25-0.5 kg/week, so we use smaller multiplier
-      // targetSpeed 0.5 = ~250 kcal surplus, targetSpeed 1.0 = ~500 kcal surplus
-      const bulkingAdjustment = targetSpeed * 500
-      tdee += bulkingAdjustment
-    }
-    // Maintain weight: no adjustment (tdee stays as is)
 
-    // Safety minimum: never below 1200
-    return Math.max(Math.round(tdee), 1200)
+    if (goalData?.id === 'loseWeight') {
+      // Cap deficit at 20-25% of TDEE to avoid absurd numbers
+      // targetSpeed 0.5 = 20% deficit, 1.0 = 25%, 1.5 = 25% (capped)
+      const deficitPercent = Math.min(0.15 + (targetSpeed * 0.1), 0.25)
+      tdee = tdee * (1 - deficitPercent)
+    } else if (goalData?.id === 'gainMuscle') {
+      // Surplus: 10-20% of TDEE
+      // targetSpeed 0.5 = ~10% surplus, 1.0 = ~15%, 1.5 = ~20%
+      const surplusPercent = Math.min(0.05 + (targetSpeed * 0.1), 0.20)
+      tdee = tdee * (1 + surplusPercent)
+    }
+    // Maintain weight: no adjustment
+
+    // Safety bounds: min 1200 for females, 1500 for males, max 4000
+    const minCalories = gender === 'male' ? 1500 : 1200
+    const maxCalories = 4000
+    return Math.max(Math.min(Math.round(tdee), maxCalories), minCalories)
   }
 
-  // Get macro percentages by goal
-  const getMacroPercentages = () => {
-    const goalData = fitnessGoals.find(g => g.value === userData.fitnessGoal)
-    switch (goalData?.id) {
-      case 'loseWeight':
-        return { protein: 40, carbs: 35, fat: 25 }
-      case 'gainMuscle':
-        return { protein: 30, carbs: 50, fat: 20 }
-      default: // maintainWeight
-        return { protein: 30, carbs: 40, fat: 30 }
+  // Calculate macros using body-weight-based protein, then fill remaining with carbs/fat
+  const calculateMacros = (calories: number) => {
+    const { gender, weight, fitnessGoal } = userData
+    const safeWeight = Math.max(30, Math.min(weight, 250))
+    const goalData = fitnessGoals.find(g => g.value === fitnessGoal)
+
+    // Protein: g/kg of body weight (evidence-based ranges)
+    let proteinPerKg: number
+    if (goalData?.id === 'loseWeight') {
+      proteinPerKg = 2.0 // higher protein preserves muscle during deficit
+    } else if (goalData?.id === 'gainMuscle') {
+      proteinPerKg = 1.8
+    } else {
+      proteinPerKg = 1.6
     }
+
+    let proteinGrams = Math.round(safeWeight * proteinPerKg)
+    let proteinCals = proteinGrams * 4
+
+    // Cap protein at 40% of total calories so we don't get absurd splits
+    if (proteinCals > calories * 0.4) {
+      proteinCals = Math.round(calories * 0.4)
+      proteinGrams = Math.round(proteinCals / 4)
+    }
+
+    // Fat: 25-30% of calories (minimum for hormonal health)
+    const fatPercent = goalData?.id === 'gainMuscle' ? 0.25 : 0.28
+    const fatCals = Math.round(calories * fatPercent)
+    const fatGrams = Math.round(fatCals / 9)
+
+    // Carbs: fill the remainder
+    const carbsCals = calories - proteinCals - fatCals
+    const carbsGrams = Math.max(Math.round(carbsCals / 4), 50) // minimum 50g carbs
+
+    // Calculate actual percentages for display
+    const proteinPercentage = Math.round((proteinGrams * 4 / calories) * 100)
+    const fatPercentage = Math.round((fatGrams * 9 / calories) * 100)
+    const carbsPercentage = 100 - proteinPercentage - fatPercentage
+
+    return { proteinGrams, carbsGrams, fatGrams, proteinPercentage, carbsPercentage, fatPercentage }
   }
 
   // Get program name
@@ -487,22 +523,18 @@ export default function AppOnboarding() {
   useEffect(() => {
     if (step === 19) {
       const calories = calculateCalories()
-      const macros = getMacroPercentages()
+      const macros = calculateMacros(calories)
       const programName = getProgramName()
-
-      const proteinGrams = Math.round((calories * macros.protein / 100) / 4)
-      const carbsGrams = Math.round((calories * macros.carbs / 100) / 4)
-      const fatGrams = Math.round((calories * macros.fat / 100) / 9)
 
       setUserData(prev => ({
         ...prev,
         calculatedCalories: calories,
-        proteinGrams,
-        carbsGrams,
-        fatGrams,
-        proteinPercentage: macros.protein,
-        carbsPercentage: macros.carbs,
-        fatPercentage: macros.fat,
+        proteinGrams: macros.proteinGrams,
+        carbsGrams: macros.carbsGrams,
+        fatGrams: macros.fatGrams,
+        proteinPercentage: macros.proteinPercentage,
+        carbsPercentage: macros.carbsPercentage,
+        fatPercentage: macros.fatPercentage,
         programName,
       }))
 
