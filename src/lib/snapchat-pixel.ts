@@ -53,6 +53,7 @@ export const snapPurchase = (params: {
   currency: string
   item_ids?: string[]
   transaction_id?: string
+  discount_code?: string
 }) => {
   if (typeof window !== 'undefined' && window.snaptr) {
     window.snaptr('track', 'PURCHASE', {
@@ -60,6 +61,7 @@ export const snapPurchase = (params: {
       currency: params.currency,
       ...(params.item_ids ? { item_ids: params.item_ids } : {}),
       ...(params.transaction_id ? { transaction_id: params.transaction_id } : {}),
+      ...(params.discount_code ? { description: params.discount_code } : {}),
     })
     console.log('Snapchat Pixel: PURCHASE event fired', params)
   } else {

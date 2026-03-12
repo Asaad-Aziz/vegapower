@@ -723,6 +723,58 @@ export async function POST(request: NextRequest) {
       console.error('Failed to store subscription:', insertError)
     }
 
+    // Extract coupon/discount from webhook payload and insert into orders for affiliate tracking
+    // StreamPay may include coupon info in various locations
+    const couponName = data?.coupon?.name || data?.coupons?.[0]?.name ||
+                       body?.coupon?.name || body?.coupons?.[0]?.name ||
+                       metadata?.discountCode || metadata?.coupon_name
+    let affiliateDiscountCode: string | null = null
+
+    if (couponName) {
+      // Look up the affiliate code that matches this StreamPay coupon name
+      const { data: affiliateMatch } = await supabase
+        .from('affiliate_codes')
+        .select('code')
+        .ilike('code', couponName.trim())
+        .eq('is_active', true)
+        .single()
+
+      affiliateDiscountCode = affiliateMatch?.code || couponName.toUpperCase().trim()
+      console.log('Webhook: Coupon detected:', { couponName, affiliateDiscountCode })
+    } else {
+      // Fallback: check if StreamPay coupon ID is stored for any affiliate
+      const couponId = data?.coupon?.id || data?.coupons?.[0]?.id ||
+                       body?.coupon?.id || body?.coupons?.[0]?.id
+      if (couponId) {
+        const { data: affiliateMatch } = await supabase
+          .from('affiliate_codes')
+          .select('code')
+          .eq('streampay_coupon_id', couponId)
+          .eq('is_active', true)
+          .single()
+
+        if (affiliateMatch) {
+          affiliateDiscountCode = affiliateMatch.code
+          console.log('Webhook: Matched coupon ID to affiliate:', { couponId, affiliateDiscountCode })
+        }
+      }
+    }
+
+    // Insert into orders table for affiliate tracking
+    const paidAmount = typeof amount === 'number' ? (amount > 1000 ? amount / 100 : amount) : (plan === 'yearly' ? 216 : 45)
+    const { error: orderError } = await supabase.from('orders').insert({
+      buyer_email: email,
+      amount_sar: paidAmount,
+      status: 'paid',
+      moyasar_payment_id: payment_id || `streampay_wh_${Date.now()}`,
+      discount_code: affiliateDiscountCode,
+    })
+    if (orderError && orderError.code !== '23505') {
+      console.error('Webhook: Failed to create order for affiliate tracking:', orderError)
+    } else {
+      console.log('Webhook: Order created for affiliate tracking:', { email, paidAmount, affiliateDiscountCode })
+    }
+
     // Send email as FALLBACK if user wasn't already processed by verify-payment
     // This ensures user gets their credentials even if the redirect fails
     if (!userAlreadyExists && firebaseUid) {
@@ -835,6 +887,7 @@ export async function POST(request: NextRequest) {
       value: amount || (plan === 'yearly' ? 216 : 45),
       contentId: `streampay_${plan}`,
       contentName: `Vega Power App - ${plan === 'yearly' ? 'سنوي' : 'شهري'}`,
+      discountCode: affiliateDiscountCode || undefined,
     }).catch(() => {})
 
     return NextResponse.json({

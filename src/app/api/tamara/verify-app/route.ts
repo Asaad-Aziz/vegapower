@@ -217,6 +217,7 @@ export async function POST(request: NextRequest) {
       value: paidAmount,
       contentId: 'tamara_yearly',
       contentName: 'Vega Power App - سنوي (تمارا)',
+      discountCode: discountCode || undefined,
     }).catch(() => {})
 
     return NextResponse.json({

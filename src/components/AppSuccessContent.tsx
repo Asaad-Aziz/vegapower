@@ -99,21 +99,24 @@ function AppSuccessInner() {
                 value: purchaseValue,
                 currency: 'SAR',
                 num_items: 1,
+                discount_code: discountCode || undefined,
               })
               snapPurchase({
                 price: purchaseValue,
                 currency: 'SAR',
                 item_ids: [productId],
                 transaction_id: sessionId || undefined,
+                discount_code: discountCode || undefined,
               })
               ttCompletePayment({
                 content_id: productId,
                 content_type: 'product',
                 value: purchaseValue,
                 currency: 'SAR',
+                discount_code: discountCode || undefined,
               })
               setHasTrackedPurchase(true)
-              console.log('StreamPay purchase tracking:', { productId, amount, plan })
+              console.log('StreamPay purchase tracking:', { productId, amount, plan, discountCode })
             }
           } else {
             setStatus('error')
@@ -183,18 +186,21 @@ function AppSuccessInner() {
                 value: purchaseValue,
                 currency: 'SAR',
                 num_items: 1,
+                discount_code: discountCode || undefined,
               })
               snapPurchase({
                 price: purchaseValue,
                 currency: 'SAR',
                 item_ids: ['tamara_yearly'],
                 transaction_id: orderRef,
+                discount_code: discountCode || undefined,
               })
               ttCompletePayment({
                 content_id: 'tamara_yearly',
                 content_type: 'product',
                 value: purchaseValue,
                 currency: 'SAR',
+                discount_code: discountCode || undefined,
               })
               setHasTrackedPurchase(true)
             }

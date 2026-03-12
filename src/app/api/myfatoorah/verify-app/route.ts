@@ -241,6 +241,7 @@ export async function POST(request: NextRequest) {
       value: paidAmount,
       contentId: plan === 'monthly' ? 'myfatoorah_monthly' : 'myfatoorah_yearly',
       contentName: `Vega Power App - ${plan === 'monthly' ? 'شهري' : 'سنوي'}`,
+      discountCode: discountCode || undefined,
     }).catch(() => {})
 
     return NextResponse.json({

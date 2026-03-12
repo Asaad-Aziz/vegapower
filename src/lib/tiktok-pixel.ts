@@ -40,6 +40,7 @@ export const ttCompletePayment = (params: {
   content_type: string
   value: number
   currency: string
+  discount_code?: string
 }) => {
   if (typeof window !== 'undefined' && window.ttq) {
     window.ttq.track('CompletePayment', {
@@ -47,6 +48,7 @@ export const ttCompletePayment = (params: {
       content_type: params.content_type,
       value: params.value,
       currency: params.currency,
+      ...(params.discount_code ? { query: params.discount_code } : {}),
     })
     console.log('TikTok Pixel: CompletePayment event fired', params)
   }

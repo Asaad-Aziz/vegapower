@@ -93,6 +93,7 @@ export const purchase = async (params: {
   value: number
   currency: string
   num_items: number
+  discount_code?: string
 }) => {
   const fbqReady = await waitForFbq()
   if (fbqReady && window.fbq) {

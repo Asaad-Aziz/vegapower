@@ -11,6 +11,7 @@ interface TikTokEventParams {
   currency?: string
   contentId: string
   contentName?: string
+  discountCode?: string
 }
 
 async function sendEvent(eventName: string, params: TikTokEventParams) {
@@ -45,6 +46,7 @@ async function sendEvent(eventName: string, params: TikTokEventParams) {
       ],
       value: params.value,
       currency: params.currency || 'SAR',
+      ...(params.discountCode ? { query: params.discountCode } : {}),
     },
   }
 
