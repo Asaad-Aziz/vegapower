@@ -724,39 +724,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract coupon/discount from webhook payload and insert into orders for affiliate tracking
-    // StreamPay may include coupon info in various locations
-    const couponName = data?.coupon?.name || data?.coupons?.[0]?.name ||
-                       body?.coupon?.name || body?.coupons?.[0]?.name ||
-                       metadata?.discountCode || metadata?.coupon_name
+    // StreamPay sends coupon info at: data.metadata.coupon_id + data.metadata.coupon_applied
+    const couponApplied = data?.metadata?.coupon_applied || metadata?.coupon_applied
+    const couponId = data?.metadata?.coupon_id || metadata?.coupon_id ||
+                     data?.coupon?.id || data?.coupons?.[0]?.id
     let affiliateDiscountCode: string | null = null
 
-    if (couponName) {
-      // Look up the affiliate code that matches this StreamPay coupon name
+    if (couponApplied && couponId) {
+      // Look up which affiliate code has this StreamPay coupon ID
       const { data: affiliateMatch } = await supabase
         .from('affiliate_codes')
         .select('code')
-        .ilike('code', couponName.trim())
+        .eq('streampay_coupon_id', couponId)
         .eq('is_active', true)
         .single()
 
-      affiliateDiscountCode = affiliateMatch?.code || couponName.toUpperCase().trim()
-      console.log('Webhook: Coupon detected:', { couponName, affiliateDiscountCode })
-    } else {
-      // Fallback: check if StreamPay coupon ID is stored for any affiliate
-      const couponId = data?.coupon?.id || data?.coupons?.[0]?.id ||
-                       body?.coupon?.id || body?.coupons?.[0]?.id
-      if (couponId) {
-        const { data: affiliateMatch } = await supabase
-          .from('affiliate_codes')
-          .select('code')
-          .eq('streampay_coupon_id', couponId)
-          .eq('is_active', true)
-          .single()
-
-        if (affiliateMatch) {
-          affiliateDiscountCode = affiliateMatch.code
-          console.log('Webhook: Matched coupon ID to affiliate:', { couponId, affiliateDiscountCode })
-        }
+      if (affiliateMatch) {
+        affiliateDiscountCode = affiliateMatch.code
+        console.log('Webhook: Matched coupon to affiliate:', { couponId, affiliateDiscountCode })
+      } else {
+        console.log('Webhook: Coupon applied but no matching affiliate found for coupon ID:', couponId)
       }
     }
 
