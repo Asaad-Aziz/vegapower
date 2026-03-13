@@ -316,13 +316,42 @@ export async function POST(request: NextRequest) {
 
         console.log('Subscription ID saved:', { firebaseUid, subscriptionId })
       } else {
-        console.log('WARNING: Could not save subscription ID:', { 
+        console.log('WARNING: Could not save subscription ID:', {
           reason: !firebaseUid ? 'User not found in Firebase' : 'No subscriptionId extracted',
-          email, 
-          consumerId, 
+          email,
+          consumerId,
           subscriptionId,
           firebaseUid,
         })
+      }
+
+      // Track affiliate coupon usage from mobile app
+      const couponApplied = data?.metadata?.coupon_applied
+      const couponIdFromMeta = data?.metadata?.coupon_id
+      if (couponApplied && couponIdFromMeta && userEmail) {
+        const { data: affiliateMatch } = await supabase
+          .from('affiliate_codes')
+          .select('code')
+          .eq('streampay_coupon_id', couponIdFromMeta)
+          .eq('is_active', true)
+          .single()
+
+        if (affiliateMatch) {
+          const { error: orderError } = await supabase.from('orders').insert({
+            buyer_email: userEmail,
+            amount_sar: 45,
+            status: 'paid',
+            moyasar_payment_id: `sp_sub_${subscriptionId || body?.entity_id || Date.now()}`,
+            discount_code: affiliateMatch.code,
+          })
+          if (orderError && orderError.code !== '23505') {
+            console.error('Webhook: Failed to create order for affiliate tracking:', orderError)
+          } else {
+            console.log('Webhook: Affiliate order tracked from SUBSCRIPTION_ACTIVATED:', { email: userEmail, code: affiliateMatch.code })
+          }
+        } else {
+          console.log('Webhook: Coupon applied but no matching affiliate for coupon ID:', couponIdFromMeta)
+        }
       }
 
       return NextResponse.json({
