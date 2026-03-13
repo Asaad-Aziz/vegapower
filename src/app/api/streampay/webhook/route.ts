@@ -331,15 +331,19 @@ export async function POST(request: NextRequest) {
       if (couponApplied && couponIdFromMeta && userEmail) {
         const { data: affiliateMatch } = await supabase
           .from('affiliate_codes')
-          .select('code')
+          .select('code, discount_percentage')
           .eq('streampay_coupon_id', couponIdFromMeta)
           .eq('is_active', true)
           .single()
 
         if (affiliateMatch) {
+          const planType = data?.metadata?.plan_type || 'monthly'
+          const basePrice = planType === 'yearly' ? 216 : planType === 'quarterly' ? 92 : 45
+          const paidAmount = Math.round(basePrice * (1 - (affiliateMatch.discount_percentage || 0) / 100))
+
           const { error: orderError } = await supabase.from('orders').insert({
             buyer_email: userEmail,
-            amount_sar: 45,
+            amount_sar: paidAmount,
             status: 'paid',
             moyasar_payment_id: `sp_sub_${subscriptionId || body?.entity_id || Date.now()}`,
             discount_code: affiliateMatch.code,
