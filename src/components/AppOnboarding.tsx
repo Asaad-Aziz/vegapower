@@ -16,8 +16,33 @@ import { initiateCheckout } from '@/lib/meta-pixel'
 import { snapStartCheckout } from '@/lib/snapchat-pixel'
 import { ttInitiateCheckout } from '@/lib/tiktok-pixel'
 import { signInWithApple, checkAppleSignInRedirect } from '@/lib/firebase-client'
+import posthog from 'posthog-js'
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20
+
+const STEP_NAMES: Record<number, string> = {
+  0: 'gender',
+  1: 'activity_level',
+  2: 'fitness_level',
+  3: 'insight_break_1',
+  4: 'body_metrics',
+  5: 'workout_location',
+  6: 'days_per_week',
+  7: 'split_preference',
+  8: 'training_style',
+  9: 'insight_break_2',
+  10: 'ai_scan',
+  11: 'cardio_preference',
+  12: 'target_speed',
+  13: 'challenges',
+  14: 'motivation',
+  15: 'insight_break_3',
+  16: 'email',
+  17: 'discount_code',
+  18: 'plan_selection',
+  19: 'insight_break_4',
+  20: 'payment',
+}
 
 const INSIGHT_BREAK_STEPS = new Set([3, 9, 10, 15, 19])
 const INPUT_STEP_COUNT = 16
@@ -355,6 +380,11 @@ export default function AppOnboarding() {
     }
   }, [searchParams, router])
 
+  // Track onboarding start
+  useEffect(() => {
+    posthog.capture('onboarding_started')
+  }, [])
+
   // Check for Apple Sign-In redirect result (when returning from Apple's auth page)
   useEffect(() => {
     const checkRedirect = async () => {
@@ -408,7 +438,17 @@ export default function AppOnboarding() {
   const progress = (getProgressIndex(step) / (INPUT_STEP_COUNT - 1)) * 100
 
   const nextStep = () => {
-    if (step < 20) setStep((step + 1) as Step)
+    if (step < 20) {
+      const from = STEP_NAMES[step] || `step_${step}`
+      const to = STEP_NAMES[step + 1] || `step_${step + 1}`
+      posthog.capture('onboarding_step_completed', {
+        step_number: step,
+        step_name: from,
+        next_step: to,
+        progress_percent: Math.round(((getProgressIndex(step) + 1) / INPUT_STEP_COUNT) * 100),
+      })
+      setStep((step + 1) as Step)
+    }
   }
 
   // Select and advance immediately

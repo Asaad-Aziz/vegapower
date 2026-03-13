@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { trackEvent } from '@/lib/analytics'
 import * as fbq from '@/lib/meta-pixel'
 import { snapPurchase } from '@/lib/snapchat-pixel'
+import posthog from 'posthog-js'
 
 interface VerificationResult {
   success: boolean
@@ -28,7 +29,13 @@ export default function SuccessContent() {
     purchaseTracked.current = true
     
     trackEvent('purchase')
-    
+    posthog.capture('purchase_completed', {
+      product_name: data.productTitle || 'Product',
+      product_id: data.productId || 'unknown',
+      amount: data.amount || 0,
+      currency: 'SAR',
+    })
+
     // Meta Pixel: Purchase Conversion Event (most important for ads!)
     fbq.purchase({
       content_name: data.productTitle || 'Product',

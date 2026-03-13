@@ -6,6 +6,7 @@ import Script from 'next/script'
 import ReactMarkdown from 'react-markdown'
 import { trackEvent } from '@/lib/analytics'
 import * as fbq from '@/lib/meta-pixel'
+import posthog from 'posthog-js'
 import type { Product, StoreSettings } from '@/types/database'
 
 interface StorePageProps {
@@ -87,6 +88,11 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
 
   useEffect(() => {
     trackEvent('page_view')
+    posthog.capture('product_viewed', {
+      product_id: product.id,
+      product_name: product.title,
+      price: product.price_sar,
+    })
     // Meta Pixel: ViewContent
     fbq.viewContent({
       content_name: product.title,
@@ -104,6 +110,11 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
 
   const handleBuyClick = () => {
     trackEvent('buy_click')
+    posthog.capture('checkout_started', {
+      product_id: product.id,
+      product_name: product.title,
+      price: product.price_sar,
+    })
     // Meta Pixel: InitiateCheckout
     fbq.initiateCheckout({
       content_ids: [product.id],

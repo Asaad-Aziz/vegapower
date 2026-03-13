@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { purchase } from '@/lib/meta-pixel'
 import { snapPurchase } from '@/lib/snapchat-pixel'
 import { ttCompletePayment } from '@/lib/tiktok-pixel'
+import posthog from 'posthog-js'
 
 function AppSuccessInner() {
   const searchParams = useSearchParams()
@@ -112,6 +113,12 @@ function AppSuccessInner() {
                 content_id: productId,
                 content_type: 'product',
                 value: purchaseValue,
+                currency: 'SAR',
+                discount_code: discountCode || undefined,
+              })
+              posthog.capture('app_subscription_completed', {
+                plan,
+                amount: purchaseValue,
                 currency: 'SAR',
                 discount_code: discountCode || undefined,
               })
