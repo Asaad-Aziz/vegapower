@@ -9,7 +9,8 @@
       "Bash(grep -r \"sk_\\\\|pk_\\\\|apiKey.*=\" /c/Users/Admin/Desktop/vpstan/src --include=\"*.ts\" --include=\"*.tsx\" 2>/dev/null | grep -v \"process.env\" | grep -v \"node_modules\" | head -20)",
       "Bash(grep -r \"gtag\\\\|Google Analytics\\\\|google-analytics\\\\|GA_\\\\|ANALYTICS\" /c/Users/Admin/Desktop/vpstan/src --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.js\" --include=\"*.json\" 2>/dev/null | head -20)",
       "WebFetch(domain:posthog.com)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(cd C:/Users/Admin/Desktop/vpstan && npx next build 2>&1 | tail -15)"
     ]
   }
 }

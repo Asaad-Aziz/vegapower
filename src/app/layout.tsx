@@ -4,8 +4,6 @@ import "./globals.css";
 import MetaPixel from "@/components/MetaPixel";
 import SnapPixel from "@/components/SnapPixel";
 import TikTokPixel from "@/components/TikTokPixel";
-import { PostHogProvider } from "@/lib/posthog";
-import PostHogPageView from "@/components/PostHogPageView";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -46,13 +44,10 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={inter.variable}>
       <body className="antialiased">
-        <PostHogProvider>
-          <PostHogPageView />
-          <MetaPixel />
-          <SnapPixel />
-          <TikTokPixel />
-          {children}
-        </PostHogProvider>
+        <MetaPixel />
+        <SnapPixel />
+        <TikTokPixel />
+        {children}
       </body>
     </html>
   );
