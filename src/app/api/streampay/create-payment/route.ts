@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import StreamSDK from '@streamsdk/typescript'
+import { createServerClient } from '@/lib/supabase'
 
 // Plan configurations with optional pre-made product IDs from StreamPay dashboard
 const plans = {
@@ -272,6 +273,24 @@ export async function POST(request: NextRequest) {
       plan,
       email,
     })
+
+    // Track abandoned checkout for recovery email automation
+    try {
+      const supabase = createServerClient()
+      await supabase.from('abandoned_checkouts').insert({
+        email,
+        plan,
+        amount: price,
+        session_id: sessionId,
+        consumer_id: result.consumerId || null,
+        converted: false,
+        recovery_email_sent: false,
+      })
+      console.log('Abandoned checkout tracked for:', email)
+    } catch (trackErr) {
+      // Don't fail the payment flow if tracking fails
+      console.log('Abandoned checkout tracking skipped:', trackErr)
+    }
 
     return NextResponse.json({
       success: true,

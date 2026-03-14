@@ -618,6 +618,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, alreadyProcessed: true })
     }
 
+    // Mark abandoned checkout as converted
+    try {
+      await supabase.from('abandoned_checkouts')
+        .update({ converted: true, converted_at: new Date().toISOString() })
+        .eq('email', email)
+        .eq('converted', false)
+      console.log('Abandoned checkout marked as converted for:', email)
+    } catch (acErr) {
+      console.log('Abandoned checkout update skipped:', acErr)
+    }
+
     // Also check by email if recently processed (within last 5 minutes)
     // This prevents double emails when both verify-payment and webhook fire
     const { data: recentByEmail } = await supabase

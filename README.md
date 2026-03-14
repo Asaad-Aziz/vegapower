@@ -177,5 +177,5 @@ MIT
 ## deploying
 
 git add -A
-git commit -m "affiliate"
+git commit -m "discountCode"
 git push origin master
