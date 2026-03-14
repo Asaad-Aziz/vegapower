@@ -11,6 +11,7 @@ const planPrices: Record<string, number> = {
 
 const DISCOUNT_CODE = 'VP20'
 const DISCOUNT_PERCENT = 20
+const MAX_PAGES = 10 // Safety limit — max 10 pages (1000 items)
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,58 +30,50 @@ export async function POST(request: NextRequest) {
     const client = StreamSDK.init(apiKey)
     const supabase = createServerClient()
 
-    // Step 1: Fetch ALL consumers from StreamPay (paginate through every page)
+    // Step 1: Fetch consumers from StreamPay (with safety limit)
     const allConsumers: { id: string; email?: string | null; name?: string; created_at: string }[] = []
-    let page = 1
+    let consumerPages = 0
 
-    while (true) {
-      const consumersPage = await client.listConsumers({ page, size: 100 })
-      const items = consumersPage.data || []
-      console.log(`Consumers page ${page}: got ${items.length} items`)
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const res = await client.listConsumers({ page, size: 100 })
+      const items = res.data || []
+      consumerPages = page
       if (items.length === 0) break
       allConsumers.push(...items)
-      // Always try next page — some APIs return fewer than requested
-      const totalPages = (consumersPage as { pagination?: { total_pages?: number } }).pagination?.total_pages
-      if (totalPages && page >= totalPages) break
-      if (items.length < 10) break // If less than minimum page size, we're done
-      page++
+      // Check if we've reached the last page
+      const pagination = (res as { pagination?: { total_pages?: number } }).pagination
+      if (pagination?.total_pages && page >= pagination.total_pages) break
     }
-    console.log(`Total consumers fetched: ${allConsumers.length}`)
 
-    // Step 2: Fetch ALL invoices from StreamPay
+    // Step 2: Fetch invoices from StreamPay (with safety limit)
     const paidConsumerIds = new Set<string>()
-    page = 1
+    let invoicePages = 0
 
-    while (true) {
-      const invoicesPage = await client.listInvoices({ page, size: 100 })
-      const items = invoicesPage.data || []
-      console.log(`Invoices page ${page}: got ${items.length} items`)
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const res = await client.listInvoices({ page, size: 100 })
+      const items = res.data || []
+      invoicePages = page
       if (items.length === 0) break
       for (const invoice of items) {
         if (invoice.organization_consumer_id) {
           paidConsumerIds.add(invoice.organization_consumer_id)
         }
       }
-      const totalPages = (invoicesPage as { pagination?: { total_pages?: number } }).pagination?.total_pages
-      if (totalPages && page >= totalPages) break
-      if (items.length < 10) break
-      page++
+      const pagination = (res as { pagination?: { total_pages?: number } }).pagination
+      if (pagination?.total_pages && page >= pagination.total_pages) break
     }
-    console.log(`Total paid consumer IDs: ${paidConsumerIds.size}`)
 
-    // Step 3: Filter consumers who have email but no invoice (didn't pay)
+    // Step 3: Filter — has email, no invoice, within last month
     const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     const abandonedConsumers = allConsumers.filter(c => {
       if (!c.email) return false
       if (paidConsumerIds.has(c.id)) return false
-      // Only from the past week
       const createdAt = new Date(c.created_at)
       if (createdAt < oneMonthAgo) return false
       return true
     })
 
-    // Step 4: Exclude anyone who already has an active subscription in our DB
-    const emails = abandonedConsumers.map(c => c.email!.toLowerCase())
+    // Step 4: Exclude active subscribers
     const { data: activeSubscriptions } = await supabase
       .from('app_subscriptions')
       .select('email')
@@ -90,7 +83,7 @@ export async function POST(request: NextRequest) {
       (activeSubscriptions || []).map(s => s.email?.toLowerCase()).filter(Boolean)
     )
 
-    // Step 5: Exclude anyone already sent a recovery email
+    // Step 5: Exclude already emailed
     const { data: existingAbandoned } = await supabase
       .from('abandoned_checkouts')
       .select('email')
@@ -100,15 +93,13 @@ export async function POST(request: NextRequest) {
       (existingAbandoned || []).map(a => a.email?.toLowerCase()).filter(Boolean)
     )
 
-    const toEmail = abandonedConsumers.filter(c => {
-      const emailLower = c.email!.toLowerCase()
-      return !convertedEmails.has(emailLower) && !alreadyEmailed.has(emailLower)
-    })
-
     // Deduplicate by email
-    const uniqueEmails = new Map<string, typeof toEmail[0]>()
-    for (const c of toEmail) {
-      uniqueEmails.set(c.email!.toLowerCase(), c)
+    const uniqueEmails = new Map<string, typeof abandonedConsumers[0]>()
+    for (const c of abandonedConsumers) {
+      const emailLower = c.email!.toLowerCase()
+      if (!convertedEmails.has(emailLower) && !alreadyEmailed.has(emailLower)) {
+        uniqueEmails.set(emailLower, c)
+      }
     }
     const finalList = [...uniqueEmails.values()]
 
@@ -116,12 +107,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         dryRun: true,
         totalConsumers: allConsumers.length,
+        consumerPages,
         totalWithInvoice: paidConsumerIds.size,
+        invoicePages,
         totalAbandoned: abandonedConsumers.length,
         alreadyEmailed: alreadyEmailed.size,
         excludedConverted: convertedEmails.size,
         toEmail: finalList.length,
-        pagesScanned: page,
         emails: finalList.map(c => ({ email: c.email, created_at: c.created_at })),
         message: 'Set dryRun: false to actually send emails',
       })
@@ -132,11 +124,10 @@ export async function POST(request: NextRequest) {
     let failed = 0
 
     for (const consumer of finalList) {
-      const plan = 'monthly' // Default plan for backfill
+      const plan = 'monthly'
       const originalPrice = planPrices[plan]
       const discountedPrice = Math.round(originalPrice * (1 - DISCOUNT_PERCENT / 100))
 
-      // Track in abandoned_checkouts
       await supabase.from('abandoned_checkouts').insert({
         email: consumer.email,
         plan,
@@ -170,7 +161,6 @@ export async function POST(request: NextRequest) {
         failed++
       }
 
-      // Small delay to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 200))
     }
 
