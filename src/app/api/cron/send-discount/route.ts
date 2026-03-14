@@ -28,42 +28,40 @@ export async function POST(request: NextRequest) {
     const originalPrice = planPrices[plan] || planPrices.monthly
     const discountedPrice = Math.round(originalPrice * (1 - DISCOUNT_PERCENT / 100))
 
-    let sent = 0
-    let failed = 0
-    const results: { email: string; success: boolean }[] = []
-
-    for (const email of emails) {
-      const emailSent = await sendAbandonedCartEmail({
-        to: email,
-        plan,
-        discountCode: DISCOUNT_CODE,
-        discountPercent: DISCOUNT_PERCENT,
-        originalPrice,
-        discountedPrice,
-      })
-
-      if (emailSent) {
-        // Track in abandoned_checkouts
-        await supabase.from('abandoned_checkouts').insert({
-          email,
+    // Send all emails in parallel (no delay) to avoid timeout
+    const emailPromises = emails.map(async (email: string) => {
+      try {
+        const emailSent = await sendAbandonedCartEmail({
+          to: email.trim(),
           plan,
-          amount: originalPrice,
-          session_id: `manual_${Date.now()}`,
-          converted: false,
-          recovery_email_sent: true,
-          recovery_email_sent_at: new Date().toISOString(),
-          discount_code: DISCOUNT_CODE,
+          discountCode: DISCOUNT_CODE,
+          discountPercent: DISCOUNT_PERCENT,
+          originalPrice,
+          discountedPrice,
         })
-        sent++
-        results.push({ email, success: true })
-      } else {
-        failed++
-        results.push({ email, success: false })
-      }
 
-      // Small delay between emails
-      await new Promise(resolve => setTimeout(resolve, 200))
-    }
+        if (emailSent) {
+          await supabase.from('abandoned_checkouts').insert({
+            email: email.trim(),
+            plan,
+            amount: originalPrice,
+            session_id: `manual_${Date.now()}`,
+            converted: false,
+            recovery_email_sent: true,
+            recovery_email_sent_at: new Date().toISOString(),
+            discount_code: DISCOUNT_CODE,
+          })
+          return { email, success: true }
+        }
+        return { email, success: false }
+      } catch {
+        return { email, success: false }
+      }
+    })
+
+    const results = await Promise.all(emailPromises)
+    const sent = results.filter(r => r.success).length
+    const failed = results.filter(r => !r.success).length
 
     return NextResponse.json({ sent, failed, total: emails.length, results })
   } catch (error) {
