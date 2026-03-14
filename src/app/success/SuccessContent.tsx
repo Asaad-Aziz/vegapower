@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { trackEvent } from '@/lib/analytics'
 import * as fbq from '@/lib/meta-pixel'
 import { snapPurchase } from '@/lib/snapchat-pixel'
+import { ttCompletePayment } from '@/lib/tiktok-pixel'
 import posthog from 'posthog-js'
 
 interface VerificationResult {
@@ -50,6 +51,13 @@ export default function SuccessContent() {
       price: data.amount || 0,
       currency: 'SAR',
       item_ids: [data.productId || 'unknown'],
+    })
+    // TikTok Pixel: CompletePayment Event
+    ttCompletePayment({
+      content_id: data.productId || 'unknown',
+      content_type: 'product',
+      value: data.amount || 0,
+      currency: 'SAR',
     })
   }
 

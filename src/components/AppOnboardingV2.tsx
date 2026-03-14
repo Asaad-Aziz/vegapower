@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { initiateCheckout } from '@/lib/meta-pixel'
 import { snapStartCheckout } from '@/lib/snapchat-pixel'
-import { ttInitiateCheckout } from '@/lib/tiktok-pixel'
+import { ttInitiateCheckout, ttIdentify } from '@/lib/tiktok-pixel'
 import posthog from 'posthog-js'
 
 // ─── Config ──────────────────────────────────────────────────────────
@@ -986,6 +986,7 @@ export default function AppOnboardingV2() {
                 setTimeout(() => setShowDomainSuggestions(false), 150)
                 if (validateEmail(email)) {
                   posthog.capture('onboarding_v2_email_entered')
+                  ttIdentify(email)
                 }
               }}
               onFocus={() => {
