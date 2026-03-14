@@ -9,8 +9,8 @@ const planPrices: Record<string, number> = {
   yearly: 187,
 }
 
-const DISCOUNT_CODE = 'VP10'
-const DISCOUNT_PERCENT = 10
+const DISCOUNT_CODE = 'VP20'
+const DISCOUNT_PERCENT = 20
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,40 +29,44 @@ export async function POST(request: NextRequest) {
     const client = StreamSDK.init(apiKey)
     const supabase = createServerClient()
 
-    // Step 1: Fetch all consumers from StreamPay (paginate)
+    // Step 1: Fetch ALL consumers from StreamPay (paginate through every page)
     const allConsumers: { id: string; email?: string | null; name?: string; created_at: string }[] = []
     let page = 1
-    const pageSize = 100
 
     while (true) {
-      const consumersPage = await client.listConsumers({ page, size: pageSize })
-      if (consumersPage.data && consumersPage.data.length > 0) {
-        allConsumers.push(...consumersPage.data)
-        if (consumersPage.data.length < pageSize) break
-        page++
-      } else {
-        break
-      }
+      const consumersPage = await client.listConsumers({ page, size: 100 })
+      const items = consumersPage.data || []
+      console.log(`Consumers page ${page}: got ${items.length} items`)
+      if (items.length === 0) break
+      allConsumers.push(...items)
+      // Always try next page — some APIs return fewer than requested
+      const totalPages = (consumersPage as { pagination?: { total_pages?: number } }).pagination?.total_pages
+      if (totalPages && page >= totalPages) break
+      if (items.length < 10) break // If less than minimum page size, we're done
+      page++
     }
+    console.log(`Total consumers fetched: ${allConsumers.length}`)
 
-    // Step 2: Fetch all invoices from StreamPay (these are the ones who paid)
+    // Step 2: Fetch ALL invoices from StreamPay
     const paidConsumerIds = new Set<string>()
     page = 1
 
     while (true) {
-      const invoicesPage = await client.listInvoices({ page, size: pageSize })
-      if (invoicesPage.data && invoicesPage.data.length > 0) {
-        for (const invoice of invoicesPage.data) {
-          if (invoice.organization_consumer_id) {
-            paidConsumerIds.add(invoice.organization_consumer_id)
-          }
+      const invoicesPage = await client.listInvoices({ page, size: 100 })
+      const items = invoicesPage.data || []
+      console.log(`Invoices page ${page}: got ${items.length} items`)
+      if (items.length === 0) break
+      for (const invoice of items) {
+        if (invoice.organization_consumer_id) {
+          paidConsumerIds.add(invoice.organization_consumer_id)
         }
-        if (invoicesPage.data.length < pageSize) break
-        page++
-      } else {
-        break
       }
+      const totalPages = (invoicesPage as { pagination?: { total_pages?: number } }).pagination?.total_pages
+      if (totalPages && page >= totalPages) break
+      if (items.length < 10) break
+      page++
     }
+    console.log(`Total paid consumer IDs: ${paidConsumerIds.size}`)
 
     // Step 3: Filter consumers who have email but no invoice (didn't pay)
     const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
@@ -117,6 +121,7 @@ export async function POST(request: NextRequest) {
         alreadyEmailed: alreadyEmailed.size,
         excludedConverted: convertedEmails.size,
         toEmail: finalList.length,
+        pagesScanned: page,
         emails: finalList.map(c => ({ email: c.email, created_at: c.created_at })),
         message: 'Set dryRun: false to actually send emails',
       })

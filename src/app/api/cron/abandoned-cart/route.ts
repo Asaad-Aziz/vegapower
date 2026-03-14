@@ -9,8 +9,8 @@ const planPrices: Record<string, number> = {
   yearly: 187,
 }
 
-const DISCOUNT_CODE = 'VP10'
-const DISCOUNT_PERCENT = 10
+const DISCOUNT_CODE = 'VP20'
+const DISCOUNT_PERCENT = 20
 const DELAY_MINUTES = 15
 
 export async function GET() {
