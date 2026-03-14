@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Background -->
+  <rect width="120" height="120" rx="60" fill="#F0E6D3"/>
+  <!-- Face -->
+  <circle cx="60" cy="58" r="32" fill="#D4A574"/>
+  <!-- Hair -->
+  <path d="M28 50C28 32 42 20 60 20C78 20 92 32 92 50V52C92 52 85 40 60 40C35 40 28 52 28 52V50Z" fill="#2C1810"/>
+  <path d="M28 50V56C28 56 30 48 60 48C90 48 92 56 92 56V50" fill="#2C1810"/>
+  <!-- Eyes -->
+  <ellipse cx="47" cy="56" rx="3" ry="3.5" fill="#1A1A1A"/>
+  <ellipse cx="73" cy="56" rx="3" ry="3.5" fill="#1A1A1A"/>
+  <!-- Eyebrows -->
+  <path d="M40 49C42 47 47 46 51 48" stroke="#2C1810" stroke-width="2" stroke-linecap="round"/>
+  <path d="M80 49C78 47 73 46 69 48" stroke="#2C1810" stroke-width="2" stroke-linecap="round"/>
+  <!-- Smile -->
+  <path d="M50 68C53 72 67 72 70 68" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+  <!-- Beard stubble -->
+  <path d="M42 72C42 72 48 80 60 80C72 80 78 72 78 72" stroke="#3D2B1F" stroke-width="1" stroke-linecap="round" opacity="0.3"/>
+</svg>

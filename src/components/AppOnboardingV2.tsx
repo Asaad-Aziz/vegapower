@@ -475,16 +475,30 @@ export default function AppOnboardingV2() {
             تمارين مخصصة، تغذية ذكية، وتتبع تقدمك — كل شيء بالذكاء الاصطناعي
           </p>
 
+          {/* Hero app image */}
+          <div className="mb-8 w-full max-w-md mx-auto">
+            <Image
+              src="/hero51.png"
+              alt="تطبيق فيقا باور - لوحة التحكم والتمارين والتغذية"
+              width={800}
+              height={500}
+              className="w-full h-auto"
+              priority
+            />
+          </div>
+
           {/* Social proof counter */}
           <div className="flex flex-col items-center gap-3 mb-10">
             <div className="flex -space-x-2.5 rtl:space-x-reverse">
-              {['bg-vp-navy', 'bg-vp-navy/80', 'bg-vp-navy/60', 'bg-vp-navy/70', 'bg-vp-navy/90'].map((color, i) => (
-                <div
+              {['/avatars/a1.svg', '/avatars/a2.svg', '/avatars/a3.svg', '/avatars/a4.svg', '/avatars/a5.svg'].map((src, i) => (
+                <Image
                   key={i}
-                  className={`w-10 h-10 rounded-full ${color} border-[3px] border-[#FAFAF8] flex items-center justify-center text-white text-xs font-bold shadow-sm`}
-                >
-                  {['A', 'S', 'M', 'N', 'K'][i]}
-                </div>
+                  src={src}
+                  alt=""
+                  width={40}
+                  height={40}
+                  className="w-10 h-10 rounded-full border-[3px] border-[#FAFAF8] shadow-sm bg-vp-navy/5"
+                />
               ))}
             </div>
             <p className="text-sm text-vp-navy/50 font-medium">
@@ -518,28 +532,51 @@ export default function AppOnboardingV2() {
           </p>
 
           <div className="space-y-4">
-            {/* AI Meal Scanner — killer feature */}
-            <div className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl p-6 relative overflow-hidden">
-              <div className="absolute top-3 left-3">
+            {/* AI Meal Scanner — killer feature with screenshot */}
+            <div className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl relative overflow-hidden">
+              <div className="absolute top-3 left-3 z-10">
                 <span className="bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">الأكثر طلباً</span>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-vp-navy/10 flex items-center justify-center mb-4">
-                <Camera className="w-6 h-6 text-vp-navy" />
+              <div className="p-6 pb-0">
+                <div className="w-12 h-12 rounded-xl bg-vp-navy/10 flex items-center justify-center mb-4">
+                  <Camera className="w-6 h-6 text-vp-navy" />
+                </div>
+                <h3 className="text-lg font-bold mb-1.5">ماسح الوجبات بالذكاء الاصطناعي</h3>
+                <p className="text-sm text-vp-navy/55 leading-relaxed mb-4">صوّر وجبتك وخلّ الذكاء الاصطناعي يحسب السعرات والماكروز في ثانية. بدون إدخال يدوي، بدون تخمين.</p>
               </div>
-              <h3 className="text-lg font-bold mb-1.5">ماسح الوجبات بالذكاء الاصطناعي</h3>
-              <p className="text-sm text-vp-navy/55 leading-relaxed">صوّر وجبتك وخلّ الذكاء الاصطناعي يحسب السعرات والماكروز في ثانية. بدون إدخال يدوي، بدون تخمين.</p>
+              <div className="px-6">
+                <Image
+                  src="/6.png"
+                  alt="شاشة تتبع التغذية والسعرات"
+                  width={400}
+                  height={500}
+                  className="w-[70%] mx-auto rounded-t-2xl"
+                />
+              </div>
             </div>
 
-            {/* Two cards row */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl p-5">
+            {/* Workout program card with screenshot */}
+            <div className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl overflow-hidden">
+              <div className="p-5 pb-0">
                 <div className="w-10 h-10 rounded-xl bg-vp-navy/10 flex items-center justify-center mb-3">
                   <Brain className="w-5 h-5 text-vp-navy/80" />
                 </div>
                 <h3 className="text-sm font-bold mb-1">برنامج AI يتطور معك</h3>
-                <p className="text-xs text-vp-navy/45 leading-relaxed">مو برنامج ثابت — يتغير ويتطور كل ما تتقدم</p>
+                <p className="text-xs text-vp-navy/45 leading-relaxed mb-3">مو برنامج ثابت — يتغير ويتطور كل ما تتقدم</p>
               </div>
+              <div className="px-5">
+                <Image
+                  src="/4.png"
+                  alt="شاشة برنامج التمارين"
+                  width={400}
+                  height={500}
+                  className="w-[65%] mx-auto rounded-t-2xl"
+                />
+              </div>
+            </div>
 
+            {/* Two cards row */}
+            <div className="grid grid-cols-2 gap-4">
               <div className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl p-5">
                 <div className="w-10 h-10 rounded-xl bg-vp-navy/10 flex items-center justify-center mb-3">
                   <BarChart3 className="w-5 h-5 text-vp-navy/80" />
@@ -547,10 +584,7 @@ export default function AppOnboardingV2() {
                 <h3 className="text-sm font-bold mb-1">تتبع أوزانك وتقدمك</h3>
                 <p className="text-xs text-vp-navy/45 leading-relaxed">سجّل أوزانك في الجيم وشوف تطورك بالأرقام</p>
               </div>
-            </div>
 
-            {/* Two more cards */}
-            <div className="grid grid-cols-2 gap-4">
               <div className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl p-5">
                 <div className="w-10 h-10 rounded-xl bg-vp-navy/10 flex items-center justify-center mb-3">
                   <Target className="w-5 h-5 text-vp-navy/80" />
@@ -558,13 +592,25 @@ export default function AppOnboardingV2() {
                 <h3 className="text-sm font-bold mb-1">سعرات وماكروز دقيقة</h3>
                 <p className="text-xs text-vp-navy/45 leading-relaxed">حساب مخصص لجسمك وهدفك بالضبط</p>
               </div>
+            </div>
 
-              <div className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl p-5">
+            {/* Community card with screenshot */}
+            <div className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl overflow-hidden">
+              <div className="p-5 pb-0">
                 <div className="w-10 h-10 rounded-xl bg-vp-navy/10 flex items-center justify-center mb-3">
                   <Users className="w-5 h-5 text-vp-navy/80" />
                 </div>
                 <h3 className="text-sm font-bold mb-1">مجتمع يحفزك</h3>
-                <p className="text-xs text-vp-navy/45 leading-relaxed">+28,900 متدرب يشاركونك الرحلة والتحفيز</p>
+                <p className="text-xs text-vp-navy/45 leading-relaxed mb-3">+28,900 متدرب يشاركونك الرحلة والتحفيز</p>
+              </div>
+              <div className="px-5">
+                <Image
+                  src="/5.png"
+                  alt="شاشة المجتمع والخريطة"
+                  width={400}
+                  height={500}
+                  className="w-[65%] mx-auto rounded-t-2xl"
+                />
               </div>
             </div>
           </div>
@@ -1070,10 +1116,10 @@ export default function AppOnboardingV2() {
 
           <div className="space-y-4">
             {[
-              { text: 'التطبيق غير حياتي كلياً. خسيت 12 كيلو في 3 أشهر بدون حرمان — فقط التزمت بالسعرات اللي حسبها لي التطبيق', name: 'سارة', initial: 'س', result: '-12 كيلو', period: '3 أشهر' },
-              { text: 'ماسح الوجبات شيء خرافي! أصوّر الأكل وبثانية يحسب لي كل شيء. ما عمري حسبت سعراتي بهالسهولة', name: 'محمد', initial: 'م', result: '+8 كيلو عضل', period: '4 أشهر' },
-              { text: 'جربت تطبيقات كثيرة بس هذا أول تطبيق يعطيني برنامج يتغير معي كل أسبوع. المجتمع والدعم شيء مختلف', name: 'نورة', initial: 'ن', result: '-7 كيلو', period: 'شهرين' },
-              { text: 'أنا مبتدئ وكنت ضايع وين أبدأ. التطبيق صمم لي برنامج كامل من الصفر. الحين صار عندي روتين ثابت', name: 'عبدالله', initial: 'ع', result: 'من 0 لـ 5 أيام/أسبوع', period: '6 أسابيع' },
+              { text: 'التطبيق غير حياتي كلياً. خسيت 12 كيلو في 3 أشهر بدون حرمان — فقط التزمت بالسعرات اللي حسبها لي التطبيق', name: 'سارة', avatar: '/avatars/a3.svg', result: '-12 كيلو', period: '3 أشهر' },
+              { text: 'ماسح الوجبات شيء خرافي! أصوّر الأكل وبثانية يحسب لي كل شيء. ما عمري حسبت سعراتي بهالسهولة', name: 'محمد', avatar: '/avatars/a1.svg', result: '+8 كيلو عضل', period: '4 أشهر' },
+              { text: 'جربت تطبيقات كثيرة بس هذا أول تطبيق يعطيني برنامج يتغير معي كل أسبوع. المجتمع والدعم شيء مختلف', name: 'نورة', avatar: '/avatars/a4.svg', result: '-7 كيلو', period: 'شهرين' },
+              { text: 'أنا مبتدئ وكنت ضايع وين أبدأ. التطبيق صمم لي برنامج كامل من الصفر. الحين صار عندي روتين ثابت', name: 'عبدالله', avatar: '/avatars/a2.svg', result: 'من 0 لـ 5 أيام/أسبوع', period: '6 أسابيع' },
             ].map((t, i) => (
               <div key={i} className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl p-6">
                 {/* Result badge */}
@@ -1089,9 +1135,13 @@ export default function AppOnboardingV2() {
                 </div>
                 <p className="text-sm text-vp-navy/70 mb-4 leading-relaxed">&ldquo;{t.text}&rdquo;</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-vp-navy text-white flex items-center justify-center font-bold text-sm">
-                    {t.initial}
-                  </div>
+                  <Image
+                    src={t.avatar}
+                    alt={t.name}
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 rounded-full bg-vp-navy/5"
+                  />
                   <span className="text-sm font-semibold text-vp-navy/60">{t.name}</span>
                 </div>
               </div>

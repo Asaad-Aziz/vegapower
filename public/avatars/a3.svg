@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Background -->
+  <rect width="120" height="120" rx="60" fill="#F5E6D8"/>
+  <!-- Face -->
+  <circle cx="60" cy="58" r="32" fill="#E8B88A"/>
+  <!-- Hair (hijab/long style) -->
+  <path d="M24 52C24 30 40 14 60 14C80 14 96 30 96 52V70C96 70 90 58 60 46C30 58 24 70 24 70V52Z" fill="#2D2D2D"/>
+  <ellipse cx="60" cy="14" rx="20" ry="6" fill="#2D2D2D"/>
+  <!-- Hijab wrap -->
+  <path d="M24 52C24 52 22 60 22 70C22 80 28 92 28 92" stroke="#2D2D2D" stroke-width="8" stroke-linecap="round"/>
+  <path d="M96 52C96 52 98 60 98 70C98 80 92 92 92 92" stroke="#2D2D2D" stroke-width="8" stroke-linecap="round"/>
+  <!-- Eyes -->
+  <ellipse cx="47" cy="56" rx="2.5" ry="3" fill="#1A1A1A"/>
+  <ellipse cx="73" cy="56" rx="2.5" ry="3" fill="#1A1A1A"/>
+  <!-- Eyelashes -->
+  <path d="M43 52C44 51 46 51 48 52" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M77 52C76 51 74 51 72 52" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Smile -->
+  <path d="M51 67C54 71 66 71 69 67" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+  <!-- Blush -->
+  <circle cx="40" cy="64" r="5" fill="#E8927C" opacity="0.25"/>
+  <circle cx="80" cy="64" r="5" fill="#E8927C" opacity="0.25"/>
+</svg>
