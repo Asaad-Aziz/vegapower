@@ -137,36 +137,56 @@ export async function sendAbandonedCartEmail({
             <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 16px; padding: 40px; border: 1px solid rgba(0,0,0,0.06);">
 
               <div style="text-align: center; margin-bottom: 32px;">
-                <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
-                  <span style="color: white; font-size: 28px;">🔥</span>
+                <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #262626 0%, #404040 100%); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                  <span style="color: white; font-size: 28px;">%</span>
                 </div>
-                <h1 style="color: #1a1a1a; font-size: 22px; font-weight: 600; margin: 0 0 8px 0;">لا تفوّت الفرصة!</h1>
-                <p style="color: #737373; font-size: 15px; margin: 0;">لاحظنا إنك ما كمّلت اشتراكك</p>
+                <h1 style="color: #1a1a1a; font-size: 22px; font-weight: 600; margin: 0 0 8px 0;">عرض خاص لك!</h1>
+                <p style="color: #737373; font-size: 15px; margin: 0;">لاحظنا إنك ما كمّلت اشتراكك، جهزنا لك خصم حصري</p>
               </div>
 
-              <div style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 12px; padding: 20px; margin-bottom: 24px; text-align: center; border: 2px dashed #f59e0b;">
-                <p style="margin: 0 0 8px; color: #92400e; font-size: 13px; font-weight: 500;">كود الخصم الخاص بك</p>
-                <p style="margin: 0 0 8px; color: #1a1a1a; font-size: 32px; font-weight: 700; font-family: monospace; letter-spacing: 4px;" dir="ltr">${discountCode}</p>
-                <p style="margin: 0; color: #b45309; font-size: 14px; font-weight: 600;">خصم ${discountPercent}% على ${planName}</p>
+              <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-radius: 12px; padding: 24px; margin-bottom: 24px; text-align: center; border: 2px dashed #22c55e;">
+                <p style="margin: 0 0 8px; color: #166534; font-size: 13px; font-weight: 500;">كود الخصم الخاص بك</p>
+                <div style="background: #fff; border-radius: 8px; padding: 12px 20px; display: inline-block; margin-bottom: 8px;">
+                  <p style="margin: 0; color: #1a1a1a; font-size: 36px; font-weight: 700; font-family: monospace; letter-spacing: 6px;" dir="ltr">${discountCode}</p>
+                </div>
+                <p style="margin: 0; color: #15803d; font-size: 14px; font-weight: 600;">خصم ${discountPercent}% على ${planName}</p>
               </div>
 
-              <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                  <span style="color: #737373; font-size: 14px;">${planName}</span>
-                  <span style="color: #9ca3af; font-size: 14px; text-decoration: line-through;">${originalPrice} ر.س</span>
+              <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+                <p style="margin: 0 0 12px; color: #374151; font-size: 14px; font-weight: 600; text-align: center;">الشهري</p>
+                <div style="text-align: center; margin-bottom: 4px;">
+                  <span style="color: #9ca3af; font-size: 15px; text-decoration: line-through;">${originalPrice} ر.س</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span style="color: #059669; font-size: 16px; font-weight: 600;">السعر بعد الخصم</span>
-                  <span style="color: #059669; font-size: 20px; font-weight: 700;">${discountedPrice} ر.س</span>
+                <div style="text-align: center;">
+                  <span style="color: #059669; font-size: 26px; font-weight: 700;">${discountedPrice} ر.س</span>
+                  <span style="color: #059669; font-size: 13px; font-weight: 500;"> / شهر</span>
                 </div>
               </div>
 
-              <a href="${baseUrl}/app?discount=${encodeURIComponent(discountCode)}" style="display: block; background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); color: white; text-decoration: none; padding: 16px 24px; border-radius: 12px; text-align: center; font-weight: 600; font-size: 16px; margin-bottom: 24px;">
-                أكمل اشتراكك الآن بخصم ${discountPercent}%
-              </a>
+              <div style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid #f59e0b;">
+                <p style="margin: 0 0 4px; color: #92400e; font-size: 14px; font-weight: 600; text-align: center;">السنوي - أفضل قيمة</p>
+                <p style="margin: 0 0 8px; color: #b45309; font-size: 12px; text-align: center;">خصم 60% + كود ${discountCode} = وفّر أكثر!</p>
+                <div style="text-align: center; margin-bottom: 4px;">
+                  <span style="color: #9ca3af; font-size: 15px; text-decoration: line-through;">540 ر.س</span>
+                  <span style="color: #9ca3af; font-size: 13px;"> ← </span>
+                  <span style="color: #b45309; font-size: 15px; text-decoration: line-through;">216 ر.س</span>
+                </div>
+                <div style="text-align: center;">
+                  <span style="color: #d97706; font-size: 30px; font-weight: 700;">173 ر.س</span>
+                  <span style="color: #d97706; font-size: 13px; font-weight: 500;"> / سنة</span>
+                </div>
+                <p style="margin: 8px 0 0; color: #92400e; font-size: 12px; text-align: center;">يعني أقل من 15 ر.س بالشهر!</p>
+              </div>
+
+              <div style="background: #f3f4f6; border-radius: 12px; padding: 20px; margin-bottom: 24px; text-align: center;">
+                <p style="margin: 0 0 12px; color: #374151; font-size: 15px; font-weight: 600;">كيف تستخدم الكود؟</p>
+                <p style="margin: 0 0 6px; color: #6b7280; font-size: 14px; line-height: 1.8;">١. افتح تطبيق Vega Power</p>
+                <p style="margin: 0 0 6px; color: #6b7280; font-size: 14px; line-height: 1.8;">٢. أكمل خطوات التسجيل</p>
+                <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.8;">٣. أدخل الكود <strong dir="ltr" style="color: #1a1a1a;">${discountCode}</strong> عند الدفع</p>
+              </div>
 
               <p style="color: #9ca3af; font-size: 13px; line-height: 1.8; margin: 0; text-align: center;">
-                هذا العرض محدود - استخدم الكود عند الدفع للحصول على الخصم
+                هذا العرض محدود - لا تفوّت الفرصة
               </p>
 
               <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
