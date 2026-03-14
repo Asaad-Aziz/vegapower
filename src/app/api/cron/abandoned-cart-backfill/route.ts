@@ -65,13 +65,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 3: Filter consumers who have email but no invoice (didn't pay)
-    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     const abandonedConsumers = allConsumers.filter(c => {
       if (!c.email) return false
       if (paidConsumerIds.has(c.id)) return false
       // Only from the past week
       const createdAt = new Date(c.created_at)
-      if (createdAt < oneWeekAgo) return false
+      if (createdAt < oneMonthAgo) return false
       return true
     })
 
