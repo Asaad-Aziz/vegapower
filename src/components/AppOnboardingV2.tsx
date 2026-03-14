@@ -423,7 +423,7 @@ export default function AppOnboardingV2() {
 
   // ─── Render ──────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white text-vp-navy" style={{ scrollBehavior: 'smooth' }}>
+    <div className="min-h-screen bg-[#FAFAF8] text-vp-navy" style={{ scrollBehavior: 'smooth' }}>
       <Script
         src={process.env.NEXT_PUBLIC_MYFATOORAH_JS_URL || 'https://sa.myfatoorah.com/sessions/v1/session.js'}
         onLoad={() => setMfScriptLoaded(true)}
@@ -433,7 +433,7 @@ export default function AppOnboardingV2() {
           STICKY BOTTOM CTA BAR
       ═══════════════════════════════════════════════════════════════ */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-vp-navy/10 px-4 py-3 transition-all duration-300 ease-out ${
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-[#FAFAF8]/95 backdrop-blur-md border-t border-vp-navy/10 px-4 py-3 transition-all duration-300 ease-out ${
           showStickyCta ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
         }`}
       >
@@ -478,10 +478,10 @@ export default function AppOnboardingV2() {
           {/* Social proof counter */}
           <div className="flex flex-col items-center gap-3 mb-10">
             <div className="flex -space-x-2.5 rtl:space-x-reverse">
-              {['bg-amber-400', 'bg-sky-400', 'bg-rose-400', 'bg-emerald-400', 'bg-violet-400'].map((color, i) => (
+              {['bg-vp-navy', 'bg-vp-navy/80', 'bg-vp-navy/60', 'bg-vp-navy/70', 'bg-vp-navy/90'].map((color, i) => (
                 <div
                   key={i}
-                  className={`w-10 h-10 rounded-full ${color} border-[3px] border-white flex items-center justify-center text-white text-xs font-bold shadow-sm`}
+                  className={`w-10 h-10 rounded-full ${color} border-[3px] border-[#FAFAF8] flex items-center justify-center text-white text-xs font-bold shadow-sm`}
                 >
                   {['A', 'S', 'M', 'N', 'K'][i]}
                 </div>
@@ -490,8 +490,8 @@ export default function AppOnboardingV2() {
             <p className="text-sm text-vp-navy/50 font-medium">
               <span className="font-extrabold text-vp-navy text-base">+28,900</span> شخص يستخدمون فيقا باور
             </p>
-            <div className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1.5 rounded-full">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <div className="flex items-center gap-1.5 bg-vp-navy/5 text-vp-navy/60 px-3 py-1.5 rounded-full">
+              <div className="w-2 h-2 rounded-full bg-vp-navy/40 animate-pulse" />
               <span className="text-xs font-semibold">847 شخص اشتركوا هذا الأسبوع</span>
             </div>
           </div>
@@ -519,52 +519,52 @@ export default function AppOnboardingV2() {
 
           <div className="space-y-4">
             {/* AI Meal Scanner — killer feature */}
-            <div className="bg-gradient-to-bl from-amber-50 to-orange-50 border border-amber-200/50 rounded-2xl p-6 relative overflow-hidden">
+            <div className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl p-6 relative overflow-hidden">
               <div className="absolute top-3 left-3">
                 <span className="bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">الأكثر طلباً</span>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-amber-500/15 flex items-center justify-center mb-4">
-                <Camera className="w-6 h-6 text-amber-600" />
+              <div className="w-12 h-12 rounded-xl bg-vp-navy/10 flex items-center justify-center mb-4">
+                <Camera className="w-6 h-6 text-vp-navy" />
               </div>
               <h3 className="text-lg font-bold mb-1.5">ماسح الوجبات بالذكاء الاصطناعي</h3>
-              <p className="text-sm text-vp-navy/60 leading-relaxed">صوّر وجبتك وخلّ الذكاء الاصطناعي يحسب السعرات والماكروز في ثانية. بدون إدخال يدوي، بدون تخمين.</p>
+              <p className="text-sm text-vp-navy/55 leading-relaxed">صوّر وجبتك وخلّ الذكاء الاصطناعي يحسب السعرات والماكروز في ثانية. بدون إدخال يدوي، بدون تخمين.</p>
             </div>
 
             {/* Two cards row */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-sky-50 border border-sky-200/50 rounded-2xl p-5">
-                <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center mb-3">
-                  <Brain className="w-5 h-5 text-sky-600" />
+              <div className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl p-5">
+                <div className="w-10 h-10 rounded-xl bg-vp-navy/10 flex items-center justify-center mb-3">
+                  <Brain className="w-5 h-5 text-vp-navy/80" />
                 </div>
                 <h3 className="text-sm font-bold mb-1">برنامج AI يتطور معك</h3>
-                <p className="text-xs text-vp-navy/50 leading-relaxed">مو برنامج ثابت — يتغير ويتطور كل ما تتقدم</p>
+                <p className="text-xs text-vp-navy/45 leading-relaxed">مو برنامج ثابت — يتغير ويتطور كل ما تتقدم</p>
               </div>
 
-              <div className="bg-emerald-50 border border-emerald-200/50 rounded-2xl p-5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center mb-3">
-                  <BarChart3 className="w-5 h-5 text-emerald-600" />
+              <div className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl p-5">
+                <div className="w-10 h-10 rounded-xl bg-vp-navy/10 flex items-center justify-center mb-3">
+                  <BarChart3 className="w-5 h-5 text-vp-navy/80" />
                 </div>
                 <h3 className="text-sm font-bold mb-1">تتبع أوزانك وتقدمك</h3>
-                <p className="text-xs text-vp-navy/50 leading-relaxed">سجّل أوزانك في الجيم وشوف تطورك بالأرقام</p>
+                <p className="text-xs text-vp-navy/45 leading-relaxed">سجّل أوزانك في الجيم وشوف تطورك بالأرقام</p>
               </div>
             </div>
 
             {/* Two more cards */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-purple-50 border border-purple-200/50 rounded-2xl p-5">
-                <div className="w-10 h-10 rounded-xl bg-purple-500/15 flex items-center justify-center mb-3">
-                  <Target className="w-5 h-5 text-purple-600" />
+              <div className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl p-5">
+                <div className="w-10 h-10 rounded-xl bg-vp-navy/10 flex items-center justify-center mb-3">
+                  <Target className="w-5 h-5 text-vp-navy/80" />
                 </div>
                 <h3 className="text-sm font-bold mb-1">سعرات وماكروز دقيقة</h3>
-                <p className="text-xs text-vp-navy/50 leading-relaxed">حساب مخصص لجسمك وهدفك بالضبط</p>
+                <p className="text-xs text-vp-navy/45 leading-relaxed">حساب مخصص لجسمك وهدفك بالضبط</p>
               </div>
 
-              <div className="bg-rose-50 border border-rose-200/50 rounded-2xl p-5">
-                <div className="w-10 h-10 rounded-xl bg-rose-500/15 flex items-center justify-center mb-3">
-                  <Users className="w-5 h-5 text-rose-600" />
+              <div className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl p-5">
+                <div className="w-10 h-10 rounded-xl bg-vp-navy/10 flex items-center justify-center mb-3">
+                  <Users className="w-5 h-5 text-vp-navy/80" />
                 </div>
                 <h3 className="text-sm font-bold mb-1">مجتمع يحفزك</h3>
-                <p className="text-xs text-vp-navy/50 leading-relaxed">+28,900 متدرب يشاركونك الرحلة والتحفيز</p>
+                <p className="text-xs text-vp-navy/45 leading-relaxed">+28,900 متدرب يشاركونك الرحلة والتحفيز</p>
               </div>
             </div>
           </div>
@@ -578,12 +578,12 @@ export default function AppOnboardingV2() {
 
           <div className="grid grid-cols-2 gap-3">
             {/* Without header */}
-            <div className="bg-neutral-100 rounded-t-2xl px-4 py-3 text-center">
-              <X className="w-5 h-5 mx-auto text-red-400 mb-1" />
-              <p className="text-xs font-bold text-neutral-500">بدون التطبيق</p>
+            <div className="bg-vp-navy/5 rounded-t-2xl px-4 py-3 text-center">
+              <X className="w-5 h-5 mx-auto text-vp-navy/30 mb-1" />
+              <p className="text-xs font-bold text-vp-navy/40">بدون التطبيق</p>
             </div>
             <div className="bg-vp-navy rounded-t-2xl px-4 py-3 text-center">
-              <Check className="w-5 h-5 mx-auto text-green-400 mb-1" />
+              <Check className="w-5 h-5 mx-auto text-amber-400 mb-1" />
               <p className="text-xs font-bold text-white">مع فيقا باور</p>
             </div>
 
@@ -595,8 +595,8 @@ export default function AppOnboardingV2() {
               ['تبدأ متحمس وتوقف بعد أسبوع', 'مجتمع ودعم يخليك مستمر'],
             ].map(([without, withApp], i) => (
               <div key={i} className="contents">
-                <div className={`bg-neutral-50 px-4 py-3.5 ${i === 3 ? 'rounded-b-2xl' : ''} border-b border-neutral-100`}>
-                  <p className="text-xs text-neutral-400 leading-relaxed">{without}</p>
+                <div className={`bg-vp-navy/[0.02] px-4 py-3.5 ${i === 3 ? 'rounded-b-2xl' : ''} border-b border-vp-navy/5`}>
+                  <p className="text-xs text-vp-navy/35 leading-relaxed">{without}</p>
                 </div>
                 <div className={`bg-vp-navy/95 px-4 py-3.5 ${i === 3 ? 'rounded-b-2xl' : ''} border-b border-white/5`}>
                   <p className="text-xs text-white/90 leading-relaxed font-medium">{withApp}</p>
@@ -635,7 +635,7 @@ export default function AppOnboardingV2() {
                   className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 transition-all duration-200 ease-out min-h-[80px] text-lg font-semibold
                     ${gender === opt.value
                       ? 'border-vp-navy bg-vp-navy text-white shadow-lg scale-[1.02]'
-                      : 'border-vp-navy/15 bg-white hover:border-vp-navy/40 text-vp-navy'
+                      : 'border-vp-navy/10 bg-white/80 hover:border-vp-navy/30 text-vp-navy'
                     }
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vp-navy focus-visible:ring-offset-2`}
                 >
@@ -664,7 +664,7 @@ export default function AppOnboardingV2() {
                   className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 ease-out min-h-[90px] text-sm font-semibold text-center leading-snug
                     ${goal === opt.value
                       ? 'border-vp-navy bg-vp-navy text-white shadow-lg scale-[1.02]'
-                      : 'border-vp-navy/15 bg-white hover:border-vp-navy/40 text-vp-navy'
+                      : 'border-vp-navy/10 bg-white/80 hover:border-vp-navy/30 text-vp-navy'
                     }
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vp-navy focus-visible:ring-offset-2`}
                 >
@@ -727,7 +727,7 @@ export default function AppOnboardingV2() {
                   className={`cursor-pointer flex flex-col items-center justify-center gap-1.5 p-4 rounded-2xl border-2 transition-all duration-200 ease-out min-h-[100px] text-center leading-snug
                     ${activity === opt.value
                       ? 'border-vp-navy bg-vp-navy text-white shadow-lg scale-[1.02]'
-                      : 'border-vp-navy/15 bg-white hover:border-vp-navy/40 text-vp-navy'
+                      : 'border-vp-navy/10 bg-white/80 hover:border-vp-navy/30 text-vp-navy'
                     }
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vp-navy focus-visible:ring-offset-2`}
                 >
@@ -758,7 +758,7 @@ export default function AppOnboardingV2() {
 
                 <div className="grid grid-cols-2 gap-3 mb-6">
                   <div className="bg-white/10 rounded-2xl p-4 text-center">
-                    <p className="text-3xl font-extrabold text-green-400">{calculations.calories}</p>
+                    <p className="text-3xl font-extrabold text-amber-400">{calculations.calories}</p>
                     <p className="text-[11px] text-white/50 mt-1">سعرة / يوم</p>
                   </div>
                   <div className="bg-white/10 rounded-2xl p-4 text-center">
@@ -794,49 +794,49 @@ export default function AppOnboardingV2() {
 
           {/* Price comparison cards */}
           <div className="space-y-3 mb-8">
-            <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 border border-neutral-100">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-vp-navy/[0.03] border border-vp-navy/8">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
-                  <Dumbbell className="w-5 h-5 text-red-500" />
+                <div className="w-10 h-10 rounded-xl bg-vp-navy/8 flex items-center justify-center">
+                  <Dumbbell className="w-5 h-5 text-vp-navy/40" />
                 </div>
-                <span className="text-sm font-semibold">مدرب شخصي</span>
+                <span className="text-sm font-semibold text-vp-navy/60">مدرب شخصي</span>
               </div>
-              <span className="text-sm font-bold text-red-500 line-through">+500 ر.س/شهر</span>
+              <span className="text-sm font-bold text-vp-navy/35 line-through">+500 ر.س/شهر</span>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 border border-neutral-100">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-vp-navy/[0.03] border border-vp-navy/8">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
-                  <CalendarCheck className="w-5 h-5 text-red-500" />
+                <div className="w-10 h-10 rounded-xl bg-vp-navy/8 flex items-center justify-center">
+                  <CalendarCheck className="w-5 h-5 text-vp-navy/40" />
                 </div>
-                <span className="text-sm font-semibold">أخصائي تغذية</span>
+                <span className="text-sm font-semibold text-vp-navy/60">أخصائي تغذية</span>
               </div>
-              <span className="text-sm font-bold text-red-500 line-through">+300 ر.س/جلسة</span>
+              <span className="text-sm font-bold text-vp-navy/35 line-through">+300 ر.س/جلسة</span>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-xl bg-green-50 border-2 border-green-200">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-vp-navy border-2 border-vp-navy">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
-                  <span className="text-sm font-bold block">فيقا باور</span>
-                  <span className="text-[11px] text-green-600">مدرب + تغذية + تتبع + مجتمع</span>
+                  <span className="text-sm font-bold block text-white">فيقا باور</span>
+                  <span className="text-[11px] text-white/60">مدرب + تغذية + تتبع + مجتمع</span>
                 </div>
               </div>
               <div className="text-left">
-                <span className="text-lg font-extrabold text-green-600">{Math.round(finalPrice / 12)} ر.س</span>
-                <span className="text-[11px] text-green-600 block">/شهر فقط</span>
+                <span className="text-lg font-extrabold text-amber-400">{Math.round(finalPrice / 12)} ر.س</span>
+                <span className="text-[11px] text-white/60 block">/شهر فقط</span>
               </div>
             </div>
           </div>
 
           {/* Savings callout */}
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
-            <p className="text-sm font-bold text-amber-800">
+          <div className="bg-vp-navy/5 border border-vp-navy/10 rounded-2xl p-4 text-center">
+            <p className="text-sm font-bold text-vp-navy">
               توفّر أكثر من <span className="text-lg">9,400</span> ر.س سنوياً
             </p>
-            <p className="text-xs text-amber-600 mt-1">مقارنة بمدرب شخصي + أخصائي تغذية</p>
+            <p className="text-xs text-vp-navy/50 mt-1">مقارنة بمدرب شخصي + أخصائي تغذية</p>
           </div>
         </section>
 
@@ -844,13 +844,13 @@ export default function AppOnboardingV2() {
             SECTION 7: Pricing Card + Offer
         ═══════════════════════════════════════════════════════════════ */}
         <section className="py-8">
-          <div className="border-2 border-vp-navy/10 rounded-3xl p-8 relative overflow-hidden bg-gradient-to-b from-white to-vp-beige/20">
+          <div className="border-2 border-vp-navy/10 rounded-3xl p-8 relative overflow-hidden bg-white/60">
             {/* Badges */}
             <div className="absolute top-4 left-4 flex gap-2">
-              <span className="inline-block bg-green-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-full">
+              <span className="inline-block bg-vp-navy text-white text-[10px] font-bold px-3 py-1.5 rounded-full">
                 خصم 60%
               </span>
-              <span className="inline-block bg-red-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-full animate-pulse">
+              <span className="inline-block bg-amber-500 text-vp-navy text-[10px] font-bold px-3 py-1.5 rounded-full animate-pulse">
                 عرض محدود
               </span>
             </div>
@@ -862,7 +862,7 @@ export default function AppOnboardingV2() {
                 <span className="text-lg text-vp-navy/60">ر.س/سنة</span>
               </div>
               {appliedDiscount && (
-                <p className="text-sm text-green-600 font-semibold mt-1">
+                <p className="text-sm text-amber-600 font-semibold mt-1">
                   خصم {appliedDiscount.label} مطبق
                 </p>
               )}
@@ -881,7 +881,7 @@ export default function AppOnboardingV2() {
                   value={discountCode}
                   onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError('') }}
                   placeholder="كود الخصم (اختياري)"
-                  className="flex-1 p-3 rounded-xl bg-white border-2 border-vp-navy/10 focus:border-vp-navy/40 outline-none text-sm text-center transition-colors duration-200"
+                  className="flex-1 p-3 rounded-xl bg-[#FAFAF8] border-2 border-vp-navy/10 focus:border-vp-navy/40 outline-none text-sm text-center transition-colors duration-200"
                   dir="ltr"
                 />
                 <button
@@ -894,9 +894,9 @@ export default function AppOnboardingV2() {
               </div>
               {discountError && <p className="text-red-500 text-xs mt-2 text-center">{discountError}</p>}
               {appliedDiscount && (
-                <div className="flex items-center justify-center gap-2 mt-2 p-2 bg-green-500/10 rounded-xl">
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span className="text-green-700 text-sm font-medium">تم تطبيق خصم {appliedDiscount.label}</span>
+                <div className="flex items-center justify-center gap-2 mt-2 p-2 bg-vp-navy/5 rounded-xl">
+                  <Check className="w-4 h-4 text-vp-navy" />
+                  <span className="text-vp-navy text-sm font-medium">تم تطبيق خصم {appliedDiscount.label}</span>
                 </div>
               )}
             </div>
@@ -912,10 +912,10 @@ export default function AppOnboardingV2() {
                 { text: 'مجتمع +28,900 متدرب للتحفيز', icon: Users },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                    <item.icon className="w-3.5 h-3.5 text-green-600" />
+                  <div className="w-7 h-7 rounded-lg bg-vp-navy/8 flex items-center justify-center flex-shrink-0">
+                    <item.icon className="w-3.5 h-3.5 text-vp-navy/70" />
                   </div>
-                  <span className="text-sm text-vp-navy/80 font-medium">{item.text}</span>
+                  <span className="text-sm text-vp-navy/70 font-medium">{item.text}</span>
                 </div>
               ))}
             </div>
@@ -953,7 +953,7 @@ export default function AppOnboardingV2() {
                 }
               }}
               placeholder="البريد الإلكتروني"
-              className="w-full p-4 rounded-2xl border-2 border-vp-navy/15 bg-white text-base font-medium text-vp-navy placeholder:text-vp-navy/30 outline-none transition-all duration-200 ease-out focus:border-vp-navy/50 focus-visible:ring-2 focus-visible:ring-vp-navy focus-visible:ring-offset-2"
+              className="w-full p-4 rounded-2xl border-2 border-vp-navy/10 bg-white/80 text-base font-medium text-vp-navy placeholder:text-vp-navy/30 outline-none transition-all duration-200 ease-out focus:border-vp-navy/50 focus-visible:ring-2 focus-visible:ring-vp-navy focus-visible:ring-offset-2"
               dir="ltr"
             />
             {/* Domain suggestions */}
@@ -1075,7 +1075,7 @@ export default function AppOnboardingV2() {
               { text: 'جربت تطبيقات كثيرة بس هذا أول تطبيق يعطيني برنامج يتغير معي كل أسبوع. المجتمع والدعم شيء مختلف', name: 'نورة', initial: 'ن', result: '-7 كيلو', period: 'شهرين' },
               { text: 'أنا مبتدئ وكنت ضايع وين أبدأ. التطبيق صمم لي برنامج كامل من الصفر. الحين صار عندي روتين ثابت', name: 'عبدالله', initial: 'ع', result: 'من 0 لـ 5 أيام/أسبوع', period: '6 أسابيع' },
             ].map((t, i) => (
-              <div key={i} className="bg-vp-beige/15 rounded-2xl p-6">
+              <div key={i} className="bg-vp-navy/[0.03] border border-vp-navy/10 rounded-2xl p-6">
                 {/* Result badge */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex gap-0.5">
@@ -1083,7 +1083,7 @@ export default function AppOnboardingV2() {
                       <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />
                     ))}
                   </div>
-                  <div className="bg-green-500/10 text-green-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
+                  <div className="bg-vp-navy/10 text-vp-navy text-[11px] font-bold px-2.5 py-1 rounded-full">
                     {t.result} في {t.period}
                   </div>
                 </div>
