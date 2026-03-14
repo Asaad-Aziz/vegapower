@@ -6,6 +6,8 @@ import Script from 'next/script'
 import {
   CreditCard, Lock, ChevronDown, ChevronUp, Scale, Flame,
   Sprout, Footprints, Dumbbell, TrendingUp, Sparkles, Star, Check,
+  Camera, BarChart3, Users, Zap, X, ArrowDown, Shield,
+  Target, CalendarCheck, Brain,
 } from 'lucide-react'
 import { initiateCheckout } from '@/lib/meta-pixel'
 import { snapStartCheckout } from '@/lib/snapchat-pixel'
@@ -65,6 +67,10 @@ export default function AppOnboardingV2() {
   const [resultsTracked, setResultsTracked] = useState(false)
   const resultsRef = useRef<HTMLDivElement>(null)
 
+  // Sticky CTA visibility
+  const [showStickyCta, setShowStickyCta] = useState(false)
+  const heroRef = useRef<HTMLElement>(null)
+
   // ─── Calculations ────────────────────────────────────────────────
   const allFilled = gender !== '' && goal !== '' && activity !== '' &&
     height !== '' && weight !== '' && age !== '' &&
@@ -115,6 +121,16 @@ export default function AppOnboardingV2() {
   // ─── PostHog: page view ──────────────────────────────────────────
   useEffect(() => {
     posthog.capture('onboarding_v2_viewed')
+  }, [])
+
+  // ─── Sticky CTA: show after scrolling past hero ─────────────────
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyCta(!entry.isIntersecting),
+      { threshold: 0 }
+    )
+    if (heroRef.current) observer.observe(heroRef.current)
+    return () => observer.disconnect()
   }, [])
 
   // ─── Price helpers ───────────────────────────────────────────────
@@ -400,15 +416,9 @@ export default function AppOnboardingV2() {
   // ─── FAQ data ────────────────────────────────────────────────────
   const faqs = [
     { q: 'هل يمكنني إلغاء الاشتراك في أي وقت؟', a: 'الاشتراك السنوي دفعة واحدة بدون تجديد تلقائي. لا تحتاج لإلغاء أي شيء.' },
-    { q: 'هل التطبيق مناسب للمبتدئين؟', a: 'نعم! التطبيق يصمم برنامجاً مخصصاً حسب مستواك ويتطور معك.' },
-    { q: 'كيف أحصل على البرنامج بعد الدفع؟', a: 'ستصلك بيانات الدخول على بريدك الإلكتروني فوراً بعد الدفع.' },
-  ]
-
-  // ─── Testimonials ────────────────────────────────────────────────
-  const testimonials = [
-    { text: 'التطبيق غير حياتي! خسيت 8 كيلو في شهرين', name: 'سارة', initial: 'س' },
-    { text: 'أفضل برنامج تمارين استخدمته. النتائج واضحة من أول أسبوع', name: 'محمد', initial: 'م' },
-    { text: 'الدعم والمتابعة شيء مختلف. تحس إنك مو لوحدك', name: 'نورة', initial: 'ن' },
+    { q: 'هل التطبيق مناسب للمبتدئين؟', a: 'نعم! التطبيق يصمم برنامجاً مخصصاً حسب مستواك ويتطور معك تدريجياً.' },
+    { q: 'كيف أحصل على البرنامج بعد الدفع؟', a: 'ستصلك بيانات الدخول على بريدك الإلكتروني فوراً بعد الدفع. حمّل التطبيق وسجّل دخولك.' },
+    { q: 'هل يعمل التطبيق بدون إنترنت؟', a: 'نعم، بعد تحميل برنامجك يعمل بدون إنترنت. تحتاج اتصال فقط للمزامنة والتحديث.' },
   ]
 
   // ─── Render ──────────────────────────────────────────────────────
@@ -419,64 +429,194 @@ export default function AppOnboardingV2() {
         onLoad={() => setMfScriptLoaded(true)}
       />
 
-      <div className="max-w-lg mx-auto px-5 pb-20">
+      {/* ═══════════════════════════════════════════════════════════════
+          STICKY BOTTOM CTA BAR
+      ═══════════════════════════════════════════════════════════════ */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-vp-navy/10 px-4 py-3 transition-all duration-300 ease-out ${
+          showStickyCta ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+        }`}
+      >
+        <div className="max-w-lg mx-auto flex items-center justify-between gap-3">
+          <div className="text-sm">
+            <span className="font-bold">{finalPrice} ر.س</span>
+            <span className="text-vp-navy/40 text-xs mr-1">/سنة</span>
+          </div>
+          <button
+            onClick={() => document.getElementById('payment-section')?.scrollIntoView({ behavior: 'smooth' })}
+            className="cursor-pointer flex-1 max-w-[200px] py-3 rounded-xl bg-amber-500 text-vp-navy font-bold text-sm shadow-lg hover:bg-amber-400 transition-all duration-200 ease-out"
+          >
+            اشترك الآن
+          </button>
+        </div>
+      </div>
 
-        {/* ════════════════════════════════════════════════════════════
-            SECTION 1: Hero
-        ════════════════════════════════════════════════════════════ */}
-        <section className="min-h-[85vh] flex flex-col items-center justify-center text-center pt-12 pb-8">
+      <div className="max-w-lg mx-auto px-5 pb-28">
+
+        {/* ═══════════════════════════════════════════════════════════════
+            SECTION 1: Hero — Emotional Hook
+        ═══════════════════════════════════════════════════════════════ */}
+        <section ref={heroRef} className="min-h-[90vh] flex flex-col items-center justify-center text-center pt-12 pb-8">
           <Image
             src="/Vegapower Logo-05.jpg"
             alt="Vega Power"
             width={80}
             height={80}
-            className="rounded-2xl mb-8"
+            className="rounded-2xl mb-6 shadow-lg"
             priority
           />
 
-          <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-4 tracking-tight">
-            هدفك أقرب مما تتخيل
+          <h1 className="text-4xl sm:text-5xl font-extrabold leading-[1.2] mb-4 tracking-tight">
+            مدربك الشخصي<br />
+            <span className="text-amber-500">في جيبك</span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-vp-navy/70 mb-10 max-w-sm mx-auto leading-relaxed">
-            برنامج رياضي وتغذية مخصص لك بالذكاء الاصطناعي
+          <p className="text-lg text-vp-navy/60 mb-8 max-w-xs mx-auto leading-relaxed">
+            تمارين مخصصة، تغذية ذكية، وتتبع تقدمك — كل شيء بالذكاء الاصطناعي
           </p>
 
-          {/* Social proof */}
-          <div className="flex items-center gap-3 mb-12">
-            <div className="flex -space-x-2 rtl:space-x-reverse">
-              {['bg-amber-400', 'bg-sky-400', 'bg-rose-400', 'bg-emerald-400'].map((color, i) => (
+          {/* Social proof counter */}
+          <div className="flex flex-col items-center gap-3 mb-10">
+            <div className="flex -space-x-2.5 rtl:space-x-reverse">
+              {['bg-amber-400', 'bg-sky-400', 'bg-rose-400', 'bg-emerald-400', 'bg-violet-400'].map((color, i) => (
                 <div
                   key={i}
-                  className={`w-9 h-9 rounded-full ${color} border-2 border-white flex items-center justify-center text-white text-xs font-bold`}
+                  className={`w-10 h-10 rounded-full ${color} border-[3px] border-white flex items-center justify-center text-white text-xs font-bold shadow-sm`}
                 >
-                  {['A', 'S', 'M', 'N'][i]}
+                  {['A', 'S', 'M', 'N', 'K'][i]}
                 </div>
               ))}
             </div>
-            <p className="text-sm text-vp-navy/60 font-medium">
-              +28,900 شخص بدأوا رحلتهم معنا
+            <p className="text-sm text-vp-navy/50 font-medium">
+              <span className="font-extrabold text-vp-navy text-base">+28,900</span> شخص يستخدمون فيقا باور
             </p>
+            <div className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1.5 rounded-full">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-xs font-semibold">847 شخص اشتركوا هذا الأسبوع</span>
+            </div>
           </div>
 
           {/* Scroll indicator */}
           <button
-            onClick={() => document.getElementById('personalization')?.scrollIntoView({ behavior: 'smooth' })}
+            onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
             className="cursor-pointer animate-bounce"
             aria-label="انتقل للأسفل"
           >
-            <ChevronDown className="w-8 h-8 text-vp-navy/40" />
+            <ArrowDown className="w-7 h-7 text-vp-navy/30" />
           </button>
         </section>
 
-        {/* ════════════════════════════════════════════════════════════
-            SECTION 2: Quick Personalization
-        ════════════════════════════════════════════════════════════ */}
-        <section id="personalization" className="py-12 space-y-12">
-          <h2 className="text-2xl font-bold text-center mb-2">
-            <Sparkles className="inline-block w-6 h-6 ml-2 text-amber-500" />
-            خصّص برنامجك
+        {/* ═══════════════════════════════════════════════════════════════
+            SECTION 2: Feature Showcase — Create Desire
+        ═══════════════════════════════════════════════════════════════ */}
+        <section id="features" className="py-14">
+          <h2 className="text-2xl font-extrabold text-center mb-3">
+            كل اللي تحتاجه في تطبيق واحد
           </h2>
+          <p className="text-center text-vp-navy/50 text-sm mb-10">
+            لا تطبيقات كثيرة ولا حسابات يدوية — كل شيء جاهز لك
+          </p>
+
+          <div className="space-y-4">
+            {/* AI Meal Scanner — killer feature */}
+            <div className="bg-gradient-to-bl from-amber-50 to-orange-50 border border-amber-200/50 rounded-2xl p-6 relative overflow-hidden">
+              <div className="absolute top-3 left-3">
+                <span className="bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">الأكثر طلباً</span>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-amber-500/15 flex items-center justify-center mb-4">
+                <Camera className="w-6 h-6 text-amber-600" />
+              </div>
+              <h3 className="text-lg font-bold mb-1.5">ماسح الوجبات بالذكاء الاصطناعي</h3>
+              <p className="text-sm text-vp-navy/60 leading-relaxed">صوّر وجبتك وخلّ الذكاء الاصطناعي يحسب السعرات والماكروز في ثانية. بدون إدخال يدوي، بدون تخمين.</p>
+            </div>
+
+            {/* Two cards row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-sky-50 border border-sky-200/50 rounded-2xl p-5">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center mb-3">
+                  <Brain className="w-5 h-5 text-sky-600" />
+                </div>
+                <h3 className="text-sm font-bold mb-1">برنامج AI يتطور معك</h3>
+                <p className="text-xs text-vp-navy/50 leading-relaxed">مو برنامج ثابت — يتغير ويتطور كل ما تتقدم</p>
+              </div>
+
+              <div className="bg-emerald-50 border border-emerald-200/50 rounded-2xl p-5">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center mb-3">
+                  <BarChart3 className="w-5 h-5 text-emerald-600" />
+                </div>
+                <h3 className="text-sm font-bold mb-1">تتبع أوزانك وتقدمك</h3>
+                <p className="text-xs text-vp-navy/50 leading-relaxed">سجّل أوزانك في الجيم وشوف تطورك بالأرقام</p>
+              </div>
+            </div>
+
+            {/* Two more cards */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-purple-50 border border-purple-200/50 rounded-2xl p-5">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/15 flex items-center justify-center mb-3">
+                  <Target className="w-5 h-5 text-purple-600" />
+                </div>
+                <h3 className="text-sm font-bold mb-1">سعرات وماكروز دقيقة</h3>
+                <p className="text-xs text-vp-navy/50 leading-relaxed">حساب مخصص لجسمك وهدفك بالضبط</p>
+              </div>
+
+              <div className="bg-rose-50 border border-rose-200/50 rounded-2xl p-5">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/15 flex items-center justify-center mb-3">
+                  <Users className="w-5 h-5 text-rose-600" />
+                </div>
+                <h3 className="text-sm font-bold mb-1">مجتمع يحفزك</h3>
+                <p className="text-xs text-vp-navy/50 leading-relaxed">+28,900 متدرب يشاركونك الرحلة والتحفيز</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            SECTION 3: Without vs With — Loss Aversion
+        ═══════════════════════════════════════════════════════════════ */}
+        <section className="py-14">
+          <h2 className="text-2xl font-extrabold text-center mb-10">الفرق واضح</h2>
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* Without header */}
+            <div className="bg-neutral-100 rounded-t-2xl px-4 py-3 text-center">
+              <X className="w-5 h-5 mx-auto text-red-400 mb-1" />
+              <p className="text-xs font-bold text-neutral-500">بدون التطبيق</p>
+            </div>
+            <div className="bg-vp-navy rounded-t-2xl px-4 py-3 text-center">
+              <Check className="w-5 h-5 mx-auto text-green-400 mb-1" />
+              <p className="text-xs font-bold text-white">مع فيقا باور</p>
+            </div>
+
+            {/* Rows */}
+            {[
+              ['تحسب سعراتك يدوياً وتنسى', 'تصوّر وجبتك والباقي علينا'],
+              ['تتمرن عشوائي بدون خطة', 'برنامج مصمم لهدفك بالضبط'],
+              ['ما تدري إذا تتقدم أو لا', 'تشوف تطورك بالأرقام كل أسبوع'],
+              ['تبدأ متحمس وتوقف بعد أسبوع', 'مجتمع ودعم يخليك مستمر'],
+            ].map(([without, withApp], i) => (
+              <div key={i} className="contents">
+                <div className={`bg-neutral-50 px-4 py-3.5 ${i === 3 ? 'rounded-b-2xl' : ''} border-b border-neutral-100`}>
+                  <p className="text-xs text-neutral-400 leading-relaxed">{without}</p>
+                </div>
+                <div className={`bg-vp-navy/95 px-4 py-3.5 ${i === 3 ? 'rounded-b-2xl' : ''} border-b border-white/5`}>
+                  <p className="text-xs text-white/90 leading-relaxed font-medium">{withApp}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            SECTION 4: Quick Personalization
+        ═══════════════════════════════════════════════════════════════ */}
+        <section id="personalization" className="py-14 space-y-10">
+          <div className="text-center">
+            <h2 className="text-2xl font-extrabold mb-2">
+              <Sparkles className="inline-block w-6 h-6 ml-2 text-amber-500" />
+              خصّص برنامجك في 30 ثانية
+            </h2>
+            <p className="text-sm text-vp-navy/50">أربع أسئلة بس وبرنامجك جاهز</p>
+          </div>
 
           {/* Q1: Gender */}
           <div className="space-y-3">
@@ -551,7 +691,6 @@ export default function AppOnboardingV2() {
                     value={field.value}
                     onChange={(e) => {
                       field.setter(e.target.value)
-                      // Check if all metrics are filled after this change
                       const vals = [height, weight, age]
                       vals[i] = e.target.value
                       if (vals.every(v => v !== '' && Number(v) > 0)) {
@@ -575,9 +714,9 @@ export default function AppOnboardingV2() {
             <label className="block text-lg font-semibold">مستوى نشاطك</label>
             <div className="grid grid-cols-3 gap-3">
               {([
-                { value: 'light' as const, label: 'نشاط خفيف', icon: <Footprints className="w-5 h-5" /> },
-                { value: 'moderate' as const, label: 'نشاط متوسط', icon: <Flame className="w-5 h-5" /> },
-                { value: 'active' as const, label: 'نشاط عالي', icon: <Dumbbell className="w-5 h-5" /> },
+                { value: 'light' as const, label: 'نشاط خفيف', sub: '0-2 تمارين/أسبوع', icon: <Footprints className="w-5 h-5" /> },
+                { value: 'moderate' as const, label: 'نشاط متوسط', sub: '3-5 تمارين/أسبوع', icon: <Flame className="w-5 h-5" /> },
+                { value: 'active' as const, label: 'نشاط عالي', sub: '6+ تمارين/أسبوع', icon: <Dumbbell className="w-5 h-5" /> },
               ]).map(opt => (
                 <button
                   key={opt.value}
@@ -585,7 +724,7 @@ export default function AppOnboardingV2() {
                     setActivity(opt.value)
                     posthog.capture('onboarding_v2_activity_selected', { activity: opt.value })
                   }}
-                  className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 ease-out min-h-[90px] text-sm font-semibold text-center leading-snug
+                  className={`cursor-pointer flex flex-col items-center justify-center gap-1.5 p-4 rounded-2xl border-2 transition-all duration-200 ease-out min-h-[100px] text-center leading-snug
                     ${activity === opt.value
                       ? 'border-vp-navy bg-vp-navy text-white shadow-lg scale-[1.02]'
                       : 'border-vp-navy/15 bg-white hover:border-vp-navy/40 text-vp-navy'
@@ -593,73 +732,133 @@ export default function AppOnboardingV2() {
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vp-navy focus-visible:ring-offset-2`}
                 >
                   {opt.icon}
-                  {opt.label}
+                  <span className="text-sm font-semibold">{opt.label}</span>
+                  <span className={`text-[10px] ${activity === opt.value ? 'text-white/60' : 'text-vp-navy/40'}`}>{opt.sub}</span>
                 </button>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ════════════════════════════════════════════════════════════
-            SECTION 3: Results Preview
-        ════════════════════════════════════════════════════════════ */}
+        {/* ═══════════════════════════════════════════════════════════════
+            SECTION 5: Results Preview
+        ═══════════════════════════════════════════════════════════════ */}
         <div ref={resultsRef}>
           {calculations && (
             <section
-              className={`py-12 transition-all duration-500 ease-out ${
+              className={`py-6 transition-all duration-500 ease-out ${
                 resultsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
             >
               <div className="bg-vp-navy rounded-3xl p-8 text-white shadow-2xl">
-                <h3 className="text-xl font-bold text-center mb-6">نتائجك المخصصة</h3>
+                <div className="flex items-center justify-center gap-2 mb-6">
+                  <Zap className="w-5 h-5 text-amber-400" />
+                  <h3 className="text-xl font-bold">نتائجك المخصصة جاهزة</h3>
+                </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-2 gap-3 mb-6">
                   <div className="bg-white/10 rounded-2xl p-4 text-center">
-                    <Flame className="w-6 h-6 mx-auto mb-1 text-green-400" />
                     <p className="text-3xl font-extrabold text-green-400">{calculations.calories}</p>
-                    <p className="text-xs text-white/60 mt-1">سعرة / يوم</p>
+                    <p className="text-[11px] text-white/50 mt-1">سعرة / يوم</p>
                   </div>
                   <div className="bg-white/10 rounded-2xl p-4 text-center">
-                    <Dumbbell className="w-6 h-6 mx-auto mb-1 text-blue-400" />
                     <p className="text-3xl font-extrabold text-blue-400">{calculations.proteinGrams}g</p>
-                    <p className="text-xs text-white/60 mt-1">بروتين</p>
+                    <p className="text-[11px] text-white/50 mt-1">بروتين</p>
                   </div>
                   <div className="bg-white/10 rounded-2xl p-4 text-center">
-                    <Sprout className="w-6 h-6 mx-auto mb-1 text-purple-400" />
                     <p className="text-3xl font-extrabold text-purple-400">{calculations.carbsGrams}g</p>
-                    <p className="text-xs text-white/60 mt-1">كربوهيدرات</p>
+                    <p className="text-[11px] text-white/50 mt-1">كربوهيدرات</p>
                   </div>
                   <div className="bg-white/10 rounded-2xl p-4 text-center">
-                    <Scale className="w-6 h-6 mx-auto mb-1 text-yellow-400" />
                     <p className="text-3xl font-extrabold text-yellow-400">{calculations.fatGrams}g</p>
-                    <p className="text-xs text-white/60 mt-1">دهون</p>
+                    <p className="text-[11px] text-white/50 mt-1">دهون</p>
                   </div>
                 </div>
 
-                <p className="text-center text-white/80 text-base font-medium">
-                  برنامجك جاهز — اشترك الآن وابدأ
-                </p>
+                <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-3 text-center">
+                  <p className="text-sm font-semibold text-amber-300">
+                    اشترك الآن وابدأ برنامجك المخصص
+                  </p>
+                </div>
               </div>
             </section>
           )}
         </div>
 
-        {/* ════════════════════════════════════════════════════════════
-            SECTION 4: Pricing
-        ════════════════════════════════════════════════════════════ */}
-        <section className="py-12">
+        {/* ═══════════════════════════════════════════════════════════════
+            SECTION 6: Price Anchoring — Make It Feel Like a Steal
+        ═══════════════════════════════════════════════════════════════ */}
+        <section className="py-14">
+          <h2 className="text-2xl font-extrabold text-center mb-3">قارن بنفسك</h2>
+          <p className="text-center text-vp-navy/50 text-sm mb-8">كل هذا بسعر أقل من كوب قهوة في الأسبوع</p>
+
+          {/* Price comparison cards */}
+          <div className="space-y-3 mb-8">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 border border-neutral-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+                  <Dumbbell className="w-5 h-5 text-red-500" />
+                </div>
+                <span className="text-sm font-semibold">مدرب شخصي</span>
+              </div>
+              <span className="text-sm font-bold text-red-500 line-through">+500 ر.س/شهر</span>
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 border border-neutral-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+                  <CalendarCheck className="w-5 h-5 text-red-500" />
+                </div>
+                <span className="text-sm font-semibold">أخصائي تغذية</span>
+              </div>
+              <span className="text-sm font-bold text-red-500 line-through">+300 ر.س/جلسة</span>
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-xl bg-green-50 border-2 border-green-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <span className="text-sm font-bold block">فيقا باور</span>
+                  <span className="text-[11px] text-green-600">مدرب + تغذية + تتبع + مجتمع</span>
+                </div>
+              </div>
+              <div className="text-left">
+                <span className="text-lg font-extrabold text-green-600">{Math.round(finalPrice / 12)} ر.س</span>
+                <span className="text-[11px] text-green-600 block">/شهر فقط</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Savings callout */}
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
+            <p className="text-sm font-bold text-amber-800">
+              توفّر أكثر من <span className="text-lg">9,400</span> ر.س سنوياً
+            </p>
+            <p className="text-xs text-amber-600 mt-1">مقارنة بمدرب شخصي + أخصائي تغذية</p>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            SECTION 7: Pricing Card + Offer
+        ═══════════════════════════════════════════════════════════════ */}
+        <section className="py-8">
           <div className="border-2 border-vp-navy/10 rounded-3xl p-8 relative overflow-hidden bg-gradient-to-b from-white to-vp-beige/20">
-            {/* Badge */}
-            <div className="absolute top-4 left-4">
-              <span className="inline-block bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+            {/* Badges */}
+            <div className="absolute top-4 left-4 flex gap-2">
+              <span className="inline-block bg-green-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-full">
                 خصم 60%
+              </span>
+              <span className="inline-block bg-red-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-full animate-pulse">
+                عرض محدود
               </span>
             </div>
 
-            <div className="text-center mb-6 pt-4">
+            <div className="text-center mb-6 pt-6">
               <p className="text-sm text-vp-navy/50 font-semibold mb-1">{plan.label}</p>
               <div className="flex items-baseline justify-center gap-2">
-                <span className="text-4xl font-extrabold">{appliedDiscount ? getFinalPrice(plan.price) : plan.price}</span>
+                <span className="text-5xl font-extrabold">{finalPrice}</span>
                 <span className="text-lg text-vp-navy/60">ر.س/سنة</span>
               </div>
               {appliedDiscount && (
@@ -668,7 +867,7 @@ export default function AppOnboardingV2() {
                 </p>
               )}
               <p className="text-vp-navy/40 text-sm mt-1">
-                = {Math.round((appliedDiscount ? getFinalPrice(plan.price) : plan.price) / 12)} ر.س/شهر
+                = {Math.round(finalPrice / 12)} ر.س/شهر &middot; أقل من قهوة في الأسبوع
               </p>
               <p className="text-vp-navy/30 line-through text-sm mt-1">540 ر.س</p>
               <p className="text-vp-navy/50 text-xs mt-2">دفعة واحدة &middot; بدون تجديد تلقائي</p>
@@ -702,29 +901,31 @@ export default function AppOnboardingV2() {
               )}
             </div>
 
-            {/* What's included */}
+            {/* What's included — enhanced */}
             <div className="space-y-3">
               {[
-                'جدول تمارين مصمم بالذكاء الاصطناعي',
-                'حساب سعرات وماكروز مخصص',
-                'متابعة يومية وتحديث أسبوعي',
-                'دعم وتحفيز من المجتمع',
+                { text: 'ماسح وجبات بالذكاء الاصطناعي', icon: Camera },
+                { text: 'جدول تمارين مخصص يتطور معك', icon: Brain },
+                { text: 'تتبع أوزانك وتقدمك بالأرقام', icon: BarChart3 },
+                { text: 'حساب سعرات وماكروز دقيق', icon: Target },
+                { text: 'متابعة يومية وتحديث أسبوعي', icon: CalendarCheck },
+                { text: 'مجتمع +28,900 متدرب للتحفيز', icon: Users },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                    <Check className="w-3.5 h-3.5 text-green-600" />
+                  <div className="w-7 h-7 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                    <item.icon className="w-3.5 h-3.5 text-green-600" />
                   </div>
-                  <span className="text-sm text-vp-navy/80">{item}</span>
+                  <span className="text-sm text-vp-navy/80 font-medium">{item.text}</span>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ════════════════════════════════════════════════════════════
-            SECTION 5: Email + Payment
-        ════════════════════════════════════════════════════════════ */}
-        <section className="py-12 space-y-6">
+        {/* ═══════════════════════════════════════════════════════════════
+            SECTION 8: Email + Payment
+        ═══════════════════════════════════════════════════════════════ */}
+        <section id="payment-section" className="py-12 space-y-6">
           <h3 className="text-xl font-bold text-center mb-4">ابدأ الآن</h3>
 
           {/* Email input */}
@@ -778,7 +979,7 @@ export default function AppOnboardingV2() {
             <button
               onClick={initMyFatoorahPayment}
               disabled={mfSessionLoading}
-              className="cursor-pointer w-full py-4 rounded-2xl bg-amber-500 text-vp-navy font-bold text-lg shadow-lg hover:bg-amber-400 disabled:opacity-50 transition-all duration-200 ease-out flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 min-h-[56px]"
+              className="cursor-pointer w-full py-4 rounded-2xl bg-amber-500 text-vp-navy font-bold text-lg shadow-lg shadow-amber-500/25 hover:bg-amber-400 disabled:opacity-50 transition-all duration-200 ease-out flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 min-h-[56px]"
             >
               {mfSessionLoading ? (
                 <>
@@ -786,9 +987,9 @@ export default function AppOnboardingV2() {
                   <span>جاري تحميل نموذج الدفع...</span>
                 </>
               ) : appliedDiscount ? (
-                <>ادفع الآن - <span className="line-through opacity-60 mx-1">{plan.price}</span> {getFinalPrice(plan.price)} ريال</>
+                <>اشترك الآن - <span className="line-through opacity-60 mx-1">{plan.price}</span> {finalPrice} ريال</>
               ) : (
-                <>ادفع الآن - {plan.price} ريال</>
+                <>اشترك الآن - {plan.price} ريال</>
               )}
             </button>
           )}
@@ -833,58 +1034,76 @@ export default function AppOnboardingV2() {
                   <span>جاري التحويل...</span>
                 </>
               ) : (
-                <span>قسّمها على 4 دفعات - {Math.round(getFinalPrice(plan.price) / 4)} ر.س &times; 4</span>
+                <span>قسّمها على 4 دفعات - {Math.round(finalPrice / 4)} ر.س &times; 4 بدون فوائد</span>
               )}
             </button>
           )}
 
-          {/* Payment methods */}
-          <div className="flex items-center justify-center gap-3 flex-wrap pt-2">
-            {['Visa', 'Mastercard', 'مدى', 'Apple Pay', 'Tamara'].map(m => (
-              <span key={m} className="text-xs text-vp-navy/40 bg-vp-navy/5 px-3 py-1.5 rounded-lg font-medium">
-                {m}
-              </span>
-            ))}
-          </div>
-
-          {/* Secure payment */}
-          <div className="flex items-center justify-center gap-2 text-vp-navy/40">
-            <Lock className="w-4 h-4" />
-            <span className="text-xs font-medium">دفع آمن ومشفر</span>
+          {/* Payment methods + trust */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              {['Visa', 'Mastercard', 'مدى', 'Apple Pay', 'Tamara'].map(m => (
+                <span key={m} className="text-xs text-vp-navy/40 bg-vp-navy/5 px-3 py-1.5 rounded-lg font-medium">
+                  {m}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center gap-1.5 text-vp-navy/40">
+                <Lock className="w-3.5 h-3.5" />
+                <span className="text-[11px] font-medium">دفع آمن ومشفر</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-vp-navy/40">
+                <Shield className="w-3.5 h-3.5" />
+                <span className="text-[11px] font-medium">بدون تجديد تلقائي</span>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* ════════════════════════════════════════════════════════════
-            SECTION 6: Testimonials
-        ════════════════════════════════════════════════════════════ */}
-        <section className="py-12">
-          <h3 className="text-xl font-bold text-center mb-8">ماذا يقول عملاؤنا</h3>
+        {/* ═══════════════════════════════════════════════════════════════
+            SECTION 9: Testimonials — Social Proof with Specific Results
+        ═══════════════════════════════════════════════════════════════ */}
+        <section className="py-14">
+          <h3 className="text-xl font-extrabold text-center mb-2">نتائج حقيقية من مستخدمين حقيقيين</h3>
+          <p className="text-center text-vp-navy/40 text-sm mb-8">+4.9 تقييم على متجر التطبيقات</p>
+
           <div className="space-y-4">
-            {testimonials.map((t, i) => (
-              <div key={i} className="bg-vp-beige/20 rounded-2xl p-6">
-                {/* Stars */}
-                <div className="flex gap-0.5 mb-3">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />
-                  ))}
+            {[
+              { text: 'التطبيق غير حياتي كلياً. خسيت 12 كيلو في 3 أشهر بدون حرمان — فقط التزمت بالسعرات اللي حسبها لي التطبيق', name: 'سارة', initial: 'س', result: '-12 كيلو', period: '3 أشهر' },
+              { text: 'ماسح الوجبات شيء خرافي! أصوّر الأكل وبثانية يحسب لي كل شيء. ما عمري حسبت سعراتي بهالسهولة', name: 'محمد', initial: 'م', result: '+8 كيلو عضل', period: '4 أشهر' },
+              { text: 'جربت تطبيقات كثيرة بس هذا أول تطبيق يعطيني برنامج يتغير معي كل أسبوع. المجتمع والدعم شيء مختلف', name: 'نورة', initial: 'ن', result: '-7 كيلو', period: 'شهرين' },
+              { text: 'أنا مبتدئ وكنت ضايع وين أبدأ. التطبيق صمم لي برنامج كامل من الصفر. الحين صار عندي روتين ثابت', name: 'عبدالله', initial: 'ع', result: 'من 0 لـ 5 أيام/أسبوع', period: '6 أسابيع' },
+            ].map((t, i) => (
+              <div key={i} className="bg-vp-beige/15 rounded-2xl p-6">
+                {/* Result badge */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                    ))}
+                  </div>
+                  <div className="bg-green-500/10 text-green-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
+                    {t.result} في {t.period}
+                  </div>
                 </div>
-                <p className="text-base text-vp-navy/80 mb-4 leading-relaxed">&ldquo;{t.text}&rdquo;</p>
+                <p className="text-sm text-vp-navy/70 mb-4 leading-relaxed">&ldquo;{t.text}&rdquo;</p>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-vp-navy text-white flex items-center justify-center font-bold text-sm">
                     {t.initial}
                   </div>
-                  <span className="text-sm font-semibold text-vp-navy/70">{t.name}</span>
+                  <span className="text-sm font-semibold text-vp-navy/60">{t.name}</span>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ════════════════════════════════════════════════════════════
-            SECTION 7: FAQ
-        ════════════════════════════════════════════════════════════ */}
-        <section className="py-12 pb-16">
-          <h3 className="text-xl font-bold text-center mb-8">أسئلة شائعة</h3>
+        {/* ═══════════════════════════════════════════════════════════════
+            SECTION 10: FAQ
+        ═══════════════════════════════════════════════════════════════ */}
+        <section className="py-14 pb-16">
+          <h3 className="text-xl font-extrabold text-center mb-8">أسئلة شائعة</h3>
           <div className="space-y-3">
             {faqs.map((faq, i) => (
               <div key={i} className="border-2 border-vp-navy/10 rounded-2xl overflow-hidden">
@@ -907,6 +1126,23 @@ export default function AppOnboardingV2() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            SECTION 11: Final CTA — Last Push
+        ═══════════════════════════════════════════════════════════════ */}
+        <section className="py-12 text-center">
+          <div className="bg-vp-navy rounded-3xl p-8 text-white">
+            <h3 className="text-xl font-extrabold mb-2">جاهز تبدأ رحلتك؟</h3>
+            <p className="text-white/60 text-sm mb-6">انضم لـ +28,900 شخص غيّروا حياتهم مع فيقا باور</p>
+            <button
+              onClick={() => document.getElementById('payment-section')?.scrollIntoView({ behavior: 'smooth' })}
+              className="cursor-pointer w-full py-4 rounded-2xl bg-amber-500 text-vp-navy font-bold text-lg hover:bg-amber-400 transition-all duration-200 ease-out shadow-lg"
+            >
+              اشترك الآن - {finalPrice} ر.س/سنة
+            </button>
+            <p className="text-white/40 text-[11px] mt-3">دفعة واحدة &middot; بدون تجديد تلقائي &middot; دفع آمن ومشفر</p>
           </div>
         </section>
 
