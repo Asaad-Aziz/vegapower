@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 import { sendAbandonedCartEmail } from '@/lib/email'
 
@@ -13,15 +13,8 @@ const DISCOUNT_CODE = 'VP10'
 const DISCOUNT_PERCENT = 10
 const DELAY_MINUTES = 15
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Optional: Verify cron secret to prevent unauthorized access
-    const authHeader = request.headers.get('authorization')
-    const cronSecret = process.env.CRON_SECRET
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const supabase = createServerClient()
 
     // Find abandoned checkouts older than 15 minutes that haven't converted and haven't been emailed

@@ -10,7 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger abandoned cart check
-        run: |
-          curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "https://vegapowerstore.com/api/cron/abandoned-cart"
+        run: curl -s "https://vegapowerstore.com/api/cron/abandoned-cart"
