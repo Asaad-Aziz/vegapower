@@ -256,7 +256,7 @@ export default function StorePage({ product, storeSettings }: StorePageProps) {
     if (showPayment && paymentMethod !== 'tamara' && mfScriptLoaded && !mfInitialized && !mfSessionLoading) {
       const initMyFatoorah = async () => {
         setMfSessionLoading(true)
-        await logToServer('MYFATOORAH_INIT', 'Creating MyFatoorah session', {
+        await logToServer('MYFATOORAH_INIT', 'Creating MyFatoorah sjession', {
           amount: finalPrice,
           email,
         })
