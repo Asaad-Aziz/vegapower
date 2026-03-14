@@ -178,4 +178,4 @@ MIT
 
 git add -A
 git commit -m "discountCode"
-git push origin main
+git push origin master
