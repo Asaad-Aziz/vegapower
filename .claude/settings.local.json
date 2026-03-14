@@ -16,7 +16,12 @@
       "Bash(cd C:/Users/Admin/Desktop/vpstan && node -e \"const p = require\\('posthog-js/package.json'\\); console.log\\(p.version\\)\")",
       "Bash(cd C:/Users/Admin/Desktop/vpstan && node -e \"const p = require\\('posthog-js'\\); const ph = p.default || p; console.log\\(typeof ph.init\\)\")",
       "Bash(cd C:/Users/Admin/Desktop/vpstan && npx next build 2>&1 | tail -20)",
-      "Bash(cd C:/Users/Admin/Desktop/vpstan && npx next build 2>&1 | grep -E \"error|Error|ERROR|✓|✗|Build\" | head -15)"
+      "Bash(cd C:/Users/Admin/Desktop/vpstan && npx next build 2>&1 | grep -E \"error|Error|ERROR|✓|✗|Build\" | head -15)",
+      "Bash(cd C:/Users/Admin/Desktop/vpstan && uipro init --ai claude 2>&1)",
+      "Bash(cd C:/Users/Admin/Desktop/vpstan && python3 .claude/skills/ui-ux-pro-max/scripts/search.py \"fitness app subscription landing page\" --design-system -p \"VegaPower\" 2>&1)",
+      "Bash(cd C:/Users/Admin/Desktop/vpstan && python .claude/skills/ui-ux-pro-max/scripts/search.py \"fitness subscription conversion\" --domain landing -n 5 2>&1)",
+      "Bash(cd C:/Users/Admin/Desktop/vpstan && python .claude/skills/ui-ux-pro-max/scripts/search.py \"animation accessibility form\" --domain ux -n 5 2>&1)",
+      "Bash(cd C:/Users/Admin/Desktop/vpstan && npx next build 2>&1 | grep -E \"error|Error|✓|✗|Compil\" | head -10)"
     ]
   }
 }
